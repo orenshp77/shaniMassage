@@ -436,3 +436,41 @@
     opacity: 1;
   }
 }
+
+/* Audio Enable Overlay */
+.audio-enable-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9998;
+  cursor: pointer;
+  animation: fadeIn 0.3s ease-out;
+}
+
+.audio-enable-box {
+  background: linear-gradient(135deg, #00ffff 0%, #8a2be2 100%);
+  border-radius: 30px;
+  padding: 50px 80px;
+  text-align: center;
+  color: white;
+  animation: pulse 2s ease-in-out infinite;
+  box-shadow: 0 0 60px rgba(0, 255, 255, 0.5);
+}
+
+.audio-enable-box .audio-icon {
+  font-size: 6rem;
+  display: block;
+  margin-bottom: 20px;
+}
+
+.audio-enable-box p {
+  font-size: 2rem;
+  margin: 0;
+  text-shadow: 0 0 20px rgba(255, 255, 255, 0.5);
+}

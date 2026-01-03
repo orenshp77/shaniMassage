@@ -9,13 +9,28 @@ function DisplayPage() {
   const [message, setMessage] = useState(null)
   const [loading, setLoading] = useState(true)
   const [alertData, setAlertData] = useState(null)
+  const [audioEnabled, setAudioEnabled] = useState(false)
   const lastMessageId = useRef(null)
   const audioRef = useRef(null)
+
+  // Enable audio (must be called on user interaction)
+  const enableAudio = () => {
+    if (!audioEnabled && audioRef.current) {
+      // Play silent to unlock audio
+      audioRef.current.volume = 0
+      audioRef.current.play().then(() => {
+        audioRef.current.pause()
+        audioRef.current.currentTime = 0
+        audioRef.current.volume = 0.8
+        setAudioEnabled(true)
+      }).catch(e => console.log('Audio unlock failed:', e))
+    }
+  }
 
   // Play bell sound
   const playBellSound = () => {
     try {
-      if (audioRef.current) {
+      if (audioRef.current && audioEnabled) {
         audioRef.current.currentTime = 0
         audioRef.current.play().catch(e => console.log('Audio play failed:', e))
       }
@@ -104,7 +119,17 @@ function DisplayPage() {
   }
 
   return (
-    <div className="display-page">
+    <div className="display-page" onClick={enableAudio}>
+      {/* Audio Enable Button - Shows until user clicks */}
+      {!audioEnabled && (
+        <div className="audio-enable-overlay" onClick={enableAudio}>
+          <div className="audio-enable-box">
+            <span className="audio-icon">🔊</span>
+            <p>לחץ להפעלת צלילים</p>
+          </div>
+        </div>
+      )}
+
       {/* Custom Alert Overlay - Shows for 2 seconds when new message arrives */}
       {alertData && (
         <div className="custom-alert-overlay">
