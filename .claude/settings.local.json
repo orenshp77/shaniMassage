@@ -1,0 +1,16 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(mkdir:*)",
+      "Bash(cat:*)",
+      "Bash(npm run install:all:*)",
+      "Bash(npm install)",
+      "Bash(node:*)",
+      "Bash(npm install:*)",
+      "Bash(git init:*)",
+      "Bash(git remote add:*)",
+      "Bash(git add:*)",
+      "Bash(git commit -m \"$\\(cat <<''EOF''\nInitial commit - מוקד עידכונים system\n\nFeatures:\n- Display page for 50-inch TV \\(1920x1080\\)\n- Input page for message management\n- QR page for device connections\n- Connect page with numeric keypad\n- Real-time message alerts with bell sound\n- Dynamic font sizing based on content length\n- PostgreSQL database via Neon\n\n🤖 Generated with [Claude Code]\\(https://claude.com/claude-code\\)\n\nCo-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>\nEOF\n\\)\")"
+    ]
+  }
+}

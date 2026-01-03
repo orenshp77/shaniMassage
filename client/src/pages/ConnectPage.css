@@ -1,0 +1,276 @@
+.connect-page {
+  min-height: 100vh;
+  background: linear-gradient(135deg, #0c0c1e 0%, #1a1a3e 50%, #0f0f2d 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  overflow: hidden;
+}
+
+/* Background */
+.connect-bg {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+.connect-particle {
+  position: absolute;
+  width: 6px;
+  height: 6px;
+  background: rgba(0, 255, 255, 0.4);
+  border-radius: 50%;
+  animation: twinkle 3s ease-in-out infinite;
+}
+
+.connect-particle:nth-child(3n) {
+  background: rgba(255, 105, 180, 0.4);
+}
+
+/* Container */
+.connect-container {
+  position: relative;
+  z-index: 10;
+  text-align: center;
+  padding: 40px;
+}
+
+/* Logo */
+.connect-logo h1 {
+  font-size: 5rem;
+  font-weight: 700;
+  background: linear-gradient(135deg, #00ffff, #ff69b4);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin-bottom: 10px;
+}
+
+.connect-logo p {
+  font-size: 1.8rem;
+  color: rgba(255, 255, 255, 0.6);
+  margin-bottom: 50px;
+}
+
+/* Code Form */
+.code-form {
+  background: rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(20px);
+  border-radius: 30px;
+  padding: 50px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* Code Display */
+.code-display {
+  display: flex;
+  justify-content: center;
+  gap: 20px;
+  margin-bottom: 30px;
+}
+
+.code-digit {
+  width: 80px;
+  height: 100px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 3px solid rgba(255, 255, 255, 0.2);
+  border-radius: 15px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 3rem;
+  font-weight: 700;
+  color: white;
+  transition: all 0.3s ease;
+}
+
+.code-digit.filled {
+  border-color: #00ffff;
+  box-shadow: 0 0 20px rgba(0, 255, 255, 0.3);
+  background: rgba(0, 255, 255, 0.1);
+}
+
+.code-error {
+  color: #ff6b6b;
+  font-size: 1.2rem;
+  margin-bottom: 20px;
+  animation: shake 0.5s ease;
+}
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-10px); }
+  75% { transform: translateX(10px); }
+}
+
+/* Number Pad */
+.number-pad {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 15px;
+  max-width: 350px;
+  margin: 0 auto 30px;
+}
+
+.num-btn {
+  width: 100px;
+  height: 100px;
+  border: none;
+  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.08);
+  color: white;
+  font-size: 2.5rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-family: inherit;
+}
+
+.num-btn:hover {
+  background: rgba(255, 255, 255, 0.15);
+  transform: scale(1.05);
+}
+
+.num-btn:active {
+  transform: scale(0.95);
+  background: rgba(0, 255, 255, 0.2);
+}
+
+.clear-btn {
+  background: rgba(255, 100, 100, 0.2);
+  color: #ff6b6b;
+}
+
+.clear-btn:hover {
+  background: rgba(255, 100, 100, 0.3);
+}
+
+.back-btn {
+  background: rgba(255, 200, 100, 0.2);
+  color: #ffc864;
+}
+
+.back-btn:hover {
+  background: rgba(255, 200, 100, 0.3);
+}
+
+/* Enter Button */
+.enter-btn {
+  width: 100%;
+  max-width: 350px;
+  padding: 20px;
+  border: none;
+  border-radius: 15px;
+  background: linear-gradient(135deg, #00ffff, #00bcd4);
+  color: #0c0c1e;
+  font-size: 1.5rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-family: inherit;
+}
+
+.enter-btn:hover:not(:disabled) {
+  transform: translateY(-3px);
+  box-shadow: 0 10px 30px rgba(0, 255, 255, 0.4);
+}
+
+.enter-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Hints */
+.code-hints {
+  margin-top: 40px;
+  color: rgba(255, 255, 255, 0.4);
+}
+
+.code-hints p {
+  margin-bottom: 15px;
+  font-size: 1.1rem;
+}
+
+.hints-list {
+  display: flex;
+  justify-content: center;
+  gap: 30px;
+  flex-wrap: wrap;
+}
+
+.hints-list span {
+  background: rgba(255, 255, 255, 0.05);
+  padding: 10px 20px;
+  border-radius: 10px;
+  font-size: 1rem;
+}
+
+.hints-list strong {
+  color: #00ffff;
+}
+
+/* Responsive */
+@media (max-width: 600px) {
+  .connect-logo h1 {
+    font-size: 3.5rem;
+  }
+
+  .code-form {
+    padding: 30px 20px;
+  }
+
+  .code-digit {
+    width: 60px;
+    height: 80px;
+    font-size: 2.5rem;
+  }
+
+  .num-btn {
+    width: 80px;
+    height: 80px;
+    font-size: 2rem;
+  }
+
+  .hints-list {
+    flex-direction: column;
+    gap: 10px;
+  }
+}
+
+/* Large screens (50 inch) */
+@media (min-width: 1920px) {
+  .connect-logo h1 {
+    font-size: 8rem;
+  }
+
+  .connect-logo p {
+    font-size: 2.5rem;
+  }
+
+  .code-digit {
+    width: 120px;
+    height: 150px;
+    font-size: 5rem;
+  }
+
+  .num-btn {
+    width: 140px;
+    height: 140px;
+    font-size: 3.5rem;
+  }
+
+  .number-pad {
+    max-width: 500px;
+    gap: 20px;
+  }
+
+  .enter-btn {
+    max-width: 500px;
+    font-size: 2rem;
+    padding: 25px;
+  }
+}
