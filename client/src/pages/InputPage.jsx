@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import Swal from 'sweetalert2'
 import api from '../services/api'
+import { THEMES } from '../components/AnimatedBackgrounds'
 import './InputPage.css'
 
 function InputPage() {
@@ -11,10 +12,36 @@ function InputPage() {
   })
   const [editingId, setEditingId] = useState(null)
   const [loading, setLoading] = useState(false)
+  const [selectedTheme, setSelectedTheme] = useState('hitech')
 
   useEffect(() => {
     fetchMessages()
+    fetchCurrentTheme()
   }, [])
+
+  const fetchCurrentTheme = async () => {
+    try {
+      const response = await api.get('/active-theme')
+      setSelectedTheme(response.data.theme)
+    } catch (error) {
+      console.error('Error fetching theme:', error)
+    }
+  }
+
+  const handleThemeChange = async (themeId) => {
+    try {
+      setSelectedTheme(themeId)
+      await api.post('/active-theme', { theme: themeId })
+      Swal.fire({
+        icon: 'success',
+        title: `הרקע שונה ל${THEMES[themeId].name}`,
+        showConfirmButton: false,
+        timer: 1000
+      })
+    } catch (error) {
+      console.error('Error setting theme:', error)
+    }
+  }
 
   const fetchMessages = async () => {
     try {
@@ -173,6 +200,23 @@ function InputPage() {
             )}
           </div>
         </form>
+
+        {/* Theme Selector */}
+        <div className="theme-selector">
+          <h2>בחר רקע למסך התצוגה</h2>
+          <div className="theme-grid">
+            {Object.values(THEMES).map((theme) => (
+              <button
+                key={theme.id}
+                className={`theme-btn ${selectedTheme === theme.id ? 'active' : ''}`}
+                onClick={() => handleThemeChange(theme.id)}
+              >
+                <span className="theme-icon">{theme.icon}</span>
+                <span className="theme-name">{theme.name}</span>
+              </button>
+            ))}
+          </div>
+        </div>
 
         <div className="messages-list">
           <h2>הודעות שנשלחו</h2>

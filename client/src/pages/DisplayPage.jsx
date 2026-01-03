@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import api from '../services/api'
+import AnimatedBackground from '../components/AnimatedBackgrounds'
 import './DisplayPage.css'
 
 // Bell sound URL
@@ -9,6 +10,7 @@ function DisplayPage() {
   const [message, setMessage] = useState(null)
   const [loading, setLoading] = useState(true)
   const [alertData, setAlertData] = useState(null)
+  const [currentTheme, setCurrentTheme] = useState('hitech')
   const lastMessageId = useRef(null)
   const audioRef = useRef(null)
   const audioUnlocked = useRef(false)
@@ -55,7 +57,12 @@ function DisplayPage() {
 
     try {
       const response = await api.get('/active-message')
-      const newMessage = response.data
+      const { message: newMessage, theme } = response.data
+
+      // Update theme if changed
+      if (theme && theme !== currentTheme) {
+        setCurrentTheme(theme)
+      }
 
       // Check if message changed - show alert
       if (newMessage && lastMessageId.current !== null && lastMessageId.current !== newMessage.id) {
@@ -119,6 +126,9 @@ function DisplayPage() {
 
   return (
     <div className="display-page" onClick={unlockAudio} onMouseMove={unlockAudio} onKeyDown={unlockAudio}>
+      {/* Animated Theme Background */}
+      <AnimatedBackground theme={currentTheme} />
+
       {/* Custom Alert Overlay - Shows for 2 seconds when new message arrives */}
       {alertData && (
         <div className="custom-alert-overlay">
@@ -129,25 +139,6 @@ function DisplayPage() {
           </div>
         </div>
       )}
-
-      {/* Animated background particles */}
-      <div className="particles">
-        {[...Array(50)].map((_, i) => (
-          <div
-            key={i}
-            className="particle"
-            style={{
-              left: `${Math.random() * 100}%`,
-              top: `${Math.random() * 100}%`,
-              animationDelay: `${Math.random() * 5}s`,
-              animationDuration: `${3 + Math.random() * 4}s`
-            }}
-          />
-        ))}
-      </div>
-
-      {/* Gradient overlay */}
-      <div className="gradient-overlay"></div>
 
       {/* Content */}
       <div className="display-content">

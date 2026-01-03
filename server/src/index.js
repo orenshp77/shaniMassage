@@ -23,8 +23,9 @@ const pool = new Pool({
   ssl: { rejectUnauthorized: false }
 })
 
-// Active message ID (in-memory for real-time display)
+// Active message ID and theme (in-memory for real-time display)
 let activeMessageId = null
+let activeTheme = 'hitech' // Default theme
 
 // Initialize database table
 const initDB = async () => {
@@ -153,24 +154,47 @@ app.post('/api/active-message', async (req, res) => {
 // Get active message (for display page polling)
 app.get('/api/active-message', async (req, res) => {
   try {
+    let message = null
+
     if (!activeMessageId) {
       // If no active message, return latest
       const result = await pool.query('SELECT * FROM messages ORDER BY created_at DESC LIMIT 1')
-      return res.json(result.rows[0] || null)
+      message = result.rows[0] || null
+    } else {
+      const result = await pool.query('SELECT * FROM messages WHERE id = $1', [activeMessageId])
+      if (result.rows.length === 0) {
+        // If active message was deleted, return latest
+        activeMessageId = null
+        const latestResult = await pool.query('SELECT * FROM messages ORDER BY created_at DESC LIMIT 1')
+        message = latestResult.rows[0] || null
+      } else {
+        message = result.rows[0]
+      }
     }
 
-    const result = await pool.query('SELECT * FROM messages WHERE id = $1', [activeMessageId])
-    if (result.rows.length === 0) {
-      // If active message was deleted, return latest
-      activeMessageId = null
-      const latestResult = await pool.query('SELECT * FROM messages ORDER BY created_at DESC LIMIT 1')
-      return res.json(latestResult.rows[0] || null)
-    }
-    res.json(result.rows[0])
+    // Return message with theme
+    res.json({ message, theme: activeTheme })
   } catch (error) {
     console.error('Error fetching active message:', error)
     res.status(500).json({ error: 'שגיאה בטעינת ההודעה הפעילה' })
   }
+})
+
+// Set active theme
+app.post('/api/active-theme', (req, res) => {
+  try {
+    const { theme } = req.body
+    activeTheme = theme
+    res.json({ success: true, theme: activeTheme })
+  } catch (error) {
+    console.error('Error setting active theme:', error)
+    res.status(500).json({ error: 'שגיאה בהגדרת הנושא' })
+  }
+})
+
+// Get active theme
+app.get('/api/active-theme', (req, res) => {
+  res.json({ theme: activeTheme })
 })
 
 const PORT = process.env.PORT || 5000

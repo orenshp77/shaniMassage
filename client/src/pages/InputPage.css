@@ -152,9 +152,75 @@
   background: #e0e0e0;
 }
 
+/* Theme Selector */
+.theme-selector {
+  margin-top: 30px;
+  background: rgba(255, 255, 255, 0.9);
+  backdrop-filter: blur(10px);
+  border-radius: 20px;
+  padding: 25px;
+  box-shadow: 0 10px 40px rgba(255, 105, 180, 0.1);
+  border: 1px solid rgba(255, 182, 193, 0.3);
+}
+
+.theme-selector h2 {
+  color: #c4627e;
+  font-size: 1.3rem;
+  margin-bottom: 20px;
+  text-align: center;
+}
+
+.theme-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 12px;
+}
+
+.theme-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 15px 10px;
+  background: rgba(255, 240, 245, 0.8);
+  border: 2px solid rgba(255, 182, 193, 0.3);
+  border-radius: 15px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-family: inherit;
+}
+
+.theme-btn:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 20px rgba(255, 105, 180, 0.25);
+  border-color: #ff69b4;
+}
+
+.theme-btn.active {
+  background: linear-gradient(135deg, #ff69b4, #ff1493);
+  color: white;
+  border-color: #ff1493;
+  box-shadow: 0 8px 25px rgba(255, 105, 180, 0.4);
+}
+
+.theme-icon {
+  font-size: 2rem;
+  margin-bottom: 8px;
+}
+
+.theme-name {
+  font-size: 0.85rem;
+  font-weight: 600;
+  text-align: center;
+}
+
+.theme-btn.active .theme-name {
+  color: white;
+}
+
 /* Messages List */
 .messages-list {
-  margin-top: 40px;
+  margin-top: 30px;
   background: rgba(255, 255, 255, 0.9);
   backdrop-filter: blur(10px);
   border-radius: 20px;
@@ -335,6 +401,24 @@
     border-radius: 15px;
   }
 
+  /* Theme selector tablet */
+  .theme-grid {
+    grid-template-columns: repeat(5, 1fr);
+    gap: 10px;
+  }
+
+  .theme-btn {
+    padding: 12px 8px;
+  }
+
+  .theme-icon {
+    font-size: 1.6rem;
+  }
+
+  .theme-name {
+    font-size: 0.75rem;
+  }
+
   .message-item {
     flex-wrap: wrap;
     padding: 12px;
@@ -437,8 +521,38 @@
     border-radius: 14px;
   }
 
+  /* Theme selector phone */
+  .theme-selector {
+    padding: 15px;
+    margin-top: 20px;
+  }
+
+  .theme-selector h2 {
+    font-size: 1.1rem;
+    margin-bottom: 15px;
+  }
+
+  .theme-grid {
+    grid-template-columns: repeat(5, 1fr);
+    gap: 8px;
+  }
+
+  .theme-btn {
+    padding: 10px 5px;
+    border-radius: 12px;
+  }
+
+  .theme-icon {
+    font-size: 1.4rem;
+    margin-bottom: 5px;
+  }
+
+  .theme-name {
+    font-size: 0.65rem;
+  }
+
   .messages-list {
-    margin-top: 25px;
+    margin-top: 20px;
     padding: 15px;
     border-radius: 20px;
   }
