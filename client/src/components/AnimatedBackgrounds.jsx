@@ -39,6 +39,12 @@ export const THEMES = {
     icon: '🌊',
     category: 'animated'
   },
+  birthday: {
+    id: 'birthday',
+    name: 'יום הולדת',
+    icon: '🎂',
+    category: 'animated'
+  },
   // Solid color themes (no animation)
   solidBlue: {
     id: 'solidBlue',
@@ -192,6 +198,48 @@ function CalmBackground() {
   )
 }
 
+// Birthday Background - Colorful confetti and balloons
+function BirthdayBackground() {
+  const confettiColors = [
+    '#ff6b6b', '#ffd93d', '#6bcb77', '#4d96ff', '#ff6b9d',
+    '#c44dff', '#ff914d', '#00d4aa', '#ff4757', '#2ed573'
+  ]
+
+  return (
+    <div className="animated-bg-container birthday-bg">
+      <div className="birthday-gradient" />
+      {/* Confetti pieces */}
+      {[...Array(60)].map((_, i) => (
+        <div
+          key={`confetti-${i}`}
+          className={`birthday-confetti confetti-${i % 3}`}
+          style={{
+            left: `${Math.random() * 100}%`,
+            backgroundColor: confettiColors[i % confettiColors.length],
+            animationDuration: `${3 + Math.random() * 4}s`,
+            animationDelay: `${Math.random() * 5}s`,
+            width: `${6 + Math.random() * 8}px`,
+            height: `${6 + Math.random() * 8}px`
+          }}
+        />
+      ))}
+      {/* Balloons */}
+      {[...Array(8)].map((_, i) => (
+        <div
+          key={`balloon-${i}`}
+          className="birthday-balloon"
+          style={{
+            left: `${10 + i * 12}%`,
+            backgroundColor: confettiColors[i % confettiColors.length],
+            animationDelay: `${i * 0.5}s`
+          }}
+        />
+      ))}
+      <div className="birthday-sparkle" />
+    </div>
+  )
+}
+
 // Solid Color Backgrounds (no animation)
 function SolidBackground({ color }) {
   return (
@@ -217,7 +265,8 @@ function AnimatedBackground({ theme = 'hitech' }) {
     alert: AlertBackground,
     celebration: CelebrationBackground,
     focus: FocusBackground,
-    calm: CalmBackground
+    calm: CalmBackground,
+    birthday: BirthdayBackground
   }
 
   const BackgroundComponent = backgrounds[theme] || HitechBackground
