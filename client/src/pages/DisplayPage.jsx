@@ -9,33 +9,32 @@ function DisplayPage() {
   const [message, setMessage] = useState(null)
   const [loading, setLoading] = useState(true)
   const [alertData, setAlertData] = useState(null)
-  const [audioEnabled, setAudioEnabled] = useState(false)
   const lastMessageId = useRef(null)
   const audioRef = useRef(null)
+  const audioUnlocked = useRef(false)
 
-  // Enable audio (must be called on user interaction)
-  const enableAudio = () => {
-    if (!audioEnabled && audioRef.current) {
-      // Play silent to unlock audio
+  // Unlock audio on any user interaction (runs silently in background)
+  const unlockAudio = () => {
+    if (!audioUnlocked.current && audioRef.current) {
       audioRef.current.volume = 0
       audioRef.current.play().then(() => {
         audioRef.current.pause()
         audioRef.current.currentTime = 0
         audioRef.current.volume = 0.8
-        setAudioEnabled(true)
-      }).catch(e => console.log('Audio unlock failed:', e))
+        audioUnlocked.current = true
+      }).catch(() => {})
     }
   }
 
   // Play bell sound
   const playBellSound = () => {
     try {
-      if (audioRef.current && audioEnabled) {
+      if (audioRef.current) {
         audioRef.current.currentTime = 0
-        audioRef.current.play().catch(e => console.log('Audio play failed:', e))
+        audioRef.current.play().catch(() => {})
       }
     } catch (e) {
-      console.log('Audio error:', e)
+      // Silent fail
     }
   }
 
@@ -119,17 +118,7 @@ function DisplayPage() {
   }
 
   return (
-    <div className="display-page" onClick={enableAudio}>
-      {/* Audio Enable Button - Shows until user clicks */}
-      {!audioEnabled && (
-        <div className="audio-enable-overlay" onClick={enableAudio}>
-          <div className="audio-enable-box">
-            <span className="audio-icon">🔊</span>
-            <p>לחץ להפעלת צלילים</p>
-          </div>
-        </div>
-      )}
-
+    <div className="display-page" onClick={unlockAudio} onMouseMove={unlockAudio} onKeyDown={unlockAudio}>
       {/* Custom Alert Overlay - Shows for 2 seconds when new message arrives */}
       {alertData && (
         <div className="custom-alert-overlay">
