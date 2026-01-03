@@ -6,8 +6,15 @@ require('dotenv').config({ path: path.join(__dirname, '..', '.env') })
 
 const app = express()
 
-// Middleware
-app.use(cors())
+// Middleware - CORS configuration for production
+app.use(cors({
+  origin: [
+    'http://localhost:901',
+    'http://localhost:3000',
+    'https://shani-client.onrender.com'
+  ],
+  credentials: true
+}))
 app.use(express.json())
 
 // PostgreSQL connection (Neon)
