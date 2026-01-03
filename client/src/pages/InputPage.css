@@ -170,10 +170,32 @@
   text-align: center;
 }
 
+.theme-section {
+  margin-bottom: 20px;
+}
+
+.theme-section:last-child {
+  margin-bottom: 0;
+}
+
+.theme-section h3 {
+  color: #a8566e;
+  font-size: 1rem;
+  margin-bottom: 12px;
+  font-weight: 500;
+}
+
 .theme-grid {
   display: grid;
-  grid-template-columns: repeat(5, 1fr);
   gap: 12px;
+}
+
+.theme-grid.animated-themes {
+  grid-template-columns: repeat(6, 1fr);
+}
+
+.theme-grid.solid-themes {
+  grid-template-columns: repeat(4, 1fr);
 }
 
 .theme-btn {
@@ -204,8 +226,8 @@
 }
 
 .theme-icon {
-  font-size: 2rem;
-  margin-bottom: 8px;
+  font-size: 1.5rem;
+  margin-bottom: 6px;
 }
 
 .theme-name {
@@ -216,6 +238,19 @@
 
 .theme-btn.active .theme-name {
   color: white;
+}
+
+/* Solid color theme buttons */
+.solid-preview {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  margin-bottom: 8px;
+  border: 2px solid rgba(0, 0, 0, 0.1);
+}
+
+.theme-btn.solid-btn.active .solid-preview {
+  border-color: white;
 }
 
 /* Messages List */
@@ -402,8 +437,13 @@
   }
 
   /* Theme selector tablet */
-  .theme-grid {
-    grid-template-columns: repeat(5, 1fr);
+  .theme-grid.animated-themes {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+  }
+
+  .theme-grid.solid-themes {
+    grid-template-columns: repeat(4, 1fr);
     gap: 10px;
   }
 
@@ -412,11 +452,16 @@
   }
 
   .theme-icon {
-    font-size: 1.6rem;
+    font-size: 1.3rem;
   }
 
   .theme-name {
     font-size: 0.75rem;
+  }
+
+  .solid-preview {
+    width: 35px;
+    height: 35px;
   }
 
   .message-item {
@@ -532,8 +577,18 @@
     margin-bottom: 15px;
   }
 
-  .theme-grid {
-    grid-template-columns: repeat(5, 1fr);
+  .theme-section h3 {
+    font-size: 0.9rem;
+    margin-bottom: 10px;
+  }
+
+  .theme-grid.animated-themes {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+  }
+
+  .theme-grid.solid-themes {
+    grid-template-columns: repeat(4, 1fr);
     gap: 8px;
   }
 
@@ -543,12 +598,18 @@
   }
 
   .theme-icon {
-    font-size: 1.4rem;
-    margin-bottom: 5px;
+    font-size: 1.2rem;
+    margin-bottom: 4px;
   }
 
   .theme-name {
     font-size: 0.65rem;
+  }
+
+  .solid-preview {
+    width: 30px;
+    height: 30px;
+    margin-bottom: 5px;
   }
 
   .messages-list {

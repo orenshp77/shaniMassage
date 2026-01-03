@@ -204,17 +204,44 @@ function InputPage() {
         {/* Theme Selector */}
         <div className="theme-selector">
           <h2>בחר רקע למסך התצוגה</h2>
-          <div className="theme-grid">
-            {Object.values(THEMES).map((theme) => (
-              <button
-                key={theme.id}
-                className={`theme-btn ${selectedTheme === theme.id ? 'active' : ''}`}
-                onClick={() => handleThemeChange(theme.id)}
-              >
-                <span className="theme-icon">{theme.icon}</span>
-                <span className="theme-name">{theme.name}</span>
-              </button>
-            ))}
+
+          {/* Animated themes */}
+          <div className="theme-section">
+            <h3>ערכות מונפשות</h3>
+            <div className="theme-grid animated-themes">
+              {Object.values(THEMES)
+                .filter(theme => theme.category === 'animated')
+                .map((theme) => (
+                  <button
+                    key={theme.id}
+                    className={`theme-btn ${selectedTheme === theme.id ? 'active' : ''}`}
+                    onClick={() => handleThemeChange(theme.id)}
+                  >
+                    <span className="theme-icon">{theme.icon}</span>
+                    <span className="theme-name">{theme.name}</span>
+                  </button>
+                ))}
+            </div>
+          </div>
+
+          {/* Solid color themes */}
+          <div className="theme-section">
+            <h3>צבעים בסיסיים</h3>
+            <div className="theme-grid solid-themes">
+              {Object.values(THEMES)
+                .filter(theme => theme.category === 'solid')
+                .map((theme) => (
+                  <button
+                    key={theme.id}
+                    className={`theme-btn solid-btn ${selectedTheme === theme.id ? 'active' : ''}`}
+                    onClick={() => handleThemeChange(theme.id)}
+                    style={{ '--solid-color': theme.color }}
+                  >
+                    <span className="solid-preview" style={{ background: theme.color }}></span>
+                    <span className="theme-name">{theme.name}</span>
+                  </button>
+                ))}
+            </div>
           </div>
         </div>
 

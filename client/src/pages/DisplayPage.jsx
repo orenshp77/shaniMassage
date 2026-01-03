@@ -12,6 +12,7 @@ function DisplayPage() {
   const [alertData, setAlertData] = useState(null)
   const [currentTheme, setCurrentTheme] = useState('hitech')
   const lastMessageId = useRef(null)
+  const lastExplicitChangeRef = useRef(0) // Track last explicit change timestamp from server
   const audioRef = useRef(null)
   const audioUnlocked = useRef(false)
 
@@ -57,20 +58,28 @@ function DisplayPage() {
 
     try {
       const response = await api.get('/active-message')
-      const { message: newMessage, theme } = response.data
+      const { message: newMessage, theme, lastExplicitChange } = response.data
 
       // Update theme if changed
       if (theme && theme !== currentTheme) {
         setCurrentTheme(theme)
       }
 
-      // Check if message changed - show alert
-      if (newMessage && lastMessageId.current !== null && lastMessageId.current !== newMessage.id) {
+      // Only show alert if there was an explicit change (someone pressed "הצג" or sent new message)
+      // This won't trigger on deletions since those don't update lastExplicitChange
+      const hasNewExplicitChange = lastExplicitChange > lastExplicitChangeRef.current &&
+        lastExplicitChangeRef.current > 0 // Not on first load
+
+      if (hasNewExplicitChange && newMessage) {
         showIncomingAlert(newMessage)
       }
 
+      // Update tracking refs
+      lastExplicitChangeRef.current = lastExplicitChange
       if (newMessage) {
         lastMessageId.current = newMessage.id
+      } else {
+        lastMessageId.current = null
       }
 
       setMessage(newMessage)

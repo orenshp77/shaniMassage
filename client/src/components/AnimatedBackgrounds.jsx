@@ -1,525 +1,223 @@
-import { useEffect, useState } from 'react'
 import './AnimatedBackgrounds.css'
 
-// Theme configurations
+// Theme configurations - Professional themes for customer service center
 export const THEMES = {
+  // Animated themes
   hitech: {
     id: 'hitech',
     name: 'הייטק',
     icon: '💻',
-    description: 'טכנולוגי ומודרני'
+    category: 'animated'
   },
-  love: {
-    id: 'love',
-    name: 'אהבה',
-    icon: '❤️',
-    description: 'רומנטי וחם'
+  success: {
+    id: 'success',
+    name: 'הצלחה',
+    icon: '✓',
+    category: 'animated'
   },
-  food: {
-    id: 'food',
-    name: 'אוכל',
-    icon: '🍕',
-    description: 'טעים ומזין'
+  alert: {
+    id: 'alert',
+    name: 'התראה',
+    icon: '⚡',
+    category: 'animated'
   },
-  coffee: {
-    id: 'coffee',
-    name: 'הפסקת קפה',
-    icon: '☕',
-    description: 'רגוע ונעים'
+  celebration: {
+    id: 'celebration',
+    name: 'חגיגה',
+    icon: '🎉',
+    category: 'animated'
   },
-  racing: {
-    id: 'racing',
-    name: 'מירוצים',
-    icon: '🏎️',
-    description: 'מהיר ומרגש'
+  focus: {
+    id: 'focus',
+    name: 'ריכוז',
+    icon: '🎯',
+    category: 'animated'
   },
-  victory: {
-    id: 'victory',
-    name: 'ניצחנו!',
-    icon: '🏆',
-    description: 'חגיגי ומנצח'
+  calm: {
+    id: 'calm',
+    name: 'רגוע',
+    icon: '🌊',
+    category: 'animated'
   },
-  managerLove: {
-    id: 'managerLove',
-    name: 'המנהלת אוהבת',
-    icon: '👩‍💼💕',
-    description: 'חיובי ומעודד'
+  // Solid color themes (no animation)
+  solidBlue: {
+    id: 'solidBlue',
+    name: 'כחול',
+    icon: '',
+    category: 'solid',
+    color: '#1a365d'
   },
-  managerSad: {
-    id: 'managerSad',
-    name: 'המנהלת מאוכזבת',
-    icon: '👩‍💼😔',
-    description: 'רציני ומחשבתי'
+  solidGreen: {
+    id: 'solidGreen',
+    name: 'ירוק',
+    icon: '',
+    category: 'solid',
+    color: '#1a4d2e'
   },
-  beach: {
-    id: 'beach',
-    name: 'חוף הים',
-    icon: '🏖️',
-    description: 'רגוע וקיצי'
+  solidPurple: {
+    id: 'solidPurple',
+    name: 'סגול',
+    icon: '',
+    category: 'solid',
+    color: '#2d1b4e'
   },
-  sports: {
-    id: 'sports',
-    name: 'ספורט',
-    icon: '⚽',
-    description: 'אנרגטי ופעיל'
+  solidDark: {
+    id: 'solidDark',
+    name: 'כהה',
+    icon: '',
+    category: 'solid',
+    color: '#1a1a2e'
   }
 }
 
-// Hi-Tech Background
+// Hi-Tech Background - Original vibrant design with cyan, purple, pink particles
 function HitechBackground() {
+  const colors = [
+    { color: 'rgba(0, 255, 255, 0.8)', shadow: 'rgba(0, 255, 255, 0.6)' },   // Cyan
+    { color: 'rgba(138, 43, 226, 0.8)', shadow: 'rgba(138, 43, 226, 0.6)' }, // Purple
+    { color: 'rgba(255, 0, 128, 0.8)', shadow: 'rgba(255, 0, 128, 0.6)' },   // Pink
+    { color: 'rgba(0, 200, 255, 0.8)', shadow: 'rgba(0, 200, 255, 0.6)' },   // Light Cyan
+    { color: 'rgba(180, 100, 255, 0.8)', shadow: 'rgba(180, 100, 255, 0.6)' } // Light Purple
+  ]
+
   return (
-    <div className="animated-bg-container hitech-bg">
-      {/* Matrix-like falling code */}
+    <div className="animated-bg-container hitech-bg-original">
+      <div className="hitech-breathing-gradient" />
+      {[...Array(50)].map((_, i) => {
+        const colorSet = colors[i % colors.length]
+        return (
+          <div
+            key={i}
+            className="hitech-particle-original"
+            style={{
+              left: `${Math.random() * 100}%`,
+              top: `${Math.random() * 100}%`,
+              backgroundColor: colorSet.color,
+              boxShadow: `0 0 15px ${colorSet.shadow}, 0 0 30px ${colorSet.shadow}`,
+              animationDuration: `${3 + Math.random() * 4}s`,
+              animationDelay: `${Math.random() * 3}s`
+            }}
+          />
+        )
+      })}
+    </div>
+  )
+}
+
+// Success Background - Green tones with upward movement
+function SuccessBackground() {
+  return (
+    <div className="animated-bg-container success-bg">
+      <div className="success-gradient" />
+      {[...Array(20)].map((_, i) => (
+        <div
+          key={i}
+          className="success-particle"
+          style={{
+            left: `${Math.random() * 100}%`,
+            animationDuration: `${3 + Math.random() * 3}s`,
+            animationDelay: `${Math.random() * 2}s`
+          }}
+        />
+      ))}
+      <div className="success-glow" />
+    </div>
+  )
+}
+
+// Alert Background - Orange/Red urgent tones
+function AlertBackground() {
+  return (
+    <div className="animated-bg-container alert-bg">
+      <div className="alert-gradient" />
+      <div className="alert-pulse" />
+      {[...Array(15)].map((_, i) => (
+        <div
+          key={i}
+          className="alert-line"
+          style={{
+            top: `${Math.random() * 100}%`,
+            animationDuration: `${1 + Math.random() * 1}s`,
+            animationDelay: `${Math.random() * 1}s`
+          }}
+        />
+      ))}
+    </div>
+  )
+}
+
+// Celebration Background - Professional confetti
+function CelebrationBackground() {
+  return (
+    <div className="animated-bg-container celebration-bg">
+      <div className="celebration-gradient" />
       {[...Array(30)].map((_, i) => (
         <div
           key={i}
-          className="code-rain"
+          className="celebration-particle"
           style={{
             left: `${Math.random() * 100}%`,
-            animationDuration: `${2 + Math.random() * 3}s`,
-            animationDelay: `${Math.random() * 2}s`
-          }}
-        >
-          {['0', '1', '<', '>', '/', '{', '}', '(', ')'][Math.floor(Math.random() * 9)]}
-        </div>
-      ))}
-      {/* Glowing circuits */}
-      {[...Array(8)].map((_, i) => (
-        <div
-          key={`circuit-${i}`}
-          className="circuit-line"
-          style={{
-            top: `${10 + i * 12}%`,
-            animationDelay: `${i * 0.3}s`
-          }}
-        />
-      ))}
-      {/* Floating tech icons */}
-      {['💻', '🖥️', '📱', '⚙️', '🔧', '💡'].map((icon, i) => (
-        <div
-          key={`tech-${i}`}
-          className="floating-tech-icon"
-          style={{
-            left: `${10 + i * 15}%`,
-            animationDelay: `${i * 0.5}s`
-          }}
-        >
-          {icon}
-        </div>
-      ))}
-    </div>
-  )
-}
-
-// Love Background
-function LoveBackground() {
-  return (
-    <div className="animated-bg-container love-bg">
-      {/* Floating hearts */}
-      {[...Array(25)].map((_, i) => (
-        <div
-          key={i}
-          className="floating-heart"
-          style={{
-            left: `${Math.random() * 100}%`,
-            fontSize: `${20 + Math.random() * 40}px`,
-            animationDuration: `${4 + Math.random() * 4}s`,
+            backgroundColor: ['#ffd700', '#00d4aa', '#4a90d9', '#9b59b6'][Math.floor(Math.random() * 4)],
+            animationDuration: `${3 + Math.random() * 4}s`,
             animationDelay: `${Math.random() * 3}s`
           }}
-        >
-          {['❤️', '💕', '💖', '💗', '💓', '💘'][Math.floor(Math.random() * 6)]}
-        </div>
-      ))}
-      {/* Sparkles */}
-      {[...Array(15)].map((_, i) => (
-        <div
-          key={`sparkle-${i}`}
-          className="sparkle"
-          style={{
-            left: `${Math.random() * 100}%`,
-            top: `${Math.random() * 100}%`,
-            animationDelay: `${Math.random() * 2}s`
-          }}
-        >
-          ✨
-        </div>
-      ))}
-    </div>
-  )
-}
-
-// Food Background
-function FoodBackground() {
-  const foods = ['🍕', '🍔', '🍟', '🌭', '🍿', '🧁', '🍩', '🍪', '🎂', '🍰', '🥗', '🍜', '🍝', '🍣', '🍤']
-  return (
-    <div className="animated-bg-container food-bg">
-      {[...Array(20)].map((_, i) => (
-        <div
-          key={i}
-          className="floating-food"
-          style={{
-            left: `${Math.random() * 100}%`,
-            fontSize: `${30 + Math.random() * 30}px`,
-            animationDuration: `${5 + Math.random() * 5}s`,
-            animationDelay: `${Math.random() * 3}s`
-          }}
-        >
-          {foods[Math.floor(Math.random() * foods.length)]}
-        </div>
-      ))}
-      {/* Steam effects */}
-      {[...Array(8)].map((_, i) => (
-        <div
-          key={`steam-${i}`}
-          className="steam"
-          style={{
-            left: `${10 + i * 12}%`,
-            animationDelay: `${i * 0.4}s`
-          }}
         />
       ))}
+      <div className="celebration-shimmer" />
     </div>
   )
 }
 
-// Coffee Background
-function CoffeeBackground() {
+// Focus Background - Clean, minimal with subtle pulse
+function FocusBackground() {
   return (
-    <div className="animated-bg-container coffee-bg">
-      {/* Coffee cups */}
-      {[...Array(12)].map((_, i) => (
-        <div
-          key={i}
-          className="floating-coffee"
-          style={{
-            left: `${Math.random() * 100}%`,
-            fontSize: `${35 + Math.random() * 25}px`,
-            animationDuration: `${6 + Math.random() * 4}s`,
-            animationDelay: `${Math.random() * 3}s`
-          }}
-        >
-          {['☕', '🍵', '🧋'][Math.floor(Math.random() * 3)]}
-        </div>
-      ))}
-      {/* Rising steam */}
-      {[...Array(15)].map((_, i) => (
-        <div
-          key={`steam-${i}`}
-          className="coffee-steam"
-          style={{
-            left: `${Math.random() * 100}%`,
-            animationDelay: `${Math.random() * 2}s`
-          }}
-        />
-      ))}
-      {/* Coffee beans */}
-      {[...Array(20)].map((_, i) => (
-        <div
-          key={`bean-${i}`}
-          className="coffee-bean"
-          style={{
-            left: `${Math.random() * 100}%`,
-            top: `${Math.random() * 100}%`,
-            animationDelay: `${Math.random() * 3}s`
-          }}
-        >
-          🫘
-        </div>
-      ))}
+    <div className="animated-bg-container focus-bg">
+      <div className="focus-gradient" />
+      <div className="focus-ring ring-1" />
+      <div className="focus-ring ring-2" />
+      <div className="focus-ring ring-3" />
     </div>
   )
 }
 
-// Racing Background
-function RacingBackground() {
+// Calm Background - Gentle waves
+function CalmBackground() {
   return (
-    <div className="animated-bg-container racing-bg">
-      {/* Speed lines */}
-      {[...Array(20)].map((_, i) => (
-        <div
-          key={i}
-          className="speed-line"
-          style={{
-            top: `${Math.random() * 100}%`,
-            animationDuration: `${0.3 + Math.random() * 0.5}s`,
-            animationDelay: `${Math.random() * 1}s`
-          }}
-        />
-      ))}
-      {/* Racing cars */}
-      {[...Array(5)].map((_, i) => (
-        <div
-          key={`car-${i}`}
-          className="racing-car"
-          style={{
-            top: `${15 + i * 18}%`,
-            animationDuration: `${1.5 + Math.random() * 1}s`,
-            animationDelay: `${i * 0.3}s`
-          }}
-        >
-          🏎️
-        </div>
-      ))}
-      {/* Checkered flags */}
-      {[...Array(6)].map((_, i) => (
-        <div
-          key={`flag-${i}`}
-          className="checkered-flag"
-          style={{
-            left: `${10 + i * 16}%`,
-            animationDelay: `${i * 0.2}s`
-          }}
-        >
-          🏁
-        </div>
-      ))}
+    <div className="animated-bg-container calm-bg">
+      <div className="calm-gradient" />
+      <div className="calm-wave wave-1" />
+      <div className="calm-wave wave-2" />
+      <div className="calm-wave wave-3" />
     </div>
   )
 }
 
-// Victory Background
-function VictoryBackground() {
+// Solid Color Backgrounds (no animation)
+function SolidBackground({ color }) {
   return (
-    <div className="animated-bg-container victory-bg">
-      {/* Confetti */}
-      {[...Array(50)].map((_, i) => (
-        <div
-          key={i}
-          className="confetti"
-          style={{
-            left: `${Math.random() * 100}%`,
-            backgroundColor: ['#ff0000', '#ffff00', '#00ff00', '#00ffff', '#ff00ff', '#ffa500'][Math.floor(Math.random() * 6)],
-            animationDuration: `${2 + Math.random() * 3}s`,
-            animationDelay: `${Math.random() * 2}s`
-          }}
-        />
-      ))}
-      {/* Trophies and medals */}
-      {['🏆', '🥇', '🥈', '🥉', '🎖️', '🏅'].map((icon, i) => (
-        <div
-          key={`trophy-${i}`}
-          className="floating-trophy"
-          style={{
-            left: `${5 + i * 16}%`,
-            animationDelay: `${i * 0.3}s`
-          }}
-        >
-          {icon}
-        </div>
-      ))}
-      {/* Fireworks */}
-      {[...Array(8)].map((_, i) => (
-        <div
-          key={`firework-${i}`}
-          className="firework"
-          style={{
-            left: `${Math.random() * 100}%`,
-            top: `${Math.random() * 50}%`,
-            animationDelay: `${Math.random() * 2}s`
-          }}
-        >
-          🎆
-        </div>
-      ))}
-    </div>
-  )
-}
-
-// Manager Love Background
-function ManagerLoveBackground() {
-  return (
-    <div className="animated-bg-container manager-love-bg">
-      {/* Positive emojis */}
-      {[...Array(20)].map((_, i) => (
-        <div
-          key={i}
-          className="floating-positive"
-          style={{
-            left: `${Math.random() * 100}%`,
-            fontSize: `${25 + Math.random() * 30}px`,
-            animationDuration: `${4 + Math.random() * 4}s`,
-            animationDelay: `${Math.random() * 3}s`
-          }}
-        >
-          {['⭐', '🌟', '💫', '✨', '💖', '🌈', '🦋', '🌸'][Math.floor(Math.random() * 8)]}
-        </div>
-      ))}
-      {/* Thumbs up */}
-      {[...Array(8)].map((_, i) => (
-        <div
-          key={`thumb-${i}`}
-          className="floating-thumb"
-          style={{
-            left: `${10 + i * 12}%`,
-            animationDelay: `${i * 0.4}s`
-          }}
-        >
-          👍
-        </div>
-      ))}
-      {/* Glowing orbs */}
-      {[...Array(10)].map((_, i) => (
-        <div
-          key={`orb-${i}`}
-          className="glow-orb positive"
-          style={{
-            left: `${Math.random() * 100}%`,
-            top: `${Math.random() * 100}%`,
-            animationDelay: `${Math.random() * 2}s`
-          }}
-        />
-      ))}
-    </div>
-  )
-}
-
-// Manager Sad Background
-function ManagerSadBackground() {
-  return (
-    <div className="animated-bg-container manager-sad-bg">
-      {/* Rain drops */}
-      {[...Array(40)].map((_, i) => (
-        <div
-          key={i}
-          className="rain-drop"
-          style={{
-            left: `${Math.random() * 100}%`,
-            animationDuration: `${0.5 + Math.random() * 0.5}s`,
-            animationDelay: `${Math.random() * 1}s`
-          }}
-        />
-      ))}
-      {/* Clouds */}
-      {[...Array(5)].map((_, i) => (
-        <div
-          key={`cloud-${i}`}
-          className="sad-cloud"
-          style={{
-            left: `${i * 22}%`,
-            animationDelay: `${i * 0.5}s`
-          }}
-        >
-          ☁️
-        </div>
-      ))}
-      {/* Thinking emoji */}
-      {[...Array(6)].map((_, i) => (
-        <div
-          key={`think-${i}`}
-          className="floating-think"
-          style={{
-            left: `${10 + i * 15}%`,
-            animationDelay: `${i * 0.6}s`
-          }}
-        >
-          🤔
-        </div>
-      ))}
-    </div>
-  )
-}
-
-// Beach Background
-function BeachBackground() {
-  return (
-    <div className="animated-bg-container beach-bg">
-      {/* Waves */}
-      <div className="wave wave1" />
-      <div className="wave wave2" />
-      <div className="wave wave3" />
-      {/* Sun */}
-      <div className="beach-sun">☀️</div>
-      {/* Beach items */}
-      {['🏖️', '🌴', '🐚', '🦀', '🐠', '🌊', '⛱️', '🩴'].map((icon, i) => (
-        <div
-          key={`beach-${i}`}
-          className="floating-beach-item"
-          style={{
-            left: `${5 + i * 12}%`,
-            animationDelay: `${i * 0.4}s`
-          }}
-        >
-          {icon}
-        </div>
-      ))}
-      {/* Seagulls */}
-      {[...Array(5)].map((_, i) => (
-        <div
-          key={`bird-${i}`}
-          className="seagull"
-          style={{
-            top: `${10 + i * 8}%`,
-            animationDelay: `${i * 0.8}s`
-          }}
-        >
-          🐦
-        </div>
-      ))}
-    </div>
-  )
-}
-
-// Sports Background
-function SportsBackground() {
-  const sports = ['⚽', '🏀', '🏈', '⚾', '🎾', '🏐', '🏓', '🏸', '🥊', '🎿']
-  return (
-    <div className="animated-bg-container sports-bg">
-      {/* Bouncing balls */}
-      {[...Array(15)].map((_, i) => (
-        <div
-          key={i}
-          className="bouncing-ball"
-          style={{
-            left: `${Math.random() * 100}%`,
-            fontSize: `${30 + Math.random() * 30}px`,
-            animationDuration: `${1 + Math.random() * 1}s`,
-            animationDelay: `${Math.random() * 2}s`
-          }}
-        >
-          {sports[Math.floor(Math.random() * sports.length)]}
-        </div>
-      ))}
-      {/* Energy lines */}
-      {[...Array(12)].map((_, i) => (
-        <div
-          key={`energy-${i}`}
-          className="energy-line"
-          style={{
-            top: `${Math.random() * 100}%`,
-            animationDelay: `${i * 0.2}s`
-          }}
-        />
-      ))}
-      {/* Athletes */}
-      {['🏃', '🏊', '🚴', '🤸', '⛹️'].map((icon, i) => (
-        <div
-          key={`athlete-${i}`}
-          className="floating-athlete"
-          style={{
-            left: `${10 + i * 18}%`,
-            animationDelay: `${i * 0.5}s`
-          }}
-        >
-          {icon}
-        </div>
-      ))}
-    </div>
+    <div
+      className="animated-bg-container solid-bg"
+      style={{ background: color }}
+    />
   )
 }
 
 // Main component that renders the selected background
 function AnimatedBackground({ theme = 'hitech' }) {
+  const themeConfig = THEMES[theme]
+
+  // Handle solid color themes
+  if (themeConfig?.category === 'solid') {
+    return <SolidBackground color={themeConfig.color} />
+  }
+
   const backgrounds = {
     hitech: HitechBackground,
-    love: LoveBackground,
-    food: FoodBackground,
-    coffee: CoffeeBackground,
-    racing: RacingBackground,
-    victory: VictoryBackground,
-    managerLove: ManagerLoveBackground,
-    managerSad: ManagerSadBackground,
-    beach: BeachBackground,
-    sports: SportsBackground
+    success: SuccessBackground,
+    alert: AlertBackground,
+    celebration: CelebrationBackground,
+    focus: FocusBackground,
+    calm: CalmBackground
   }
 
   const BackgroundComponent = backgrounds[theme] || HitechBackground

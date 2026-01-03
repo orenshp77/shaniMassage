@@ -26,6 +26,7 @@ const pool = new Pool({
 // Active message ID and theme (in-memory for real-time display)
 let activeMessageId = null
 let activeTheme = 'hitech' // Default theme
+let lastExplicitChange = 0 // Timestamp of last explicit message change (for alert triggering)
 
 // Initialize database table
 const initDB = async () => {
@@ -123,10 +124,19 @@ app.put('/api/messages/:id', async (req, res) => {
 app.delete('/api/messages/:id', async (req, res) => {
   try {
     const { id } = req.params
+    const deletedId = parseInt(id)
+
     const result = await pool.query('DELETE FROM messages WHERE id = $1 RETURNING *', [id])
     if (result.rows.length === 0) {
       return res.status(404).json({ error: 'הודעה לא נמצאה' })
     }
+
+    // If deleted message was the active one, silently switch to next available
+    if (activeMessageId === deletedId) {
+      const nextMessage = await pool.query('SELECT id FROM messages ORDER BY created_at DESC LIMIT 1')
+      activeMessageId = nextMessage.rows[0]?.id || null
+    }
+
     res.json({ message: 'ההודעה נמחקה בהצלחה' })
   } catch (error) {
     console.error('Error deleting message:', error)
@@ -144,6 +154,7 @@ app.post('/api/active-message', async (req, res) => {
   try {
     const { messageId } = req.body
     activeMessageId = messageId
+    lastExplicitChange = Date.now() // Mark this as an explicit change (triggers alert)
     res.json({ success: true, activeMessageId })
   } catch (error) {
     console.error('Error setting active message:', error)
@@ -160,20 +171,27 @@ app.get('/api/active-message', async (req, res) => {
       // If no active message, return latest
       const result = await pool.query('SELECT * FROM messages ORDER BY created_at DESC LIMIT 1')
       message = result.rows[0] || null
+      // Update activeMessageId silently so we track current message
+      if (message) {
+        activeMessageId = message.id
+      }
     } else {
       const result = await pool.query('SELECT * FROM messages WHERE id = $1', [activeMessageId])
       if (result.rows.length === 0) {
-        // If active message was deleted, return latest
+        // If active message was deleted, return latest (already handled in delete)
         activeMessageId = null
         const latestResult = await pool.query('SELECT * FROM messages ORDER BY created_at DESC LIMIT 1')
         message = latestResult.rows[0] || null
+        if (message) {
+          activeMessageId = message.id
+        }
       } else {
         message = result.rows[0]
       }
     }
 
-    // Return message with theme
-    res.json({ message, theme: activeTheme })
+    // Return message with theme, activeMessageId, and lastExplicitChange for alert triggering
+    res.json({ message, theme: activeTheme, activeMessageId, lastExplicitChange })
   } catch (error) {
     console.error('Error fetching active message:', error)
     res.status(500).json({ error: 'שגיאה בטעינת ההודעה הפעילה' })
