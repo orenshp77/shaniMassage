@@ -348,6 +348,19 @@ app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', message: 'השרת פועל!' })
 })
 
+// Admin: Clear all data (temporary endpoint - remove in production)
+app.delete('/api/admin/clear-all', async (req, res) => {
+  try {
+    await pool.query('DELETE FROM settings')
+    await pool.query('DELETE FROM messages')
+    await pool.query('DELETE FROM users')
+    res.json({ success: true, message: 'All data cleared' })
+  } catch (error) {
+    console.error('Error clearing data:', error)
+    res.status(500).json({ error: 'שגיאה במחיקת הנתונים' })
+  }
+})
+
 // Set active message (for display page) - with workspace
 app.post('/api/active-message', async (req, res) => {
   try {

@@ -13,7 +13,8 @@
       "Bash(git commit -m \"$\\(cat <<''EOF''\nInitial commit - מוקד עידכונים system\n\nFeatures:\n- Display page for 50-inch TV \\(1920x1080\\)\n- Input page for message management\n- QR page for device connections\n- Connect page with numeric keypad\n- Real-time message alerts with bell sound\n- Dynamic font sizing based on content length\n- PostgreSQL database via Neon\n\n🤖 Generated with [Claude Code]\\(https://claude.com/claude-code\\)\n\nCo-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>\nEOF\n\\)\")",
       "Bash(git branch:*)",
       "Bash(git push:*)",
-      "Bash(git commit:*)"
+      "Bash(git commit:*)",
+      "Bash(PGPASSWORD=npg_2yqacA9bLVRl psql \"postgresql://neondb_owner:npg_2yqacA9bLVRl@ep-wandering-smoke-ahholl77-pooler.c-3.us-east-1.aws.neon.tech/neondb?sslmode=require\" -c \"DELETE FROM settings; DELETE FROM messages; DELETE FROM users;\")"
     ]
   }
 }
