@@ -40,9 +40,22 @@ function PairPage() {
       Swal.fire({
         icon: 'info',
         title: 'סרוק את קוד ה-QR',
-        text: 'כדי לחבר טלוויזיה, יש לסרוק את קוד ה-QR שמוצג על מסך הטלוויזיה',
-        confirmButtonText: 'הבנתי',
-        confirmButtonColor: '#00bcd4'
+        html: `
+          <p>כדי לחבר טלוויזיה, יש לסרוק את קוד ה-QR שמוצג על מסך הטלוויזיה</p>
+          <p style="margin-top: 15px; font-size: 0.9em; color: #666;">
+            פתח את אפליקציית המצלמה בטלפון וכוון אותה לקוד ה-QR
+          </p>
+        `,
+        showCancelButton: true,
+        confirmButtonText: '📺 עבור למסך הטלוויזיה',
+        cancelButtonText: 'סגור',
+        confirmButtonColor: '#667eea',
+        cancelButtonColor: '#999'
+      }).then((result) => {
+        if (result.isConfirmed) {
+          // Go to ConnectPage where TV shows QR
+          navigate('/')
+        }
       })
       return
     }
