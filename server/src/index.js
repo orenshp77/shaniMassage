@@ -28,10 +28,6 @@ let activeMessageId = null
 let activeTheme = 'hitech' // Default theme
 let lastExplicitChange = 0 // Timestamp of last explicit message change (for alert triggering)
 
-// Pinned message (persistent display below main content)
-let pinnedMessage = ''
-let pinnedMessageEnabled = false
-
 // Initialize database table
 const initDB = async () => {
   try {
@@ -45,6 +41,26 @@ const initDB = async () => {
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       )
     `)
+
+    // Create settings table for pinned message and other persistent settings
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS settings (
+        key VARCHAR(100) PRIMARY KEY,
+        value TEXT NOT NULL,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `)
+
+    // Initialize default settings if not exist
+    await pool.query(`
+      INSERT INTO settings (key, value) VALUES ('pinned_message', '')
+      ON CONFLICT (key) DO NOTHING
+    `)
+    await pool.query(`
+      INSERT INTO settings (key, value) VALUES ('pinned_enabled', 'false')
+      ON CONFLICT (key) DO NOTHING
+    `)
+
     console.log('Database initialized successfully')
   } catch (error) {
     console.error('Error initializing database:', error)
@@ -194,14 +210,18 @@ app.get('/api/active-message', async (req, res) => {
       }
     }
 
+    // Get pinned message from database
+    const pinnedMessageResult = await pool.query("SELECT value FROM settings WHERE key = 'pinned_message'")
+    const pinnedEnabledResult = await pool.query("SELECT value FROM settings WHERE key = 'pinned_enabled'")
+
     // Return message with theme, activeMessageId, lastExplicitChange, and pinned message
     res.json({
       message,
       theme: activeTheme,
       activeMessageId,
       lastExplicitChange,
-      pinnedMessage,
-      pinnedMessageEnabled
+      pinnedMessage: pinnedMessageResult.rows[0]?.value || '',
+      pinnedMessageEnabled: pinnedEnabledResult.rows[0]?.value === 'true'
     })
   } catch (error) {
     console.error('Error fetching active message:', error)
@@ -227,27 +247,47 @@ app.get('/api/active-theme', (req, res) => {
 })
 
 // Get pinned message
-app.get('/api/pinned-message', (req, res) => {
-  res.json({
-    message: pinnedMessage,
-    enabled: pinnedMessageEnabled
-  })
+app.get('/api/pinned-message', async (req, res) => {
+  try {
+    const messageResult = await pool.query("SELECT value FROM settings WHERE key = 'pinned_message'")
+    const enabledResult = await pool.query("SELECT value FROM settings WHERE key = 'pinned_enabled'")
+
+    res.json({
+      message: messageResult.rows[0]?.value || '',
+      enabled: enabledResult.rows[0]?.value === 'true'
+    })
+  } catch (error) {
+    console.error('Error fetching pinned message:', error)
+    res.status(500).json({ error: 'שגיאה בטעינת ההודעה הנעוצה' })
+  }
 })
 
 // Set pinned message
-app.post('/api/pinned-message', (req, res) => {
+app.post('/api/pinned-message', async (req, res) => {
   try {
     const { message, enabled } = req.body
+
     if (message !== undefined) {
-      pinnedMessage = message
+      await pool.query(
+        "INSERT INTO settings (key, value, updated_at) VALUES ('pinned_message', $1, CURRENT_TIMESTAMP) ON CONFLICT (key) DO UPDATE SET value = $1, updated_at = CURRENT_TIMESTAMP",
+        [message]
+      )
     }
     if (enabled !== undefined) {
-      pinnedMessageEnabled = enabled
+      await pool.query(
+        "INSERT INTO settings (key, value, updated_at) VALUES ('pinned_enabled', $1, CURRENT_TIMESTAMP) ON CONFLICT (key) DO UPDATE SET value = $1, updated_at = CURRENT_TIMESTAMP",
+        [enabled.toString()]
+      )
     }
+
+    // Get current values
+    const messageResult = await pool.query("SELECT value FROM settings WHERE key = 'pinned_message'")
+    const enabledResult = await pool.query("SELECT value FROM settings WHERE key = 'pinned_enabled'")
+
     res.json({
       success: true,
-      message: pinnedMessage,
-      enabled: pinnedMessageEnabled
+      message: messageResult.rows[0]?.value || '',
+      enabled: enabledResult.rows[0]?.value === 'true'
     })
   } catch (error) {
     console.error('Error setting pinned message:', error)
