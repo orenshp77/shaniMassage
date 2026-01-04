@@ -11,6 +11,8 @@ function DisplayPage() {
   const [loading, setLoading] = useState(true)
   const [alertData, setAlertData] = useState(null)
   const [currentTheme, setCurrentTheme] = useState('hitech')
+  const [pinnedMessage, setPinnedMessage] = useState('')
+  const [pinnedEnabled, setPinnedEnabled] = useState(false)
   const lastMessageId = useRef(null)
   const lastExplicitChangeRef = useRef(0) // Track last explicit change timestamp from server
   const audioRef = useRef(null)
@@ -58,12 +60,16 @@ function DisplayPage() {
 
     try {
       const response = await api.get('/active-message')
-      const { message: newMessage, theme, lastExplicitChange } = response.data
+      const { message: newMessage, theme, lastExplicitChange, pinnedMessage: serverPinnedMessage, pinnedMessageEnabled } = response.data
 
       // Update theme if changed
       if (theme && theme !== currentTheme) {
         setCurrentTheme(theme)
       }
+
+      // Update pinned message
+      setPinnedMessage(serverPinnedMessage || '')
+      setPinnedEnabled(pinnedMessageEnabled || false)
 
       // Only show alert if there was an explicit change (someone pressed "הצג" or sent new message)
       // This won't trigger on deletions since those don't update lastExplicitChange
@@ -174,7 +180,19 @@ function DisplayPage() {
                 {message.content}
               </p>
             </div>
-            <div className="message-datetime">
+            {/* Pinned Message */}
+            {pinnedEnabled && pinnedMessage && (
+              <div className="pinned-message-display">
+                <p
+                  className="pinned-content"
+                  style={{ fontSize: getContentFontSize(pinnedMessage.length) }}
+                >
+                  📌 {pinnedMessage}
+                </p>
+              </div>
+            )}
+            {/* Date/Time - Smaller size */}
+            <div className="message-datetime compact">
               <div className="date-box">
                 <span className="date-icon">📅</span>
                 <span className="date-text"><CurrentDate /></span>
@@ -187,8 +205,34 @@ function DisplayPage() {
           </div>
         ) : (
           <div className="no-message">
-            <h1>אין הודעות להצגה</h1>
-            <p>הוסף הודעה חדשה דרך עמוד הניהול</p>
+            {/* Show pinned message even when no regular messages */}
+            {pinnedEnabled && pinnedMessage ? (
+              <>
+                <div className="pinned-message-display standalone">
+                  <p
+                    className="pinned-content"
+                    style={{ fontSize: getContentFontSize(pinnedMessage.length) }}
+                  >
+                    📌 {pinnedMessage}
+                  </p>
+                </div>
+                <div className="message-datetime compact">
+                  <div className="date-box">
+                    <span className="date-icon">📅</span>
+                    <span className="date-text"><CurrentDate /></span>
+                  </div>
+                  <div className="time-box">
+                    <span className="time-icon">🕐</span>
+                    <span className="time-text"><CurrentTimeDisplay /></span>
+                  </div>
+                </div>
+              </>
+            ) : (
+              <>
+                <h1>אין הודעות להצגה</h1>
+                <p>הוסף הודעה חדשה דרך עמוד הניהול</p>
+              </>
+            )}
           </div>
         )}
 

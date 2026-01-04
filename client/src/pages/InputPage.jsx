@@ -13,10 +13,13 @@ function InputPage() {
   const [editingId, setEditingId] = useState(null)
   const [loading, setLoading] = useState(false)
   const [selectedTheme, setSelectedTheme] = useState('hitech')
+  const [pinnedMessage, setPinnedMessage] = useState('')
+  const [pinnedEnabled, setPinnedEnabled] = useState(false)
 
   useEffect(() => {
     fetchMessages()
     fetchCurrentTheme()
+    fetchPinnedMessage()
   }, [])
 
   const fetchCurrentTheme = async () => {
@@ -25,6 +28,41 @@ function InputPage() {
       setSelectedTheme(response.data.theme)
     } catch (error) {
       console.error('Error fetching theme:', error)
+    }
+  }
+
+  const fetchPinnedMessage = async () => {
+    try {
+      const response = await api.get('/pinned-message')
+      setPinnedMessage(response.data.message || '')
+      setPinnedEnabled(response.data.enabled || false)
+    } catch (error) {
+      console.error('Error fetching pinned message:', error)
+    }
+  }
+
+  const handlePinnedMessageChange = async (message) => {
+    setPinnedMessage(message)
+    try {
+      await api.post('/pinned-message', { message })
+    } catch (error) {
+      console.error('Error saving pinned message:', error)
+    }
+  }
+
+  const handlePinnedToggle = async () => {
+    const newEnabled = !pinnedEnabled
+    setPinnedEnabled(newEnabled)
+    try {
+      await api.post('/pinned-message', { enabled: newEnabled })
+      Swal.fire({
+        icon: 'success',
+        title: newEnabled ? 'הודעה נעוצה מופעלת' : 'הודעה נעוצה כבויה',
+        showConfirmButton: false,
+        timer: 1000
+      })
+    } catch (error) {
+      console.error('Error toggling pinned message:', error)
     }
   }
 
@@ -200,6 +238,32 @@ function InputPage() {
             )}
           </div>
         </form>
+
+        {/* Pinned Message Section */}
+        <div className="pinned-message-section">
+          <div className="pinned-header">
+            <h2>📌 הודעה נעוצה</h2>
+            <div className="pinned-toggle">
+              <span className="toggle-label">{pinnedEnabled ? 'מוצג' : 'מוסתר'}</span>
+              <label className="switch">
+                <input
+                  type="checkbox"
+                  checked={pinnedEnabled}
+                  onChange={handlePinnedToggle}
+                />
+                <span className="slider"></span>
+              </label>
+            </div>
+          </div>
+          <textarea
+            className="pinned-textarea"
+            value={pinnedMessage}
+            onChange={(e) => handlePinnedMessageChange(e.target.value)}
+            placeholder="הכנס הודעה נעוצה שתוצג תמיד..."
+            rows={3}
+          />
+          <p className="pinned-hint">ההודעה הנעוצה תוצג מתחת להודעה הראשית במסך התצוגה</p>
+        </div>
 
         {/* Theme Selector */}
         <div className="theme-selector">

@@ -28,6 +28,10 @@ let activeMessageId = null
 let activeTheme = 'hitech' // Default theme
 let lastExplicitChange = 0 // Timestamp of last explicit message change (for alert triggering)
 
+// Pinned message (persistent display below main content)
+let pinnedMessage = ''
+let pinnedMessageEnabled = false
+
 // Initialize database table
 const initDB = async () => {
   try {
@@ -190,8 +194,15 @@ app.get('/api/active-message', async (req, res) => {
       }
     }
 
-    // Return message with theme, activeMessageId, and lastExplicitChange for alert triggering
-    res.json({ message, theme: activeTheme, activeMessageId, lastExplicitChange })
+    // Return message with theme, activeMessageId, lastExplicitChange, and pinned message
+    res.json({
+      message,
+      theme: activeTheme,
+      activeMessageId,
+      lastExplicitChange,
+      pinnedMessage,
+      pinnedMessageEnabled
+    })
   } catch (error) {
     console.error('Error fetching active message:', error)
     res.status(500).json({ error: 'שגיאה בטעינת ההודעה הפעילה' })
@@ -213,6 +224,35 @@ app.post('/api/active-theme', (req, res) => {
 // Get active theme
 app.get('/api/active-theme', (req, res) => {
   res.json({ theme: activeTheme })
+})
+
+// Get pinned message
+app.get('/api/pinned-message', (req, res) => {
+  res.json({
+    message: pinnedMessage,
+    enabled: pinnedMessageEnabled
+  })
+})
+
+// Set pinned message
+app.post('/api/pinned-message', (req, res) => {
+  try {
+    const { message, enabled } = req.body
+    if (message !== undefined) {
+      pinnedMessage = message
+    }
+    if (enabled !== undefined) {
+      pinnedMessageEnabled = enabled
+    }
+    res.json({
+      success: true,
+      message: pinnedMessage,
+      enabled: pinnedMessageEnabled
+    })
+  } catch (error) {
+    console.error('Error setting pinned message:', error)
+    res.status(500).json({ error: 'שגיאה בהגדרת ההודעה הנעוצה' })
+  }
 })
 
 const PORT = process.env.PORT || 5000

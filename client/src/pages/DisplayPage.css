@@ -111,6 +111,32 @@
   overflow-wrap: break-word;
 }
 
+/* Pinned Message Display */
+.pinned-message-display {
+  background: rgba(255, 200, 50, 0.1);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 200, 50, 0.2);
+  border-radius: 20px;
+  padding: 20px 40px;
+  margin: 20px auto 10px;
+  max-width: 1400px;
+  width: 85%;
+  animation: fadeInUp 0.5s ease-out;
+}
+
+.pinned-message-display.standalone {
+  margin: 40px auto;
+}
+
+.pinned-content {
+  font-size: 2rem;
+  color: rgba(255, 255, 255, 0.9);
+  line-height: 1.4;
+  font-weight: 400;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+}
+
 /* Date/Time Display */
 .message-datetime {
   display: flex;
@@ -119,6 +145,13 @@
   margin-top: 20px;
   flex-shrink: 0;
   animation: fadeInUp 1s ease-out 0.6s both;
+}
+
+/* Compact version - 60% size */
+.message-datetime.compact {
+  transform: scale(0.6);
+  transform-origin: center;
+  margin-top: 10px;
 }
 
 .date-box,
