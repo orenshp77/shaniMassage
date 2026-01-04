@@ -20,13 +20,15 @@ function ConnectPage() {
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
 
-  // Initialize
+  // Initialize - generate pairing code only once
   useEffect(() => {
     const url = window.location.origin
     setBaseUrl(url)
     generatePairingCode()
+  }, [])
 
-    // Check for workspace code in URL (from QR scan)
+  // Check for workspace code in URL (from QR scan)
+  useEffect(() => {
     const wsCode = searchParams.get('ws')
     const type = searchParams.get('type')
     if (wsCode) {
