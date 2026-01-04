@@ -18,15 +18,17 @@ function PairPage() {
       setPairingCode(code)
     }
 
-    // Check if user is logged in (with password)
+    // Check if user has workspace code (from login OR from 3-digit code entry)
     const user = JSON.parse(localStorage.getItem('user') || 'null')
+    const storedWorkspace = user?.workspace_code || localStorage.getItem('workspaceCode')
+    const storedName = user?.display_name || localStorage.getItem('displayName')
 
-    if (user && user.workspace_code) {
-      setWorkspaceCode(user.workspace_code)
-      setDisplayName(user.display_name || 'מרחב העבודה שלי')
+    if (storedWorkspace) {
+      setWorkspaceCode(storedWorkspace)
+      setDisplayName(storedName || 'מרחב העבודה שלי')
       setStatus('ready')
     } else {
-      // Not logged in with password
+      // No workspace at all - need to login or enter code
       setStatus('needLogin')
     }
   }, [searchParams])

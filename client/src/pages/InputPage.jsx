@@ -22,41 +22,22 @@ function InputPage() {
   const { workspaceCode: urlWorkspaceCode } = useParams()
 
   useEffect(() => {
-    // SECURITY: Input page requires password login
-    const user = JSON.parse(localStorage.getItem('user') || 'null')
-
-    if (!user || !user.workspace_code) {
-      // Not logged in with password - redirect to login
-      Swal.fire({
-        icon: 'warning',
-        title: 'נדרשת התחברות',
-        text: 'כדי לנהל הודעות יש להתחבר עם שם משתמש וסיסמה',
-        confirmButtonText: 'להתחברות',
-        confirmButtonColor: '#00bcd4'
-      }).then(() => {
-        navigate('/login')
-      })
-      return
-    }
-
-    // Check if URL workspace matches logged in user's workspace
+    // Get workspace from URL or localStorage (workspace code is enough for access)
     const wsFromUrl = urlWorkspaceCode
-    if (wsFromUrl && wsFromUrl !== user.workspace_code) {
-      // Trying to access someone else's workspace
-      Swal.fire({
-        icon: 'error',
-        title: 'אין הרשאה',
-        text: 'אין לך הרשאה לגשת למרחב עבודה זה',
-        confirmButtonText: 'חזור',
-        confirmButtonColor: '#00bcd4'
-      }).then(() => {
-        navigate('/qr')
-      })
+    const user = JSON.parse(localStorage.getItem('user') || 'null')
+    const storedWorkspace = wsFromUrl || user?.workspace_code || localStorage.getItem('workspaceCode')
+    const storedName = user?.display_name || localStorage.getItem('displayName')
+
+    if (!storedWorkspace) {
+      // No workspace - redirect to home
+      navigate('/')
       return
     }
 
-    const storedWorkspace = user.workspace_code
-    const storedName = user.display_name
+    // Save to localStorage for future use
+    if (wsFromUrl) {
+      localStorage.setItem('workspaceCode', wsFromUrl)
+    }
 
     setWorkspaceCode(storedWorkspace)
     setDisplayName(storedName || 'מרחב העבודה שלי')

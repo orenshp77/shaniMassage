@@ -9,7 +9,6 @@ function QRPage() {
   const [baseUrl, setBaseUrl] = useState('')
   const [workspaceCode, setWorkspaceCode] = useState('')
   const [displayName, setDisplayName] = useState('')
-  const [isLoggedIn, setIsLoggedIn] = useState(false)
   const navigate = useNavigate()
   const { workspaceCode: urlWorkspaceCode } = useParams()
 
@@ -47,9 +46,6 @@ function QRPage() {
       navigate('/')
       return
     }
-
-    // Check if user is logged in with password
-    setIsLoggedIn(user && user.workspace_code === storedWorkspace)
 
     // Save to localStorage for future use
     if (wsFromUrl) {
@@ -130,43 +126,30 @@ function QRPage() {
             </div>
           </div>
 
-          {/* Input Page QR - only if logged in with password */}
-          {isLoggedIn ? (
-            <div className="qr-card input-card">
-              <div className="qr-icon">📝</div>
-              <h2>ניהול הודעות</h2>
-              <p>סרוק כדי להזין ולנהל הודעות</p>
-              <div className="qr-code-wrapper">
-                <QRCodeSVG
-                  value={inputUrl}
-                  size={200}
-                  level="H"
-                  includeMargin={true}
-                  bgColor="#ffffff"
-                  fgColor="#ff69b4"
-                />
-              </div>
-              <div className="card-actions">
-                <button className="card-btn enter-btn" onClick={() => navigate(`/input/${workspaceCode}`)}>
-                  כניסה
-                </button>
-                <button className="card-btn copy-btn" onClick={() => copyToClipboard(inputUrl, 'קישור לניהול הודעות')}>
-                  העתק קישור
-                </button>
-              </div>
+          {/* Input Page QR - accessible with workspace code */}
+          <div className="qr-card input-card">
+            <div className="qr-icon">📝</div>
+            <h2>ניהול הודעות</h2>
+            <p>סרוק כדי להזין ולנהל הודעות</p>
+            <div className="qr-code-wrapper">
+              <QRCodeSVG
+                value={inputUrl}
+                size={200}
+                level="H"
+                includeMargin={true}
+                bgColor="#ffffff"
+                fgColor="#ff69b4"
+              />
             </div>
-          ) : (
-            <div className="qr-card input-card locked">
-              <div className="qr-icon">🔒</div>
-              <h2>ניהול הודעות</h2>
-              <p>נדרשת התחברות עם סיסמה</p>
-              <div className="card-actions">
-                <button className="card-btn enter-btn" onClick={() => navigate('/login')}>
-                  התחבר לניהול
-                </button>
-              </div>
+            <div className="card-actions">
+              <button className="card-btn enter-btn" onClick={() => navigate(`/input/${workspaceCode}`)}>
+                כניסה
+              </button>
+              <button className="card-btn copy-btn" onClick={() => copyToClipboard(inputUrl, 'קישור לניהול הודעות')}>
+                העתק קישור
+              </button>
             </div>
-          )}
+          </div>
         </div>
 
         {/* TV Connect Button - below QR cards */}
