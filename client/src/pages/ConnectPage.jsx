@@ -209,7 +209,7 @@ function ConnectPage() {
                     <div className="scan-line"></div>
                   </div>
                 </div>
-                <div className="pairing-code">
+                <div className="pairing-code" onClick={() => navigate('/qr')} style={{ cursor: 'pointer' }}>
                   קוד צימוד: <span>{pairingCode}</span>
                 </div>
               </div>
