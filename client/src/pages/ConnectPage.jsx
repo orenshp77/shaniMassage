@@ -152,6 +152,13 @@ function ConnectPage() {
   }
 
   const selectAccessType = (type) => {
+    if (type === 'input' && workspace) {
+      // For management - go directly to QR page without PIN
+      localStorage.setItem('workspaceCode', workspace.workspace_code)
+      localStorage.setItem('displayName', workspace.display_name)
+      navigate('/qr')
+      return
+    }
     setAccessType(type)
     setCode('')
   }
