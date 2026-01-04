@@ -50,7 +50,7 @@ function PairPage() {
         showConfirmButton: false,
         timer: 2000
       }).then(() => {
-        navigate('/qr')
+        navigate('/input')
       })
     } catch (error) {
       setStatus('error')

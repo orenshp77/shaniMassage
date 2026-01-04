@@ -1,7 +1,6 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { QRCodeSVG } from 'qrcode.react'
-import { Html5QrcodeScanner } from 'html5-qrcode'
 import Swal from 'sweetalert2'
 import './QRPage.css'
 
@@ -9,8 +8,6 @@ function QRPage() {
   const [baseUrl, setBaseUrl] = useState('')
   const [workspaceCode, setWorkspaceCode] = useState('')
   const [displayName, setDisplayName] = useState('')
-  const [showScanner, setShowScanner] = useState(false)
-  const scannerRef = useRef(null)
   const navigate = useNavigate()
 
   const copyToClipboard = async (url, label) => {
@@ -51,65 +48,9 @@ function QRPage() {
     setDisplayName(storedName || 'מרחב העבודה שלי')
   }, [navigate])
 
-  // Initialize QR Scanner
-  useEffect(() => {
-    if (showScanner && !scannerRef.current) {
-      const scanner = new Html5QrcodeScanner(
-        "qr-reader",
-        {
-          fps: 10,
-          qrbox: { width: 250, height: 250 },
-          aspectRatio: 1.0,
-          showTorchButtonIfSupported: true,
-          showZoomSliderIfSupported: true,
-        },
-        false
-      )
-
-      scanner.render(
-        (decodedText) => {
-          // Success - QR code scanned
-          scanner.clear()
-          scannerRef.current = null
-          setShowScanner(false)
-
-          // Navigate to the scanned URL
-          if (decodedText.startsWith('http')) {
-            window.location.href = decodedText
-          } else {
-            Swal.fire({
-              icon: 'error',
-              title: 'קוד לא תקין',
-              text: 'הקוד שנסרק אינו קישור תקין'
-            })
-          }
-        },
-        (error) => {
-          // Scan error - ignore, keep scanning
-        }
-      )
-
-      scannerRef.current = scanner
-    }
-
-    return () => {
-      if (scannerRef.current) {
-        scannerRef.current.clear().catch(() => {})
-        scannerRef.current = null
-      }
-    }
-  }, [showScanner])
-
-  const openScanner = () => {
-    setShowScanner(true)
-  }
-
-  const closeScanner = () => {
-    if (scannerRef.current) {
-      scannerRef.current.clear().catch(() => {})
-      scannerRef.current = null
-    }
-    setShowScanner(false)
+  // Go to home page to scan QR from TV
+  const goToConnect = () => {
+    navigate('/')
   }
 
   // URLs with workspace code
@@ -141,27 +82,7 @@ function QRPage() {
         ))}
       </div>
 
-      {/* QR Scanner Modal */}
-      {showScanner && (
-        <div className="scanner-modal">
-          <div className="scanner-container">
-            <div className="scanner-header">
-              <h2>סרוק QR מהטלוויזיה</h2>
-              <button className="close-scanner" onClick={closeScanner}>✕</button>
-            </div>
-            <div id="qr-reader"></div>
-            <p className="scanner-hint">כוון את המצלמה על קוד ה-QR בטלוויזיה</p>
-          </div>
-        </div>
-      )}
-
       <div className="qr-container">
-        {/* TV Connect Button */}
-        <button className="tv-connect-btn" onClick={openScanner}>
-          <span className="tv-icon">📺</span>
-          <span className="tv-text">חבר טלוויזיה</span>
-        </button>
-
         <header className="qr-header">
           <h1>{displayName}</h1>
           <p className="workspace-code-display">קוד עבודה: <strong>{workspaceCode}</strong></p>
@@ -247,6 +168,12 @@ function QRPage() {
             </div>
           </div>
         </div>
+
+        {/* TV Connect Button - below QR cards */}
+        <button className="tv-connect-btn" onClick={goToConnect}>
+          <span className="tv-icon">📺</span>
+          <span className="tv-text">חבר טלוויזיה</span>
+        </button>
 
         <div className="qr-instructions">
           <h3>איך זה עובד?</h3>
