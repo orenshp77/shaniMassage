@@ -81,12 +81,12 @@ function ConnectPage() {
   const fetchWorkspace = async (wsCode, type = null) => {
     try {
       const response = await api.get(`/auth/workspace/${wsCode}`)
-      setWorkspace(response.data.workspace)
-      if (type) {
-        setAccessType(type)
-      }
-      setStep('pin')
-      setCode('')
+      const ws = response.data.workspace
+
+      // Go directly to QR page (no PIN needed)
+      localStorage.setItem('workspaceCode', ws.workspace_code)
+      localStorage.setItem('displayName', ws.display_name)
+      navigate('/qr')
     } catch (error) {
       setError('קוד עבודה לא נמצא')
       setTimeout(() => setError(''), 2000)
