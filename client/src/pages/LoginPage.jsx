@@ -40,10 +40,15 @@ function LoginPage() {
         navigate('/qr')
       })
     } catch (error) {
+      const errorMessage = error.response?.data?.error || 'שגיאה בהתחברות'
+      const isAuthError = error.response?.status === 401
+
       Swal.fire({
         icon: 'error',
-        title: 'שגיאה',
-        text: error.response?.data?.error || 'שגיאה בהתחברות'
+        title: isAuthError ? 'פרטים שגויים' : 'שגיאה',
+        text: errorMessage,
+        confirmButtonText: 'נסה שוב',
+        confirmButtonColor: '#00bcd4'
       })
     } finally {
       setLoading(false)

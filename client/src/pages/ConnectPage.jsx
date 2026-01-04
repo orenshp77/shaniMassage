@@ -5,12 +5,9 @@ import api from '../services/api'
 import './ConnectPage.css'
 
 function ConnectPage() {
-  // Phone/Connect side state
+  // Phone/Connect side state - only workspace code needed
   const [code, setCode] = useState('')
   const [error, setError] = useState('')
-  const [workspace, setWorkspace] = useState(null)
-  const [accessType, setAccessType] = useState(null)
-  const [step, setStep] = useState('workspace')
 
   // TV side state
   const [pairingCode, setPairingCode] = useState('')
@@ -30,9 +27,8 @@ function ConnectPage() {
   // Check for workspace code in URL (from QR scan)
   useEffect(() => {
     const wsCode = searchParams.get('ws')
-    const type = searchParams.get('type')
     if (wsCode) {
-      fetchWorkspace(wsCode, type)
+      fetchWorkspace(wsCode)
     }
   }, [searchParams])
 
@@ -77,8 +73,8 @@ function ConnectPage() {
     return () => clearInterval(interval)
   }, [checkPairingStatus])
 
-  // Phone side functions
-  const fetchWorkspace = async (wsCode, type = null) => {
+  // Phone side - fetch workspace and go directly to QR page
+  const fetchWorkspace = async (wsCode) => {
     try {
       const response = await api.get(`/auth/workspace/${wsCode}`)
       const ws = response.data.workspace
@@ -95,41 +91,13 @@ function ConnectPage() {
 
   const handleSubmit = async (e) => {
     e.preventDefault()
-
-    if (step === 'workspace') {
-      if (code.length === 3) {
-        await fetchWorkspace(code)
-      }
-    } else if (step === 'pin') {
-      if (code.length === 4 && workspace) {
-        try {
-          await api.post('/auth/pin-login', {
-            workspaceCode: workspace.workspace_code,
-            pin: code,
-            type: accessType || 'input'
-          })
-
-          localStorage.setItem('workspaceCode', workspace.workspace_code)
-          localStorage.setItem('displayName', workspace.display_name)
-
-          if (accessType === 'display') {
-            navigate('/display')
-          } else {
-            // Navigate to QR page for management access
-            navigate('/qr')
-          }
-        } catch (error) {
-          setError('קוד PIN שגוי')
-          setTimeout(() => setError(''), 2000)
-          setCode('')
-        }
-      }
+    if (code.length === 3) {
+      await fetchWorkspace(code)
     }
   }
 
   const handleKeyPress = (char) => {
-    const maxLength = step === 'workspace' ? 3 : 4
-    if (code.length < maxLength) {
+    if (code.length < 3) {
       setCode(prev => prev + char)
     }
   }
@@ -141,20 +109,6 @@ function ConnectPage() {
 
   const handleBackspace = () => {
     setCode(prev => prev.slice(0, -1))
-  }
-
-  const handleBack = () => {
-    setStep('workspace')
-    setWorkspace(null)
-    setAccessType(null)
-    setCode('')
-    setError('')
-  }
-
-  const selectAccessType = (type) => {
-    // Set access type and show PIN input
-    setAccessType(type)
-    setCode('')
   }
 
   // QR URL for phone to scan
@@ -237,72 +191,45 @@ function ConnectPage() {
         <div className="home-section phone-section">
           <div className="section-header">
             <div className="section-icon">📱</div>
-            <h2>{workspace ? workspace.display_name : 'התחברות'}</h2>
-            <p>
-              {step === 'workspace'
-                ? 'הזן קוד עבודה (3 ספרות)'
-                : accessType
-                  ? `הזן PIN ${accessType === 'display' ? 'למסך' : 'לניהול'}`
-                  : 'בחר סוג גישה'
-              }
-            </p>
+            <h2>התחברות</h2>
+            <p>הזן קוד עבודה (3 ספרות)</p>
           </div>
 
-          {step === 'pin' && !accessType && (
-            <div className="access-type-selector">
-              <button
-                className="access-type-btn input-btn"
-                onClick={() => selectAccessType('input')}
-              >
-                <span className="access-icon">⌨️</span>
-                <span className="access-label">ניהול</span>
-              </button>
+          <form onSubmit={handleSubmit} className="code-form">
+            <div className="code-display workspace-code">
+              {[...Array(3)].map((_, i) => (
+                <div key={i} className={`code-digit ${code[i] ? 'filled' : ''}`}>
+                  {code[i] || ''}
+                </div>
+              ))}
             </div>
-          )}
 
-          {(step === 'workspace' || accessType) && (
-            <form onSubmit={handleSubmit} className="code-form">
-              <div className={`code-display ${step === 'workspace' ? 'workspace-code' : ''}`}>
-                {[...Array(step === 'workspace' ? 3 : 4)].map((_, i) => (
-                  <div key={i} className={`code-digit ${code[i] ? 'filled' : ''}`}>
-                    {code[i] || ''}
-                  </div>
-                ))}
-              </div>
+            {error && <div className="code-error">{error}</div>}
 
-              {error && <div className="code-error">{error}</div>}
-
-              <div className="number-pad">
-                {[1, 2, 3, 4, 5, 6, 7, 8, 9].map((num) => (
-                  <button
-                    key={num}
-                    type="button"
-                    className="num-btn"
-                    onClick={() => handleKeyPress(num.toString())}
-                  >
-                    {num}
-                  </button>
-                ))}
-                <button type="button" className="num-btn clear-btn" onClick={handleClear}>C</button>
-                <button type="button" className="num-btn" onClick={() => handleKeyPress('0')}>0</button>
-                <button type="button" className="num-btn back-btn" onClick={handleBackspace}>←</button>
-              </div>
-
-              <button
-                type="submit"
-                className="enter-btn"
-                disabled={step === 'workspace' ? code.length !== 3 : code.length !== 4}
-              >
-                {step === 'workspace' ? 'המשך' : 'כניסה'}
-              </button>
-
-              {step === 'pin' && (
-                <button type="button" className="back-link" onClick={handleBack}>
-                  חזרה
+            <div className="number-pad">
+              {[1, 2, 3, 4, 5, 6, 7, 8, 9].map((num) => (
+                <button
+                  key={num}
+                  type="button"
+                  className="num-btn"
+                  onClick={() => handleKeyPress(num.toString())}
+                >
+                  {num}
                 </button>
-              )}
-            </form>
-          )}
+              ))}
+              <button type="button" className="num-btn clear-btn" onClick={handleClear}>C</button>
+              <button type="button" className="num-btn" onClick={() => handleKeyPress('0')}>0</button>
+              <button type="button" className="num-btn back-btn" onClick={handleBackspace}>←</button>
+            </div>
+
+            <button
+              type="submit"
+              className="enter-btn"
+              disabled={code.length !== 3}
+            >
+              המשך
+            </button>
+          </form>
 
           <div className="auth-links">
             <Link to="/login">התחברות עם סיסמה</Link>

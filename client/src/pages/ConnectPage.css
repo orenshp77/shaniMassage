@@ -511,23 +511,40 @@
     height: 160px !important;
   }
 
-  /* Mobile - enlarged 70% */
+  /* Mobile - code digits */
   .code-digit {
-    width: 68px;
-    height: 82px;
-    font-size: 2.4rem;
+    width: 60px;
+    height: 70px;
+    font-size: 2rem;
+    border-radius: 12px;
+  }
+
+  .code-display {
+    gap: 12px;
+    margin-bottom: 20px;
+  }
+
+  /* Mobile - number pad centered and uniform */
+  .number-pad {
+    display: grid;
+    grid-template-columns: repeat(3, 70px);
+    gap: 10px;
+    justify-content: center;
+    margin-bottom: 20px;
   }
 
   .num-btn {
-    width: 77px;
-    height: 58px;
-    font-size: 1.9rem;
+    width: 70px;
+    height: 55px;
+    font-size: 1.6rem;
+    border-radius: 12px;
   }
 
   .enter-btn {
-    width: 240px;
+    width: 230px;
     padding: 14px 28px;
-    font-size: 1.4rem;
+    font-size: 1.3rem;
+    border-radius: 12px;
   }
 
   /* Mobile - access type button enlarged 40% */
