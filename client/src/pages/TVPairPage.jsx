@@ -46,7 +46,7 @@ function TVPairPage() {
 
         // Navigate to display page after short delay
         setTimeout(() => {
-          navigate(`/?ws=${response.data.workspaceCode}&type=display`)
+          navigate('/display')
         }, 2000)
       }
     } catch (error) {
