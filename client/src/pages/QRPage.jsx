@@ -59,7 +59,11 @@ function QRPage() {
   const displayUrl = `${baseUrl}/?ws=${workspaceCode}&type=display`
   const connectUrl = `${baseUrl}/?ws=${workspaceCode}`
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
+    // Notify server to disconnect TV
+    try {
+      await api.post('/tv/disconnect', { workspaceCode })
+    } catch (e) {}
     localStorage.removeItem('workspaceCode')
     localStorage.removeItem('displayName')
     localStorage.removeItem('user')
