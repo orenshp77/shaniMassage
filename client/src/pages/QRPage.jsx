@@ -172,7 +172,7 @@ function QRPage() {
         {/* TV Connect Button - below QR cards */}
         <button className="tv-connect-btn" onClick={goToConnect}>
           <span className="tv-icon">📺</span>
-          <span className="tv-text">חבר טלוויזיה</span>
+          <span className="tv-text">חבר מסך</span>
         </button>
 
         <div className="qr-instructions">
