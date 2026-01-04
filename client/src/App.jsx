@@ -8,25 +8,26 @@ import RegisterPage from './pages/RegisterPage'
 import AdminPage from './pages/AdminPage'
 import TVPairPage from './pages/TVPairPage'
 import PairPage from './pages/PairPage'
-import ProtectedRoute from './components/ProtectedRoute'
 
 function App() {
   return (
     <Router>
       <div className="app">
         <Routes>
-          {/* Public routes */}
+          {/* All routes are public - workspace code in URL handles access */}
           <Route path="/" element={<ConnectPage />} />
           <Route path="/login" element={<LoginPage />} />
           <Route path="/register" element={<RegisterPage />} />
           <Route path="/display" element={<DisplayPage />} />
+          <Route path="/display/:workspaceCode" element={<DisplayPage />} />
           <Route path="/pair" element={<PairPage />} />
-
-          {/* Protected routes - require password login */}
-          <Route path="/admin" element={<ProtectedRoute><AdminPage /></ProtectedRoute>} />
-          <Route path="/input" element={<ProtectedRoute><InputPage /></ProtectedRoute>} />
-          <Route path="/qr" element={<ProtectedRoute><QRPage /></ProtectedRoute>} />
-          <Route path="/tv" element={<ProtectedRoute><TVPairPage /></ProtectedRoute>} />
+          <Route path="/admin" element={<AdminPage />} />
+          <Route path="/input" element={<InputPage />} />
+          <Route path="/input/:workspaceCode" element={<InputPage />} />
+          <Route path="/qr" element={<QRPage />} />
+          <Route path="/qr/:workspaceCode" element={<QRPage />} />
+          <Route path="/tv" element={<TVPairPage />} />
+          <Route path="/tv/:workspaceCode" element={<TVPairPage />} />
         </Routes>
       </div>
     </Router>

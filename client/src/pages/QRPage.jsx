@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useParams } from 'react-router-dom'
 import { QRCodeSVG } from 'qrcode.react'
 import Swal from 'sweetalert2'
+import api from '../services/api'
 import './QRPage.css'
 
 function QRPage() {
@@ -9,6 +10,7 @@ function QRPage() {
   const [workspaceCode, setWorkspaceCode] = useState('')
   const [displayName, setDisplayName] = useState('')
   const navigate = useNavigate()
+  const { workspaceCode: urlWorkspaceCode } = useParams()
 
   const copyToClipboard = async (url, label) => {
     try {
@@ -34,29 +36,34 @@ function QRPage() {
     const url = window.location.origin
     setBaseUrl(url)
 
-    // Get workspace info from user data
+    // Get workspace from URL first, then from localStorage
+    const wsFromUrl = urlWorkspaceCode
     const user = JSON.parse(localStorage.getItem('user') || '{}')
-    const storedWorkspace = user.workspace_code || localStorage.getItem('workspaceCode')
+    const storedWorkspace = wsFromUrl || user.workspace_code || localStorage.getItem('workspaceCode')
     const storedName = user.display_name || localStorage.getItem('displayName')
 
     if (!storedWorkspace) {
-      // Redirect to login if no workspace
-      navigate('/login')
+      navigate('/')
       return
+    }
+
+    // Save to localStorage for future use
+    if (wsFromUrl) {
+      localStorage.setItem('workspaceCode', wsFromUrl)
     }
 
     setWorkspaceCode(storedWorkspace)
     setDisplayName(storedName || 'מרחב העבודה שלי')
-  }, [navigate])
+  }, [navigate, urlWorkspaceCode])
 
   // Go to pair page to connect TV
   const goToConnect = () => {
     navigate('/pair')
   }
 
-  // URLs with workspace code
-  const inputUrl = `${baseUrl}/?ws=${workspaceCode}&type=input`
-  const displayUrl = `${baseUrl}/?ws=${workspaceCode}&type=display`
+  // URLs with workspace code in path
+  const inputUrl = `${baseUrl}/input/${workspaceCode}`
+  const displayUrl = `${baseUrl}/display/${workspaceCode}`
   const connectUrl = `${baseUrl}/?ws=${workspaceCode}`
 
   const handleLogout = async () => {

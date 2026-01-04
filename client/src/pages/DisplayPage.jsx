@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useParams } from 'react-router-dom'
 import Swal from 'sweetalert2'
 import api from '../services/api'
 import AnimatedBackground from '../components/AnimatedBackgrounds'
@@ -19,8 +19,9 @@ function DisplayPage() {
   const lastExplicitChangeRef = useRef(0) // Track last explicit change timestamp from server
   const audioRef = useRef(null)
   const audioUnlocked = useRef(false)
-  const workspaceCode = useRef(localStorage.getItem('workspaceCode'))
+  const workspaceCode = useRef(null)
   const navigate = useNavigate()
+  const { workspaceCode: urlWorkspaceCode } = useParams()
 
   // Unlock audio on any user interaction (runs silently in background)
   const unlockAudio = () => {
@@ -132,11 +133,21 @@ function DisplayPage() {
   }
 
   useEffect(() => {
-    // Check for workspace code
-    if (!workspaceCode.current) {
+    // Get workspace from URL first, then from localStorage
+    const wsFromUrl = urlWorkspaceCode
+    const storedWs = localStorage.getItem('workspaceCode')
+    const ws = wsFromUrl || storedWs
+
+    if (!ws) {
       navigate('/')
       return
     }
+
+    // Save to localStorage and ref
+    if (wsFromUrl) {
+      localStorage.setItem('workspaceCode', wsFromUrl)
+    }
+    workspaceCode.current = ws
 
     // Get display name from localStorage
     const storedName = localStorage.getItem('displayName')
@@ -153,7 +164,7 @@ function DisplayPage() {
     // Poll for updates every 2 seconds
     const interval = setInterval(fetchMessage, 2000)
     return () => clearInterval(interval)
-  }, [navigate])
+  }, [navigate, urlWorkspaceCode])
 
   // Calculate dynamic font size for subject based on text length
   const getSubjectFontSize = (length) => {

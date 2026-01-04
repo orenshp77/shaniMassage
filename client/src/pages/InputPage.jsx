@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useParams } from 'react-router-dom'
 import Swal from 'sweetalert2'
 import api from '../services/api'
 import { THEMES } from '../components/AnimatedBackgrounds'
@@ -19,42 +19,49 @@ function InputPage() {
   const [workspaceCode, setWorkspaceCode] = useState('')
   const [displayName, setDisplayName] = useState('')
   const navigate = useNavigate()
+  const { workspaceCode: urlWorkspaceCode } = useParams()
 
   useEffect(() => {
-    // Get workspace info from user data
+    // Get workspace from URL first, then from localStorage
+    const wsFromUrl = urlWorkspaceCode
     const user = JSON.parse(localStorage.getItem('user') || '{}')
-    const storedWorkspace = user.workspace_code || localStorage.getItem('workspaceCode')
+    const storedWorkspace = wsFromUrl || user.workspace_code || localStorage.getItem('workspaceCode')
     const storedName = user.display_name || localStorage.getItem('displayName')
 
     if (!storedWorkspace) {
-      navigate('/login')
+      navigate('/')
       return
+    }
+
+    // Save to localStorage for future use
+    if (wsFromUrl) {
+      localStorage.setItem('workspaceCode', wsFromUrl)
     }
 
     setWorkspaceCode(storedWorkspace)
     setDisplayName(storedName || 'מרחב העבודה שלי')
 
-    fetchMessages()
-    fetchCurrentTheme()
-    fetchPinnedMessage()
-  }, [navigate])
+    fetchMessages(storedWorkspace)
+    fetchCurrentTheme(storedWorkspace)
+    fetchPinnedMessage(storedWorkspace)
+  }, [navigate, urlWorkspaceCode])
 
-  const fetchCurrentTheme = async () => {
+  const fetchCurrentTheme = async (ws) => {
     try {
-      const ws = localStorage.getItem('workspaceCode')
-      if (!ws) return
-      const response = await api.get(`/active-theme?workspace=${ws}`)
+      const workspace = ws || localStorage.getItem('workspaceCode')
+      if (!workspace) return
+      const response = await api.get(`/active-theme?workspace=${workspace}`)
       setSelectedTheme(response.data.theme)
     } catch (error) {
       console.error('Error fetching theme:', error)
     }
   }
 
-  const fetchPinnedMessage = async () => {
+  const fetchPinnedMessage = async (ws) => {
     try {
-      const ws = localStorage.getItem('workspaceCode')
-      if (!ws) return
-      const response = await api.get(`/pinned-message?workspace=${ws}`)
+      const workspace = ws || localStorage.getItem('workspaceCode')
+      if (!workspace) return
+      const response = await api.get(`/pinned-message?workspace=${workspace}`)
       setPinnedMessage(response.data.message || '')
       setPinnedEnabled(response.data.enabled || false)
     } catch (error) {
@@ -102,11 +109,11 @@ function InputPage() {
     }
   }
 
-  const fetchMessages = async () => {
+  const fetchMessages = async (ws) => {
     try {
-      const ws = localStorage.getItem('workspaceCode')
-      if (!ws) return
-      const response = await api.get(`/messages?workspace=${ws}`)
+      const workspace = ws || localStorage.getItem('workspaceCode')
+      if (!workspace) return
+      const response = await api.get(`/messages?workspace=${workspace}`)
       setMessages(response.data)
     } catch (error) {
       console.error('Error fetching messages:', error)
