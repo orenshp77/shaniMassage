@@ -1,4 +1,4 @@
-/* Home Page - Combined TV + Phone */
+/* Home Page - Combined TV + Phone - Optimized for 1920x1080 */
 .home-page {
   min-height: 100vh;
   height: 100vh;
@@ -24,8 +24,8 @@
 
 .floating-particle {
   position: absolute;
-  width: 8px;
-  height: 8px;
+  width: 6px;
+  height: 6px;
   background: rgba(0, 255, 255, 0.3);
   border-radius: 50%;
   animation: float 20s ease-in-out infinite;
@@ -54,58 +54,60 @@
   }
 }
 
-/* Main Container - optimized for 1920x1080 */
+/* Main Container - 1920x1080 */
 .home-container {
   position: relative;
   z-index: 1;
   display: flex;
-  align-items: stretch;
+  align-items: center;
   justify-content: center;
-  gap: 40px;
-  width: 1700px;
-  max-width: 95vw;
-  height: 900px;
-  max-height: 90vh;
-  padding: 30px;
+  gap: 30px;
+  width: 1800px;
+  max-width: 98vw;
+  height: 950px;
+  max-height: 95vh;
+  padding: 20px;
 }
 
-/* Sections */
+/* Sections - the boxes */
 .home-section {
   flex: 1;
   background: rgba(255, 255, 255, 0.03);
   backdrop-filter: blur(20px);
-  border-radius: 30px;
+  border-radius: 25px;
   border: 1px solid rgba(255, 255, 255, 0.1);
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 40px 50px;
-  max-width: 700px;
+  padding: 25px 30px;
+  max-width: 750px;
+  height: 100%;
+  box-sizing: border-box;
 }
 
 .section-header {
   text-align: center;
-  margin-bottom: 30px;
+  margin-bottom: 20px;
 }
 
 .section-icon {
-  font-size: 4rem;
-  margin-bottom: 15px;
+  font-size: 3rem;
+  margin-bottom: 10px;
 }
 
 .section-header h2 {
-  font-size: 2.8rem;
+  font-size: 2.2rem;
   font-weight: 700;
   background: linear-gradient(135deg, #00ffff, #ff69b4);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
-  margin: 0 0 10px 0;
+  margin: 0 0 8px 0;
 }
 
 .section-header p {
-  font-size: 1.4rem;
+  font-size: 1.1rem;
   color: rgba(255, 255, 255, 0.6);
   margin: 0;
 }
@@ -116,19 +118,20 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 0 20px;
+  padding: 0 15px;
+  flex-shrink: 0;
 }
 
 .divider-line {
   width: 2px;
-  height: 300px;
+  height: 200px;
   background: linear-gradient(to bottom, transparent, rgba(255, 255, 255, 0.3), transparent);
 }
 
 .section-divider span {
   color: rgba(255, 255, 255, 0.4);
-  font-size: 1.8rem;
-  padding: 25px 0;
+  font-size: 1.4rem;
+  padding: 20px 0;
 }
 
 /* QR Section (TV) */
@@ -141,15 +144,15 @@
 .qr-frame {
   position: relative;
   background: white;
-  padding: 20px;
-  border-radius: 20px;
-  box-shadow: 0 0 60px rgba(0, 255, 255, 0.3);
+  padding: 12px;
+  border-radius: 16px;
+  box-shadow: 0 0 40px rgba(0, 255, 255, 0.3);
 }
 
 .qr-frame svg {
   display: block;
-  width: 320px !important;
-  height: 320px !important;
+  width: 280px !important;
+  height: 280px !important;
 }
 
 .scan-overlay {
@@ -159,7 +162,7 @@
   right: 0;
   bottom: 0;
   overflow: hidden;
-  border-radius: 20px;
+  border-radius: 16px;
   pointer-events: none;
 }
 
@@ -167,7 +170,7 @@
   position: absolute;
   left: 0;
   right: 0;
-  height: 4px;
+  height: 3px;
   background: linear-gradient(90deg, transparent, #00ffff, transparent);
   animation: scanMove 2s ease-in-out infinite;
 }
@@ -178,17 +181,17 @@
 }
 
 .pairing-code {
-  margin-top: 25px;
-  font-size: 2rem;
+  margin-top: 18px;
+  font-size: 1.4rem;
   color: rgba(255, 255, 255, 0.7);
 }
 
 .pairing-code span {
   color: #00ffff;
   font-weight: 700;
-  letter-spacing: 0.4em;
+  letter-spacing: 0.3em;
   font-family: monospace;
-  font-size: 2.8rem;
+  font-size: 2rem;
 }
 
 /* Success State */
@@ -197,19 +200,19 @@
 }
 
 .success-icon {
-  font-size: 8rem;
+  font-size: 6rem;
   color: #2ecc71;
-  margin-bottom: 25px;
+  margin-bottom: 20px;
 }
 
 .paired-success h2 {
-  font-size: 3rem;
+  font-size: 2.2rem;
   color: #2ecc71;
-  margin-bottom: 15px;
+  margin-bottom: 12px;
 }
 
 .paired-success p {
-  font-size: 1.5rem;
+  font-size: 1.2rem;
   color: rgba(255, 255, 255, 0.6);
 }
 
@@ -219,18 +222,18 @@
 }
 
 .error-state h2 {
-  font-size: 2rem;
+  font-size: 1.6rem;
   color: #e74c3c;
-  margin-bottom: 20px;
+  margin-bottom: 15px;
 }
 
 .retry-btn {
-  padding: 18px 45px;
+  padding: 14px 35px;
   background: linear-gradient(135deg, #e74c3c, #c0392b);
   border: none;
-  border-radius: 15px;
+  border-radius: 12px;
   color: white;
-  font-size: 1.4rem;
+  font-size: 1.2rem;
   font-weight: 600;
   cursor: pointer;
   font-family: inherit;
@@ -238,53 +241,53 @@
 }
 
 .retry-btn:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 8px 30px rgba(231, 76, 60, 0.4);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 25px rgba(231, 76, 60, 0.4);
 }
 
 /* Phone Section */
 .phone-section {
-  padding: 40px 50px;
+  padding: 25px 30px;
 }
 
 /* Access Type Selector */
 .access-type-selector {
   display: flex;
-  gap: 25px;
-  margin-bottom: 25px;
+  gap: 20px;
+  margin-bottom: 20px;
 }
 
 .access-type-btn {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 12px;
-  padding: 25px 40px;
+  gap: 8px;
+  padding: 18px 30px;
   background: rgba(255, 255, 255, 0.05);
   border: 2px solid rgba(255, 255, 255, 0.2);
-  border-radius: 18px;
+  border-radius: 14px;
   cursor: pointer;
   transition: all 0.3s ease;
   font-family: inherit;
 }
 
 .access-type-btn:hover {
-  transform: translateY(-5px);
+  transform: translateY(-3px);
   border-color: #00ffff;
-  box-shadow: 0 10px 35px rgba(0, 255, 255, 0.2);
+  box-shadow: 0 8px 25px rgba(0, 255, 255, 0.2);
 }
 
 .access-type-btn.input-btn:hover {
   border-color: #ff69b4;
-  box-shadow: 0 10px 35px rgba(255, 105, 180, 0.2);
+  box-shadow: 0 8px 25px rgba(255, 105, 180, 0.2);
 }
 
 .access-icon {
-  font-size: 3rem;
+  font-size: 2.2rem;
 }
 
 .access-label {
-  font-size: 1.5rem;
+  font-size: 1.2rem;
   font-weight: 600;
   color: white;
 }
@@ -294,26 +297,27 @@
   display: flex;
   flex-direction: column;
   align-items: center;
+  width: 100%;
 }
 
 /* Code Display */
 .code-display {
   display: flex;
   justify-content: center;
-  gap: 15px;
-  margin-bottom: 25px;
+  gap: 10px;
+  margin-bottom: 18px;
 }
 
 .code-digit {
-  width: 80px;
-  height: 95px;
+  width: 60px;
+  height: 72px;
   background: rgba(255, 255, 255, 0.05);
-  border: 3px solid rgba(255, 255, 255, 0.2);
-  border-radius: 15px;
+  border: 2px solid rgba(255, 255, 255, 0.2);
+  border-radius: 12px;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 3rem;
+  font-size: 2.2rem;
   font-weight: 700;
   color: white;
   transition: all 0.3s ease;
@@ -321,20 +325,20 @@
 
 .code-digit.filled {
   border-color: #00ffff;
-  box-shadow: 0 0 25px rgba(0, 255, 255, 0.3);
+  box-shadow: 0 0 18px rgba(0, 255, 255, 0.3);
   background: rgba(0, 255, 255, 0.1);
 }
 
 .workspace-code .code-digit {
-  width: 90px;
-  height: 105px;
-  font-size: 3.5rem;
+  width: 70px;
+  height: 82px;
+  font-size: 2.6rem;
 }
 
 .code-error {
   color: #ff6b6b;
-  font-size: 1.3rem;
-  margin-bottom: 15px;
+  font-size: 1.1rem;
+  margin-bottom: 12px;
   animation: shake 0.5s ease;
 }
 
@@ -344,22 +348,22 @@
   75% { transform: translateX(10px); }
 }
 
-/* Number Pad */
+/* Number Pad - compact grid */
 .number-pad {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 12px;
-  margin-bottom: 25px;
+  grid-template-columns: repeat(3, 70px);
+  gap: 8px;
+  margin-bottom: 18px;
 }
 
 .num-btn {
-  width: 90px;
-  height: 65px;
+  width: 70px;
+  height: 52px;
   border: none;
-  border-radius: 12px;
+  border-radius: 10px;
   background: rgba(255, 255, 255, 0.08);
   color: white;
-  font-size: 2rem;
+  font-size: 1.6rem;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.2s ease;
@@ -368,11 +372,11 @@
 
 .num-btn:hover {
   background: rgba(255, 255, 255, 0.15);
-  transform: scale(1.05);
+  transform: scale(1.03);
 }
 
 .num-btn:active {
-  transform: scale(0.95);
+  transform: scale(0.97);
   background: rgba(0, 255, 255, 0.2);
 }
 
@@ -396,14 +400,13 @@
 
 /* Enter Button */
 .enter-btn {
-  width: 100%;
-  max-width: 290px;
-  padding: 18px 30px;
+  width: 226px;
+  padding: 14px 25px;
   border: none;
-  border-radius: 15px;
+  border-radius: 12px;
   background: linear-gradient(135deg, #00ffff, #00bcd4);
   color: #0c0c1e;
-  font-size: 1.6rem;
+  font-size: 1.4rem;
   font-weight: 700;
   cursor: pointer;
   transition: all 0.3s ease;
@@ -411,8 +414,8 @@
 }
 
 .enter-btn:hover:not(:disabled) {
-  transform: translateY(-3px);
-  box-shadow: 0 10px 35px rgba(0, 255, 255, 0.4);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(0, 255, 255, 0.4);
 }
 
 .enter-btn:disabled {
@@ -423,12 +426,12 @@
 /* Back Link */
 .back-link {
   display: block;
-  margin-top: 18px;
+  margin-top: 14px;
   color: rgba(255, 255, 255, 0.5);
   background: none;
   border: none;
   cursor: pointer;
-  font-size: 1.2rem;
+  font-size: 1rem;
   font-family: inherit;
   transition: color 0.3s;
 }
@@ -439,9 +442,9 @@
 
 /* Auth Links */
 .auth-links {
-  margin-top: 30px;
+  margin-top: 22px;
   color: rgba(255, 255, 255, 0.4);
-  font-size: 1.1rem;
+  font-size: 0.95rem;
 }
 
 .auth-links a {
@@ -456,51 +459,62 @@
 }
 
 .auth-links span {
-  margin: 0 12px;
+  margin: 0 10px;
 }
 
-/* Responsive - Tablet and smaller */
+/* Responsive - Tablet */
 @media (max-width: 1400px) {
   .home-container {
-    width: 95vw;
-    height: auto;
-    padding: 20px;
-    gap: 25px;
+    width: 98vw;
+    height: 95vh;
+    padding: 15px;
+    gap: 20px;
   }
 
   .home-section {
-    padding: 30px 35px;
+    padding: 20px 25px;
   }
 
   .section-header h2 {
-    font-size: 2.2rem;
+    font-size: 1.8rem;
   }
 
   .section-icon {
-    font-size: 3rem;
-  }
-
-  .qr-frame svg {
-    width: 250px !important;
-    height: 250px !important;
-  }
-
-  .code-digit {
-    width: 65px;
-    height: 80px;
     font-size: 2.5rem;
   }
 
+  .qr-frame svg {
+    width: 220px !important;
+    height: 220px !important;
+  }
+
+  .code-digit {
+    width: 52px;
+    height: 62px;
+    font-size: 1.9rem;
+  }
+
   .workspace-code .code-digit {
-    width: 75px;
-    height: 90px;
-    font-size: 3rem;
+    width: 58px;
+    height: 68px;
+    font-size: 2.2rem;
+  }
+
+  .number-pad {
+    grid-template-columns: repeat(3, 60px);
+    gap: 6px;
   }
 
   .num-btn {
-    width: 75px;
-    height: 55px;
-    font-size: 1.7rem;
+    width: 60px;
+    height: 45px;
+    font-size: 1.4rem;
+  }
+
+  .enter-btn {
+    width: 196px;
+    padding: 12px 20px;
+    font-size: 1.2rem;
   }
 }
 
@@ -516,6 +530,7 @@
   .home-section {
     max-width: 100%;
     width: 100%;
+    height: auto;
     padding: 25px;
   }
 
@@ -531,24 +546,24 @@
   }
 
   .qr-frame svg {
-    width: 200px !important;
-    height: 200px !important;
+    width: 180px !important;
+    height: 180px !important;
   }
 
   .code-digit {
-    width: 55px;
-    height: 65px;
-    font-size: 2rem;
+    width: 48px;
+    height: 58px;
+    font-size: 1.7rem;
   }
 
   .num-btn {
-    width: 65px;
-    height: 50px;
-    font-size: 1.5rem;
+    width: 55px;
+    height: 42px;
+    font-size: 1.3rem;
   }
 }
 
-/* Hide TV section on very small screens */
+/* Very small screens - hide TV */
 @media (max-width: 500px) {
   .tv-section {
     display: none;
@@ -559,6 +574,6 @@
   }
 
   .home-section {
-    border-radius: 20px;
+    border-radius: 18px;
   }
 }
