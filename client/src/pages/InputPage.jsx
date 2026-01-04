@@ -21,12 +21,13 @@ function InputPage() {
   const navigate = useNavigate()
 
   useEffect(() => {
-    // Check for workspace code
-    const storedWorkspace = localStorage.getItem('workspaceCode')
-    const storedName = localStorage.getItem('displayName')
+    // Get workspace info from user data
+    const user = JSON.parse(localStorage.getItem('user') || '{}')
+    const storedWorkspace = user.workspace_code || localStorage.getItem('workspaceCode')
+    const storedName = user.display_name || localStorage.getItem('displayName')
 
     if (!storedWorkspace) {
-      navigate('/')
+      navigate('/login')
       return
     }
 

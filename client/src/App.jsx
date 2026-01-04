@@ -8,21 +8,25 @@ import RegisterPage from './pages/RegisterPage'
 import AdminPage from './pages/AdminPage'
 import TVPairPage from './pages/TVPairPage'
 import PairPage from './pages/PairPage'
+import ProtectedRoute from './components/ProtectedRoute'
 
 function App() {
   return (
     <Router>
       <div className="app">
         <Routes>
+          {/* Public routes */}
           <Route path="/" element={<ConnectPage />} />
           <Route path="/login" element={<LoginPage />} />
           <Route path="/register" element={<RegisterPage />} />
-          <Route path="/admin" element={<AdminPage />} />
-          <Route path="/input" element={<InputPage />} />
           <Route path="/display" element={<DisplayPage />} />
-          <Route path="/qr" element={<QRPage />} />
-          <Route path="/tv" element={<TVPairPage />} />
-          <Route path="/pair" element={<PairPage />} />
+
+          {/* Protected routes - require password login */}
+          <Route path="/admin" element={<ProtectedRoute><AdminPage /></ProtectedRoute>} />
+          <Route path="/input" element={<ProtectedRoute><InputPage /></ProtectedRoute>} />
+          <Route path="/qr" element={<ProtectedRoute><QRPage /></ProtectedRoute>} />
+          <Route path="/tv" element={<ProtectedRoute><TVPairPage /></ProtectedRoute>} />
+          <Route path="/pair" element={<ProtectedRoute><PairPage /></ProtectedRoute>} />
         </Routes>
       </div>
     </Router>

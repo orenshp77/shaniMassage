@@ -152,11 +152,9 @@ function ConnectPage() {
   }
 
   const selectAccessType = (type) => {
-    if (type === 'input' && workspace) {
-      // For management - go directly to QR page without PIN
-      localStorage.setItem('workspaceCode', workspace.workspace_code)
-      localStorage.setItem('displayName', workspace.display_name)
-      navigate('/qr')
+    if (type === 'input') {
+      // For management - redirect to login page (requires password)
+      navigate('/login')
       return
     }
     setAccessType(type)
@@ -209,7 +207,7 @@ function ConnectPage() {
                     <div className="scan-line"></div>
                   </div>
                 </div>
-                <div className="pairing-code" onClick={() => navigate('/qr')} style={{ cursor: 'pointer' }}>
+                <div className="pairing-code" onClick={() => navigate('/login')} style={{ cursor: 'pointer' }}>
                   קוד צימוד: <span>{pairingCode}</span>
                 </div>
               </div>

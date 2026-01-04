@@ -34,9 +34,10 @@ function QRPage() {
     const url = window.location.origin
     setBaseUrl(url)
 
-    // Get workspace info from localStorage
-    const storedWorkspace = localStorage.getItem('workspaceCode')
-    const storedName = localStorage.getItem('displayName')
+    // Get workspace info from user data
+    const user = JSON.parse(localStorage.getItem('user') || '{}')
+    const storedWorkspace = user.workspace_code || localStorage.getItem('workspaceCode')
+    const storedName = user.display_name || localStorage.getItem('displayName')
 
     if (!storedWorkspace) {
       // Redirect to login if no workspace
