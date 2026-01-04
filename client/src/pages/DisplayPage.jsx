@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
+import Swal from 'sweetalert2'
 import api from '../services/api'
 import AnimatedBackground from '../components/AnimatedBackgrounds'
 import './DisplayPage.css'
@@ -9,7 +10,6 @@ const BELL_SOUND_URL = 'https://assets.mixkit.co/active_storage/sfx/2869/2869-pr
 function DisplayPage() {
   const [message, setMessage] = useState(null)
   const [loading, setLoading] = useState(true)
-  const [alertData, setAlertData] = useState(null)
   const [currentTheme, setCurrentTheme] = useState('hitech')
   const [pinnedMessage, setPinnedMessage] = useState('')
   const [pinnedEnabled, setPinnedEnabled] = useState(false)
@@ -43,21 +43,28 @@ function DisplayPage() {
     }
   }
 
-  // Show incoming message alert
+  // Show incoming message alert using SweetAlert2
   const showIncomingAlert = (newMessage) => {
-    setAlertData(newMessage)
     playBellSound()
 
-    // Hide after 2 seconds
-    setTimeout(() => {
-      setAlertData(null)
-    }, 2000)
+    Swal.fire({
+      title: 'הודעה נכנסת!',
+      html: `<div class="swal-incoming-content">
+        <div class="swal-bell-icon">🔔</div>
+        <p class="swal-alert-subject">${newMessage.subject}</p>
+      </div>`,
+      background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+      color: '#fff',
+      showConfirmButton: false,
+      timer: 2000,
+      timerProgressBar: true,
+      customClass: {
+        popup: 'swal-incoming-popup'
+      }
+    })
   }
 
   const fetchMessage = async () => {
-    // Don't fetch while showing alert
-    if (alertData) return
-
     try {
       const response = await api.get('/active-message')
       const { message: newMessage, theme, lastExplicitChange, pinnedMessage: serverPinnedMessage, pinnedMessageEnabled } = response.data
@@ -143,17 +150,6 @@ function DisplayPage() {
     <div className="display-page" onClick={unlockAudio} onMouseMove={unlockAudio} onKeyDown={unlockAudio}>
       {/* Animated Theme Background */}
       <AnimatedBackground theme={currentTheme} />
-
-      {/* Custom Alert Overlay - Shows for 2 seconds when new message arrives */}
-      {alertData && (
-        <div className="custom-alert-overlay">
-          <div className="custom-alert-box">
-            <div className="bell-icon">🔔</div>
-            <h1>הודעה נכנסת!</h1>
-            <p className="alert-subject">{alertData.subject}</p>
-          </div>
-        </div>
-      )}
 
       {/* Content */}
       <div className="display-content">
