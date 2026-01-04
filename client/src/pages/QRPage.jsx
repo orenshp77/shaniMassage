@@ -48,9 +48,9 @@ function QRPage() {
     setDisplayName(storedName || 'מרחב העבודה שלי')
   }, [navigate])
 
-  // Go to home page to scan QR from TV
+  // Go to pair page to connect TV
   const goToConnect = () => {
-    navigate('/')
+    navigate('/pair')
   }
 
   // URLs with workspace code
