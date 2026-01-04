@@ -93,7 +93,7 @@
 }
 
 .section-icon {
-  font-size: clamp(1.2rem, 2.5vh, 2rem);
+  font-size: clamp(1.8rem, 4vh, 3rem);
   margin-bottom: 0.5vh;
 }
 
