@@ -34,7 +34,18 @@ function PairPage() {
   }, [searchParams])
 
   const handlePair = async () => {
-    if (!pairingCode || !workspaceCode) return
+    if (!workspaceCode) return
+
+    if (!pairingCode) {
+      Swal.fire({
+        icon: 'info',
+        title: 'סרוק את קוד ה-QR',
+        text: 'כדי לחבר טלוויזיה, יש לסרוק את קוד ה-QR שמוצג על מסך הטלוויזיה',
+        confirmButtonText: 'הבנתי',
+        confirmButtonColor: '#00bcd4'
+      })
+      return
+    }
 
     setStatus('pairing')
 
