@@ -113,15 +113,35 @@
 
 /* Pinned Message Display */
 .pinned-message-display {
-  background: rgba(255, 200, 50, 0.1);
+  background: linear-gradient(135deg,
+    rgba(255, 105, 180, 0.25) 0%,
+    rgba(255, 182, 193, 0.2) 25%,
+    rgba(255, 130, 150, 0.22) 50%,
+    rgba(255, 160, 180, 0.2) 75%,
+    rgba(255, 105, 180, 0.25) 100%
+  );
+  background-size: 400% 400%;
+  animation: pinnedGradientShift 6s ease-in-out infinite;
   backdrop-filter: blur(10px);
-  border: 1px solid rgba(255, 200, 50, 0.2);
+  border: 1px solid rgba(255, 182, 193, 0.3);
   border-radius: 20px;
   padding: 20px 40px;
   margin: 20px auto 10px;
   max-width: 1400px;
   width: 85%;
-  animation: fadeInUp 0.5s ease-out;
+  box-shadow: 0 0 30px rgba(255, 105, 180, 0.15);
+}
+
+@keyframes pinnedGradientShift {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
 }
 
 .pinned-message-display.standalone {
@@ -130,11 +150,12 @@
 
 .pinned-content {
   font-size: 2rem;
-  color: rgba(255, 255, 255, 0.9);
+  color: rgba(255, 255, 255, 0.95);
   line-height: 1.4;
   font-weight: 400;
   word-wrap: break-word;
   overflow-wrap: break-word;
+  text-shadow: 0 0 10px rgba(255, 105, 180, 0.3);
 }
 
 /* Date/Time Display */
@@ -147,9 +168,9 @@
   animation: fadeInUp 1s ease-out 0.6s both;
 }
 
-/* Compact version - 60% size */
+/* Compact version - 50% size (reduced by additional 10%) */
 .message-datetime.compact {
-  transform: scale(0.6);
+  transform: scale(0.5);
   transform-origin: center;
   margin-top: 10px;
 }
@@ -197,8 +218,7 @@
 .current-time {
   position: fixed;
   bottom: 15px;
-  left: 50%;
-  transform: translateX(-50%);
+  right: 20px;
   font-size: 1.5rem;
   color: rgba(255, 255, 255, 0.3);
   font-family: 'Courier New', monospace;

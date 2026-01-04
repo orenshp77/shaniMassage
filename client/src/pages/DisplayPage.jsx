@@ -187,7 +187,7 @@ function DisplayPage() {
                   className="pinned-content"
                   style={{ fontSize: getContentFontSize(pinnedMessage.length) }}
                 >
-                  📌 {pinnedMessage}
+                  {pinnedMessage}
                 </p>
               </div>
             )}
@@ -213,7 +213,7 @@ function DisplayPage() {
                     className="pinned-content"
                     style={{ fontSize: getContentFontSize(pinnedMessage.length) }}
                   >
-                    📌 {pinnedMessage}
+                    {pinnedMessage}
                   </p>
                 </div>
                 <div className="message-datetime compact">
