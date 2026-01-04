@@ -115,7 +115,8 @@ function ConnectPage() {
           if (accessType === 'display') {
             navigate('/display')
           } else {
-            navigate('/input')
+            // Navigate to QR page for management access
+            navigate('/qr')
           }
         } catch (error) {
           setError('קוד PIN שגוי')
