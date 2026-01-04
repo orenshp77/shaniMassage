@@ -45,6 +45,30 @@ export const THEMES = {
     icon: '🎂',
     category: 'animated'
   },
+  love: {
+    id: 'love',
+    name: 'אהבה',
+    icon: '💕',
+    category: 'animated'
+  },
+  gifts: {
+    id: 'gifts',
+    name: 'מתנות',
+    icon: '🎁',
+    category: 'animated'
+  },
+  confettiExplosion: {
+    id: 'confettiExplosion',
+    name: 'קונפטי',
+    icon: '🎊',
+    category: 'animated'
+  },
+  redHearts: {
+    id: 'redHearts',
+    name: 'לבבות',
+    icon: '❤️',
+    category: 'animated'
+  },
   // Solid color themes (no animation)
   solidBlue: {
     id: 'solidBlue',
@@ -240,6 +264,162 @@ function BirthdayBackground() {
   )
 }
 
+// Love Background - Pink with floating hearts
+function LoveBackground() {
+  return (
+    <div className="animated-bg-container love-bg">
+      <div className="love-gradient" />
+      {/* Floating hearts */}
+      {[...Array(30)].map((_, i) => (
+        <div
+          key={`heart-${i}`}
+          className="love-heart"
+          style={{
+            left: `${Math.random() * 100}%`,
+            animationDuration: `${4 + Math.random() * 4}s`,
+            animationDelay: `${Math.random() * 5}s`,
+            fontSize: `${20 + Math.random() * 30}px`,
+            opacity: 0.4 + Math.random() * 0.4
+          }}
+        >
+          {['💕', '💖', '💗', '💓', '❤️'][i % 5]}
+        </div>
+      ))}
+      <div className="love-shimmer" />
+    </div>
+  )
+}
+
+// Gifts Background - 3D rotating gift boxes on sides
+function GiftsBackground() {
+  const giftColors = ['#ff6b6b', '#4ecdc4', '#ffe66d', '#95e1d3', '#f38181', '#aa96da']
+
+  return (
+    <div className="animated-bg-container gifts-bg">
+      <div className="gifts-gradient" />
+      {/* Left gift box */}
+      <div className="gift-box gift-left">
+        <div className="gift-cube" style={{ '--gift-color': giftColors[0], '--ribbon-color': '#ffd700' }}>
+          <div className="gift-face gift-front"></div>
+          <div className="gift-face gift-back"></div>
+          <div className="gift-face gift-right"></div>
+          <div className="gift-face gift-left-face"></div>
+          <div className="gift-face gift-top"></div>
+          <div className="gift-face gift-bottom"></div>
+          <div className="gift-ribbon gift-ribbon-h"></div>
+          <div className="gift-ribbon gift-ribbon-v"></div>
+          <div className="gift-bow"></div>
+        </div>
+      </div>
+      {/* Right gift box */}
+      <div className="gift-box gift-right-box">
+        <div className="gift-cube" style={{ '--gift-color': giftColors[1], '--ribbon-color': '#ff69b4' }}>
+          <div className="gift-face gift-front"></div>
+          <div className="gift-face gift-back"></div>
+          <div className="gift-face gift-right"></div>
+          <div className="gift-face gift-left-face"></div>
+          <div className="gift-face gift-top"></div>
+          <div className="gift-face gift-bottom"></div>
+          <div className="gift-ribbon gift-ribbon-h"></div>
+          <div className="gift-ribbon gift-ribbon-v"></div>
+          <div className="gift-bow"></div>
+        </div>
+      </div>
+      {/* Sparkles */}
+      {[...Array(20)].map((_, i) => (
+        <div
+          key={`sparkle-${i}`}
+          className="gift-sparkle"
+          style={{
+            left: `${Math.random() * 100}%`,
+            top: `${Math.random() * 100}%`,
+            animationDelay: `${Math.random() * 3}s`
+          }}
+        />
+      ))}
+    </div>
+  )
+}
+
+// Confetti Explosion Background - 3D confetti from sides
+function ConfettiExplosionBackground() {
+  const confettiColors = [
+    '#ff6b6b', '#ffd93d', '#6bcb77', '#4d96ff', '#ff6b9d',
+    '#c44dff', '#ff914d', '#00d4aa', '#ff4757', '#2ed573'
+  ]
+
+  return (
+    <div className="animated-bg-container confetti-explosion-bg">
+      <div className="confetti-explosion-gradient" />
+      {/* Left explosion */}
+      <div className="confetti-cannon confetti-cannon-left">
+        {[...Array(25)].map((_, i) => (
+          <div
+            key={`left-${i}`}
+            className="confetti-piece confetti-from-left"
+            style={{
+              backgroundColor: confettiColors[i % confettiColors.length],
+              animationDelay: `${Math.random() * 2}s`,
+              '--end-x': `${50 + Math.random() * 50}vw`,
+              '--end-y': `${-20 + Math.random() * 140}vh`,
+              '--rotate': `${Math.random() * 1080}deg`
+            }}
+          />
+        ))}
+      </div>
+      {/* Right explosion */}
+      <div className="confetti-cannon confetti-cannon-right">
+        {[...Array(25)].map((_, i) => (
+          <div
+            key={`right-${i}`}
+            className="confetti-piece confetti-from-right"
+            style={{
+              backgroundColor: confettiColors[i % confettiColors.length],
+              animationDelay: `${Math.random() * 2}s`,
+              '--end-x': `${-50 - Math.random() * 50}vw`,
+              '--end-y': `${-20 + Math.random() * 140}vh`,
+              '--rotate': `${-Math.random() * 1080}deg`
+            }}
+          />
+        ))}
+      </div>
+    </div>
+  )
+}
+
+// Red Hearts Background - Red gradient with 3D rotating hearts on sides
+function RedHeartsBackground() {
+  return (
+    <div className="animated-bg-container red-hearts-bg">
+      <div className="red-hearts-gradient" />
+      {/* Left 3D heart */}
+      <div className="heart-3d heart-3d-left">
+        <div className="heart-shape">❤️</div>
+      </div>
+      {/* Right 3D heart */}
+      <div className="heart-3d heart-3d-right">
+        <div className="heart-shape">❤️</div>
+      </div>
+      {/* Floating small hearts */}
+      {[...Array(15)].map((_, i) => (
+        <div
+          key={`small-heart-${i}`}
+          className="small-floating-heart"
+          style={{
+            left: `${10 + Math.random() * 80}%`,
+            animationDuration: `${5 + Math.random() * 5}s`,
+            animationDelay: `${Math.random() * 5}s`,
+            fontSize: `${12 + Math.random() * 18}px`
+          }}
+        >
+          ❤️
+        </div>
+      ))}
+      <div className="red-shimmer" />
+    </div>
+  )
+}
+
 // Solid Color Backgrounds (no animation)
 function SolidBackground({ color }) {
   return (
@@ -266,7 +446,11 @@ function AnimatedBackground({ theme = 'hitech' }) {
     celebration: CelebrationBackground,
     focus: FocusBackground,
     calm: CalmBackground,
-    birthday: BirthdayBackground
+    birthday: BirthdayBackground,
+    love: LoveBackground,
+    gifts: GiftsBackground,
+    confettiExplosion: ConfettiExplosionBackground,
+    redHearts: RedHeartsBackground
   }
 
   const BackgroundComponent = backgrounds[theme] || HitechBackground

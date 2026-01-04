@@ -522,3 +522,401 @@
     opacity: 1;
   }
 }
+
+/* ==================== LOVE THEME ==================== */
+.love-bg {
+  background: linear-gradient(135deg, #2d0a1e 0%, #4a1538 50%, #2d0a25 100%);
+}
+
+.love-gradient {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background:
+    radial-gradient(ellipse at 30% 70%, rgba(255, 105, 180, 0.2) 0%, transparent 50%),
+    radial-gradient(ellipse at 70% 30%, rgba(255, 182, 193, 0.15) 0%, transparent 50%),
+    radial-gradient(ellipse at 50% 50%, rgba(255, 20, 147, 0.1) 0%, transparent 60%);
+  animation: loveGlow 6s ease-in-out infinite;
+}
+
+@keyframes loveGlow {
+  0%, 100% {
+    opacity: 0.8;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+.love-heart {
+  position: absolute;
+  bottom: -50px;
+  animation: loveFloat linear infinite;
+}
+
+@keyframes loveFloat {
+  0% {
+    transform: translateY(0) scale(1);
+    opacity: 0;
+  }
+  10% {
+    opacity: 0.8;
+  }
+  90% {
+    opacity: 0.8;
+  }
+  100% {
+    transform: translateY(-110vh) scale(1.2);
+    opacity: 0;
+  }
+}
+
+.love-shimmer {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    45deg,
+    transparent 40%,
+    rgba(255, 182, 193, 0.05) 50%,
+    transparent 60%
+  );
+  background-size: 200% 200%;
+  animation: shimmer 4s linear infinite;
+}
+
+/* ==================== GIFTS THEME ==================== */
+.gifts-bg {
+  background: linear-gradient(135deg, #1a0a2e 0%, #2d1b4e 50%, #1a1040 100%);
+  perspective: 1000px;
+}
+
+.gifts-gradient {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background:
+    radial-gradient(ellipse at 20% 50%, rgba(255, 107, 107, 0.15) 0%, transparent 50%),
+    radial-gradient(ellipse at 80% 50%, rgba(78, 205, 196, 0.15) 0%, transparent 50%);
+}
+
+.gift-box {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 25%;
+  height: 25vw;
+  max-height: 270px;
+  perspective: 800px;
+}
+
+.gift-left {
+  left: 2%;
+}
+
+.gift-right-box {
+  right: 2%;
+}
+
+.gift-cube {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  transform-style: preserve-3d;
+  animation: giftRotate 8s ease-in-out infinite;
+}
+
+.gift-left .gift-cube {
+  animation-direction: normal;
+}
+
+.gift-right-box .gift-cube {
+  animation-direction: reverse;
+}
+
+@keyframes giftRotate {
+  0% {
+    transform: rotateY(0deg) rotateX(10deg);
+  }
+  50% {
+    transform: rotateY(180deg) rotateX(-10deg);
+  }
+  100% {
+    transform: rotateY(360deg) rotateX(10deg);
+  }
+}
+
+.gift-face {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  background: var(--gift-color);
+  border: 3px solid rgba(255, 255, 255, 0.3);
+  box-shadow: inset 0 0 30px rgba(0, 0, 0, 0.2);
+}
+
+.gift-front { transform: translateZ(calc(12.5vw)); }
+.gift-back { transform: rotateY(180deg) translateZ(calc(12.5vw)); }
+.gift-right { transform: rotateY(90deg) translateZ(calc(12.5vw)); }
+.gift-left-face { transform: rotateY(-90deg) translateZ(calc(12.5vw)); }
+.gift-top { transform: rotateX(90deg) translateZ(calc(12.5vw)); }
+.gift-bottom { transform: rotateX(-90deg) translateZ(calc(12.5vw)); }
+
+.gift-ribbon {
+  position: absolute;
+  background: var(--ribbon-color);
+  z-index: 10;
+}
+
+.gift-ribbon-h {
+  width: 100%;
+  height: 20%;
+  top: 40%;
+  left: 0;
+  transform: translateZ(calc(12.5vw + 2px));
+}
+
+.gift-ribbon-v {
+  width: 20%;
+  height: 100%;
+  top: 0;
+  left: 40%;
+  transform: translateZ(calc(12.5vw + 2px));
+}
+
+.gift-bow {
+  position: absolute;
+  top: -15%;
+  left: 35%;
+  width: 30%;
+  height: 30%;
+  background: var(--ribbon-color);
+  border-radius: 50%;
+  transform: translateZ(calc(12.5vw + 5px));
+  box-shadow: 0 0 20px var(--ribbon-color);
+}
+
+.gift-bow::before,
+.gift-bow::after {
+  content: '';
+  position: absolute;
+  width: 60%;
+  height: 80%;
+  background: var(--ribbon-color);
+  border-radius: 50%;
+  top: 20%;
+}
+
+.gift-bow::before {
+  left: -40%;
+  transform: rotate(-30deg);
+}
+
+.gift-bow::after {
+  right: -40%;
+  transform: rotate(30deg);
+}
+
+.gift-sparkle {
+  position: absolute;
+  width: 4px;
+  height: 4px;
+  background: white;
+  border-radius: 50%;
+  animation: giftSparkle 2s ease-in-out infinite;
+}
+
+@keyframes giftSparkle {
+  0%, 100% {
+    opacity: 0;
+    transform: scale(0);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* ==================== CONFETTI EXPLOSION THEME ==================== */
+.confetti-explosion-bg {
+  background: linear-gradient(135deg, #0a0a1a 0%, #1a1530 50%, #0a0815 100%);
+}
+
+.confetti-explosion-gradient {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background:
+    radial-gradient(ellipse at 0% 50%, rgba(255, 100, 100, 0.15) 0%, transparent 40%),
+    radial-gradient(ellipse at 100% 50%, rgba(100, 100, 255, 0.15) 0%, transparent 40%);
+}
+
+.confetti-cannon {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+.confetti-cannon-left {
+  left: 0;
+}
+
+.confetti-cannon-right {
+  right: 0;
+}
+
+.confetti-piece {
+  position: absolute;
+  width: 15px;
+  height: 15px;
+  border-radius: 3px;
+  animation: confettiExplode 3s ease-out infinite;
+  transform-style: preserve-3d;
+}
+
+.confetti-from-left {
+  left: 0;
+}
+
+.confetti-from-right {
+  right: 0;
+}
+
+@keyframes confettiExplode {
+  0% {
+    transform: translate(0, 0) rotate(0deg) scale(1);
+    opacity: 1;
+  }
+  100% {
+    transform: translate(var(--end-x), var(--end-y)) rotate(var(--rotate)) scale(0.5);
+    opacity: 0;
+  }
+}
+
+/* ==================== RED HEARTS THEME ==================== */
+.red-hearts-bg {
+  background: linear-gradient(135deg, #2d0a0a 0%, #4a1515 50%, #2d0808 100%);
+  animation: redGradientShift 8s ease-in-out infinite;
+}
+
+@keyframes redGradientShift {
+  0%, 100% {
+    background: linear-gradient(135deg, #2d0a0a 0%, #4a1515 50%, #2d0808 100%);
+  }
+  33% {
+    background: linear-gradient(135deg, #3d0a0a 0%, #5a2020 50%, #3d1010 100%);
+  }
+  66% {
+    background: linear-gradient(135deg, #2a0505 0%, #451212 50%, #280606 100%);
+  }
+}
+
+.red-hearts-gradient {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background:
+    radial-gradient(ellipse at 15% 50%, rgba(255, 0, 0, 0.2) 0%, transparent 50%),
+    radial-gradient(ellipse at 85% 50%, rgba(255, 0, 0, 0.2) 0%, transparent 50%);
+}
+
+.heart-3d {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 25%;
+  height: 25vw;
+  max-height: 270px;
+  perspective: 800px;
+}
+
+.heart-3d-left {
+  left: 2%;
+}
+
+.heart-3d-right {
+  right: 2%;
+}
+
+.heart-shape {
+  font-size: min(20vw, 200px);
+  animation: heartRotate3D 4s ease-in-out infinite;
+  transform-style: preserve-3d;
+  filter: drop-shadow(0 0 30px rgba(255, 0, 0, 0.6));
+}
+
+.heart-3d-left .heart-shape {
+  animation-direction: normal;
+}
+
+.heart-3d-right .heart-shape {
+  animation-direction: reverse;
+}
+
+@keyframes heartRotate3D {
+  0% {
+    transform: rotateY(0deg) scale(1);
+  }
+  25% {
+    transform: rotateY(90deg) scale(1.1);
+  }
+  50% {
+    transform: rotateY(180deg) scale(1);
+  }
+  75% {
+    transform: rotateY(270deg) scale(1.1);
+  }
+  100% {
+    transform: rotateY(360deg) scale(1);
+  }
+}
+
+.small-floating-heart {
+  position: absolute;
+  bottom: -30px;
+  animation: smallHeartFloat linear infinite;
+  filter: drop-shadow(0 0 10px rgba(255, 0, 0, 0.5));
+}
+
+@keyframes smallHeartFloat {
+  0% {
+    transform: translateY(0) rotate(0deg);
+    opacity: 0;
+  }
+  10% {
+    opacity: 0.7;
+  }
+  90% {
+    opacity: 0.7;
+  }
+  100% {
+    transform: translateY(-110vh) rotate(360deg);
+    opacity: 0;
+  }
+}
+
+.red-shimmer {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    45deg,
+    transparent 40%,
+    rgba(255, 100, 100, 0.03) 50%,
+    transparent 60%
+  );
+  background-size: 200% 200%;
+  animation: shimmer 4s linear infinite;
+}
