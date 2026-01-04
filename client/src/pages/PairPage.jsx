@@ -1,0 +1,160 @@
+import { useState, useEffect } from 'react'
+import { useSearchParams, useNavigate } from 'react-router-dom'
+import api from '../services/api'
+import Swal from 'sweetalert2'
+import './PairPage.css'
+
+function PairPage() {
+  const [searchParams] = useSearchParams()
+  const navigate = useNavigate()
+  const [pairingCode, setPairingCode] = useState('')
+  const [status, setStatus] = useState('checking') // checking, needLogin, ready, pairing, success, error
+  const [workspaceCode, setWorkspaceCode] = useState('')
+  const [displayName, setDisplayName] = useState('')
+
+  useEffect(() => {
+    const code = searchParams.get('code')
+    if (code) {
+      setPairingCode(code)
+    }
+
+    // Check if user is logged in
+    const storedWorkspace = localStorage.getItem('workspaceCode')
+    const storedName = localStorage.getItem('displayName')
+
+    if (storedWorkspace) {
+      setWorkspaceCode(storedWorkspace)
+      setDisplayName(storedName || 'מרחב העבודה שלי')
+      setStatus('ready')
+    } else {
+      setStatus('needLogin')
+    }
+  }, [searchParams])
+
+  const handlePair = async () => {
+    if (!pairingCode || !workspaceCode) return
+
+    setStatus('pairing')
+
+    try {
+      const response = await api.post('/tv/pair', {
+        pairingCode,
+        workspaceCode
+      })
+
+      setStatus('success')
+      Swal.fire({
+        icon: 'success',
+        title: 'הטלוויזיה מחוברת!',
+        text: response.data.message,
+        showConfirmButton: false,
+        timer: 2000
+      }).then(() => {
+        navigate('/qr')
+      })
+    } catch (error) {
+      setStatus('error')
+      Swal.fire({
+        icon: 'error',
+        title: 'שגיאה',
+        text: error.response?.data?.error || 'לא ניתן לצמד את הטלוויזיה'
+      })
+    }
+  }
+
+  const goToLogin = () => {
+    // Save the pairing code so we can return after login
+    sessionStorage.setItem('pendingPairingCode', pairingCode)
+    navigate('/login')
+  }
+
+  return (
+    <div className="pair-page">
+      <div className="pair-bg">
+        {[...Array(15)].map((_, i) => (
+          <div
+            key={i}
+            className="floating-shape"
+            style={{
+              left: `${Math.random() * 100}%`,
+              animationDelay: `${Math.random() * 10}s`,
+              animationDuration: `${15 + Math.random() * 10}s`
+            }}
+          />
+        ))}
+      </div>
+
+      <div className="pair-container">
+        <div className="pair-card">
+          <div className="pair-icon">📺</div>
+          <h1>חיבור טלוויזיה</h1>
+
+          {status === 'checking' && (
+            <p className="status-text">בודק...</p>
+          )}
+
+          {status === 'needLogin' && (
+            <>
+              <p className="pair-message">
+                כדי לחבר את הטלוויזיה, יש להתחבר קודם לחשבון שלך
+              </p>
+              <button className="pair-btn primary" onClick={goToLogin}>
+                התחבר לחשבון
+              </button>
+              <button className="pair-btn secondary" onClick={() => navigate('/register')}>
+                יצירת חשבון חדש
+              </button>
+            </>
+          )}
+
+          {status === 'ready' && (
+            <>
+              <p className="pair-message">
+                לחץ כדי לחבר את הטלוויזיה ל:
+              </p>
+              <div className="workspace-info">
+                <span className="workspace-name">{displayName}</span>
+                <span className="workspace-code-small">{workspaceCode}</span>
+              </div>
+              <button className="pair-btn primary large" onClick={handlePair}>
+                חבר את הטלוויזיה
+              </button>
+              <button className="pair-btn secondary" onClick={() => navigate('/qr')}>
+                ביטול
+              </button>
+            </>
+          )}
+
+          {status === 'pairing' && (
+            <div className="pairing-spinner">
+              <div className="spinner"></div>
+              <p>מחבר את הטלוויזיה...</p>
+            </div>
+          )}
+
+          {status === 'success' && (
+            <div className="success-state">
+              <div className="success-icon">✓</div>
+              <p>הטלוויזיה מחוברת!</p>
+            </div>
+          )}
+
+          {status === 'error' && (
+            <>
+              <p className="error-text">אירעה שגיאה בחיבור</p>
+              <button className="pair-btn primary" onClick={handlePair}>
+                נסה שוב
+              </button>
+            </>
+          )}
+
+          <div className="pairing-code-display">
+            קוד צימוד: <strong>{pairingCode}</strong>
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+export default PairPage

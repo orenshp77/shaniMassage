@@ -1,0 +1,334 @@
+.tv-pair-page {
+  min-height: 100vh;
+  background: linear-gradient(135deg, #0a0a1a 0%, #1a1a2e 50%, #0f1a2e 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  overflow: hidden;
+}
+
+/* Animated Background */
+.tv-bg {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.floating-orb {
+  position: absolute;
+  width: 4px;
+  height: 4px;
+  background: rgba(0, 255, 255, 0.6);
+  border-radius: 50%;
+  animation: floatOrb 20s ease-in-out infinite;
+  box-shadow: 0 0 20px rgba(0, 255, 255, 0.4);
+}
+
+.floating-orb:nth-child(odd) {
+  background: rgba(255, 105, 180, 0.5);
+  box-shadow: 0 0 20px rgba(255, 105, 180, 0.3);
+}
+
+.floating-orb:nth-child(3n) {
+  background: rgba(102, 126, 234, 0.5);
+  box-shadow: 0 0 20px rgba(102, 126, 234, 0.3);
+}
+
+@keyframes floatOrb {
+  0%, 100% {
+    transform: translate(0, 0) scale(1);
+    opacity: 0.3;
+  }
+  25% {
+    transform: translate(50px, -30px) scale(1.5);
+    opacity: 0.8;
+  }
+  50% {
+    transform: translate(-30px, -60px) scale(1);
+    opacity: 0.5;
+  }
+  75% {
+    transform: translate(20px, -40px) scale(1.2);
+    opacity: 0.7;
+  }
+}
+
+/* Content */
+.tv-content {
+  position: relative;
+  z-index: 1;
+  text-align: center;
+  padding: 40px;
+  animation: fadeIn 1s ease-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Header */
+.tv-header {
+  margin-bottom: 50px;
+}
+
+.tv-header h1 {
+  font-size: 5rem;
+  font-weight: 700;
+  background: linear-gradient(135deg, #00ffff, #ff69b4, #667eea);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin-bottom: 20px;
+  animation: gradientShift 5s ease infinite;
+  background-size: 200% 200%;
+}
+
+@keyframes gradientShift {
+  0%, 100% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+}
+
+.tv-header p {
+  font-size: 2rem;
+  color: rgba(255, 255, 255, 0.7);
+}
+
+/* QR Section */
+.qr-section {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-bottom: 50px;
+}
+
+.qr-frame {
+  position: relative;
+  background: white;
+  padding: 30px;
+  border-radius: 30px;
+  box-shadow:
+    0 0 60px rgba(0, 255, 255, 0.3),
+    0 0 120px rgba(102, 126, 234, 0.2),
+    inset 0 0 60px rgba(255, 255, 255, 0.1);
+  animation: pulse 3s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    box-shadow:
+      0 0 60px rgba(0, 255, 255, 0.3),
+      0 0 120px rgba(102, 126, 234, 0.2);
+  }
+  50% {
+    box-shadow:
+      0 0 80px rgba(0, 255, 255, 0.5),
+      0 0 150px rgba(102, 126, 234, 0.3);
+  }
+}
+
+.scan-overlay {
+  position: absolute;
+  top: 30px;
+  left: 30px;
+  right: 30px;
+  bottom: 30px;
+  pointer-events: none;
+  overflow: hidden;
+  border-radius: 10px;
+}
+
+.scan-line {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, transparent, #00ffff, transparent);
+  animation: scan 2s ease-in-out infinite;
+}
+
+@keyframes scan {
+  0%, 100% {
+    top: 0;
+    opacity: 0;
+  }
+  10% {
+    opacity: 1;
+  }
+  90% {
+    opacity: 1;
+  }
+  100% {
+    top: 100%;
+    opacity: 0;
+  }
+}
+
+.pairing-code {
+  margin-top: 30px;
+  font-size: 1.8rem;
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.pairing-code span {
+  font-family: monospace;
+  font-size: 2.5rem;
+  font-weight: 700;
+  color: #00ffff;
+  letter-spacing: 8px;
+  margin-right: 15px;
+}
+
+/* Instructions */
+.tv-instructions {
+  display: flex;
+  justify-content: center;
+  gap: 60px;
+  flex-wrap: wrap;
+}
+
+.instruction-step {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  background: rgba(255, 255, 255, 0.05);
+  padding: 25px 40px;
+  border-radius: 20px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  transition: all 0.3s ease;
+}
+
+.instruction-step:hover {
+  background: rgba(255, 255, 255, 0.1);
+  transform: translateY(-5px);
+}
+
+.step-number {
+  width: 50px;
+  height: 50px;
+  background: linear-gradient(135deg, #667eea, #764ba2);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: white;
+}
+
+.step-text {
+  font-size: 1.5rem;
+  color: rgba(255, 255, 255, 0.9);
+}
+
+/* Paired Success */
+.paired-success {
+  animation: successPop 0.5s ease-out;
+}
+
+@keyframes successPop {
+  0% {
+    transform: scale(0.5);
+    opacity: 0;
+  }
+  70% {
+    transform: scale(1.1);
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+.success-icon {
+  width: 150px;
+  height: 150px;
+  background: linear-gradient(135deg, #2ecc71, #27ae60);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 80px;
+  color: white;
+  margin: 0 auto 40px;
+  box-shadow: 0 0 60px rgba(46, 204, 113, 0.5);
+}
+
+.paired-success h2 {
+  font-size: 4rem;
+  color: #2ecc71;
+  margin-bottom: 20px;
+}
+
+.paired-success p {
+  font-size: 2rem;
+  color: rgba(255, 255, 255, 0.7);
+}
+
+/* Error State */
+.error-state {
+  text-align: center;
+}
+
+.error-state h2 {
+  font-size: 3rem;
+  color: #e74c3c;
+  margin-bottom: 30px;
+}
+
+.error-state button {
+  padding: 20px 60px;
+  font-size: 1.5rem;
+  background: linear-gradient(135deg, #667eea, #764ba2);
+  color: white;
+  border: none;
+  border-radius: 15px;
+  cursor: pointer;
+  font-family: inherit;
+  transition: all 0.3s ease;
+}
+
+.error-state button:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 10px 30px rgba(102, 126, 234, 0.4);
+}
+
+/* Responsive for smaller TVs */
+@media (max-width: 1200px) {
+  .tv-header h1 {
+    font-size: 3.5rem;
+  }
+
+  .tv-header p {
+    font-size: 1.5rem;
+  }
+
+  .qr-frame {
+    padding: 20px;
+  }
+
+  .qr-frame svg {
+    width: 250px !important;
+    height: 250px !important;
+  }
+
+  .instruction-step {
+    padding: 15px 25px;
+  }
+
+  .step-text {
+    font-size: 1.2rem;
+  }
+}

@@ -37,6 +37,14 @@ const pool = new Pool({
 // In-memory storage for active workspaces (keyed by workspace_code)
 const workspaces = {}
 
+// In-memory storage for TV pairing codes (temporary, expires after 5 minutes)
+const tvPairingCodes = {}
+
+// Generate 6-digit numeric pairing code for TV
+const generatePairingCode = () => {
+  return Math.floor(100000 + Math.random() * 900000).toString()
+}
+
 // Get or create workspace state
 const getWorkspace = (workspaceCode) => {
   if (!workspaces[workspaceCode]) {
@@ -562,6 +570,108 @@ app.post('/api/admin/reset-db', async (req, res) => {
   } catch (error) {
     console.error('Error resetting database:', error)
     res.status(500).json({ error: 'שגיאה באיפוס הדאטאבייס' })
+  }
+})
+
+// ============ TV PAIRING ROUTES ============
+
+// Generate a new TV pairing code
+app.post('/api/tv/generate-code', (req, res) => {
+  try {
+    // Clean up expired codes (older than 5 minutes)
+    const now = Date.now()
+    for (const code in tvPairingCodes) {
+      if (now - tvPairingCodes[code].createdAt > 5 * 60 * 1000) {
+        delete tvPairingCodes[code]
+      }
+    }
+
+    // Generate unique code
+    let pairingCode
+    do {
+      pairingCode = generatePairingCode()
+    } while (tvPairingCodes[pairingCode])
+
+    // Store pairing code
+    tvPairingCodes[pairingCode] = {
+      createdAt: now,
+      paired: false,
+      workspaceCode: null,
+      displayName: null
+    }
+
+    res.json({ pairingCode })
+  } catch (error) {
+    console.error('Error generating pairing code:', error)
+    res.status(500).json({ error: 'שגיאה ביצירת קוד צימוד' })
+  }
+})
+
+// Check if TV has been paired (polled by TV)
+app.get('/api/tv/check-pairing/:code', (req, res) => {
+  try {
+    const { code } = req.params
+    const pairing = tvPairingCodes[code]
+
+    if (!pairing) {
+      return res.status(404).json({ error: 'קוד לא נמצא' })
+    }
+
+    if (pairing.paired) {
+      // Clean up after successful pairing
+      const result = {
+        paired: true,
+        workspaceCode: pairing.workspaceCode,
+        displayName: pairing.displayName
+      }
+      delete tvPairingCodes[code]
+      return res.json(result)
+    }
+
+    res.json({ paired: false })
+  } catch (error) {
+    console.error('Error checking pairing:', error)
+    res.status(500).json({ error: 'שגיאה בבדיקת צימוד' })
+  }
+})
+
+// Pair TV with workspace (called from phone after scanning QR)
+app.post('/api/tv/pair', async (req, res) => {
+  try {
+    const { pairingCode, workspaceCode } = req.body
+
+    if (!pairingCode || !workspaceCode) {
+      return res.status(400).json({ error: 'קוד צימוד וקוד עבודה נדרשים' })
+    }
+
+    const pairing = tvPairingCodes[pairingCode]
+    if (!pairing) {
+      return res.status(404).json({ error: 'קוד צימוד לא נמצא או פג תוקף' })
+    }
+
+    // Get workspace display name
+    const userResult = await pool.query(
+      'SELECT display_name FROM users WHERE workspace_code = $1',
+      [workspaceCode]
+    )
+
+    if (userResult.rows.length === 0) {
+      return res.status(404).json({ error: 'מרחב עבודה לא נמצא' })
+    }
+
+    // Mark as paired
+    pairing.paired = true
+    pairing.workspaceCode = workspaceCode
+    pairing.displayName = userResult.rows[0].display_name
+
+    res.json({
+      success: true,
+      message: 'הטלוויזיה צומדה בהצלחה!',
+      displayName: pairing.displayName
+    })
+  } catch (error) {
+    console.error('Error pairing TV:', error)
+    res.status(500).json({ error: 'שגיאה בצימוד הטלוויזיה' })
   }
 })
 

@@ -1,0 +1,239 @@
+.pair-page {
+  min-height: 100vh;
+  background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  overflow: hidden;
+  padding: 20px;
+}
+
+/* Background */
+.pair-bg {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.floating-shape {
+  position: absolute;
+  width: 20px;
+  height: 20px;
+  background: rgba(0, 188, 212, 0.15);
+  border-radius: 50%;
+  animation: floatUp 20s linear infinite;
+}
+
+.floating-shape:nth-child(odd) {
+  background: rgba(255, 105, 180, 0.1);
+}
+
+@keyframes floatUp {
+  0% {
+    transform: translateY(100vh) rotate(0deg);
+    opacity: 0;
+  }
+  10% { opacity: 1; }
+  90% { opacity: 1; }
+  100% {
+    transform: translateY(-100vh) rotate(720deg);
+    opacity: 0;
+  }
+}
+
+/* Container */
+.pair-container {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  max-width: 450px;
+}
+
+/* Card */
+.pair-card {
+  background: rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(10px);
+  border-radius: 25px;
+  padding: 40px;
+  text-align: center;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  direction: rtl;
+}
+
+.pair-icon {
+  font-size: 5rem;
+  margin-bottom: 20px;
+  animation: bounce 2s ease infinite;
+}
+
+@keyframes bounce {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-10px); }
+}
+
+.pair-card h1 {
+  font-size: 2rem;
+  color: white;
+  margin-bottom: 25px;
+  background: linear-gradient(135deg, #00bcd4, #667eea);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.pair-message {
+  font-size: 1.2rem;
+  color: rgba(255, 255, 255, 0.7);
+  margin-bottom: 25px;
+  line-height: 1.6;
+}
+
+/* Workspace Info */
+.workspace-info {
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 15px;
+  padding: 20px;
+  margin-bottom: 25px;
+}
+
+.workspace-name {
+  display: block;
+  font-size: 1.8rem;
+  font-weight: 700;
+  color: #00ffff;
+  margin-bottom: 8px;
+}
+
+.workspace-code-small {
+  font-size: 1rem;
+  color: rgba(255, 255, 255, 0.5);
+  font-family: monospace;
+  letter-spacing: 2px;
+}
+
+/* Buttons */
+.pair-btn {
+  width: 100%;
+  padding: 15px 30px;
+  border: none;
+  border-radius: 15px;
+  font-size: 1.1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-family: inherit;
+  margin-bottom: 15px;
+}
+
+.pair-btn.primary {
+  background: linear-gradient(135deg, #00bcd4, #0097a7);
+  color: white;
+}
+
+.pair-btn.primary:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 10px 30px rgba(0, 188, 212, 0.4);
+}
+
+.pair-btn.primary.large {
+  padding: 20px 30px;
+  font-size: 1.3rem;
+}
+
+.pair-btn.secondary {
+  background: rgba(255, 255, 255, 0.1);
+  color: rgba(255, 255, 255, 0.8);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.pair-btn.secondary:hover {
+  background: rgba(255, 255, 255, 0.2);
+  color: white;
+}
+
+/* Spinner */
+.pairing-spinner {
+  padding: 30px;
+}
+
+.spinner {
+  width: 60px;
+  height: 60px;
+  border: 4px solid rgba(255, 255, 255, 0.1);
+  border-top-color: #00bcd4;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin: 0 auto 20px;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.pairing-spinner p {
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 1.2rem;
+}
+
+/* Success State */
+.success-state {
+  padding: 20px;
+}
+
+.success-icon {
+  width: 80px;
+  height: 80px;
+  background: linear-gradient(135deg, #2ecc71, #27ae60);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 40px;
+  color: white;
+  margin: 0 auto 20px;
+  animation: pop 0.5s ease-out;
+}
+
+@keyframes pop {
+  0% { transform: scale(0); }
+  70% { transform: scale(1.2); }
+  100% { transform: scale(1); }
+}
+
+.success-state p {
+  color: #2ecc71;
+  font-size: 1.5rem;
+  font-weight: 600;
+}
+
+/* Error */
+.error-text {
+  color: #e74c3c;
+  font-size: 1.2rem;
+  margin-bottom: 20px;
+}
+
+/* Pairing Code Display */
+.pairing-code-display {
+  margin-top: 25px;
+  padding-top: 20px;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  color: rgba(255, 255, 255, 0.4);
+  font-size: 0.9rem;
+}
+
+.pairing-code-display strong {
+  color: rgba(255, 255, 255, 0.6);
+  font-family: monospace;
+  letter-spacing: 3px;
+}
+
+.status-text {
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 1.2rem;
+}

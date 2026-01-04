@@ -6,6 +6,8 @@ import ConnectPage from './pages/ConnectPage'
 import LoginPage from './pages/LoginPage'
 import RegisterPage from './pages/RegisterPage'
 import AdminPage from './pages/AdminPage'
+import TVPairPage from './pages/TVPairPage'
+import PairPage from './pages/PairPage'
 
 function App() {
   return (
@@ -19,6 +21,8 @@ function App() {
           <Route path="/input" element={<InputPage />} />
           <Route path="/display" element={<DisplayPage />} />
           <Route path="/qr" element={<QRPage />} />
+          <Route path="/tv" element={<TVPairPage />} />
+          <Route path="/pair" element={<PairPage />} />
         </Routes>
       </div>
     </Router>
