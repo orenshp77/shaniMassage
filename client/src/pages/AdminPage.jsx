@@ -4,6 +4,10 @@ import api from '../services/api'
 import Swal from 'sweetalert2'
 import './AdminPage.css'
 
+// Admin credentials
+const ADMIN_USERNAME = 'admin'
+const ADMIN_PASSWORD = 'shani2026!'
+
 function AdminPage() {
   const [users, setUsers] = useState([])
   const [loading, setLoading] = useState(true)
@@ -11,10 +15,21 @@ function AdminPage() {
   const [newPassword, setNewPassword] = useState('')
   const [newInputPin, setNewInputPin] = useState('')
   const [newDisplayPin, setNewDisplayPin] = useState('')
+  const [isAuthenticated, setIsAuthenticated] = useState(false)
+  const [adminUsername, setAdminUsername] = useState('')
+  const [adminPassword, setAdminPassword] = useState('')
+  const [loginError, setLoginError] = useState('')
   const navigate = useNavigate()
 
   useEffect(() => {
-    fetchUsers()
+    // Check if already authenticated in this session
+    const adminAuth = sessionStorage.getItem('adminAuth')
+    if (adminAuth === 'true') {
+      setIsAuthenticated(true)
+      fetchUsers()
+    } else {
+      setLoading(false)
+    }
   }, [])
 
   const fetchUsers = async () => {
@@ -186,10 +201,79 @@ function AdminPage() {
     })
   }
 
+  const handleAdminLogin = (e) => {
+    e.preventDefault()
+    if (adminUsername === ADMIN_USERNAME && adminPassword === ADMIN_PASSWORD) {
+      setIsAuthenticated(true)
+      sessionStorage.setItem('adminAuth', 'true')
+      setLoginError('')
+      fetchUsers()
+    } else {
+      setLoginError('שם משתמש או סיסמה שגויים')
+    }
+  }
+
+  const handleAdminLogout = () => {
+    sessionStorage.removeItem('adminAuth')
+    setIsAuthenticated(false)
+    setAdminUsername('')
+    setAdminPassword('')
+  }
+
   if (loading) {
     return (
       <div className="admin-page">
         <div className="loading">טוען...</div>
+      </div>
+    )
+  }
+
+  // Show login form if not authenticated
+  if (!isAuthenticated) {
+    return (
+      <div className="admin-page">
+        <div className="admin-bg">
+          {[...Array(20)].map((_, i) => (
+            <div key={i} className="floating-shape" style={{
+              left: `${Math.random() * 100}%`,
+              animationDelay: `${Math.random() * 10}s`,
+              animationDuration: `${15 + Math.random() * 10}s`
+            }} />
+          ))}
+        </div>
+        <div className="admin-login-container">
+          <div className="admin-login-card">
+            <h1>ניהול מערכת</h1>
+            <p>נא להזין פרטי מנהל</p>
+            <form onSubmit={handleAdminLogin}>
+              <div className="login-input-group">
+                <input
+                  type="text"
+                  value={adminUsername}
+                  onChange={(e) => setAdminUsername(e.target.value)}
+                  placeholder="שם משתמש"
+                  autoComplete="username"
+                />
+              </div>
+              <div className="login-input-group">
+                <input
+                  type="password"
+                  value={adminPassword}
+                  onChange={(e) => setAdminPassword(e.target.value)}
+                  placeholder="סיסמה"
+                  autoComplete="current-password"
+                />
+              </div>
+              {loginError && <div className="login-error">{loginError}</div>}
+              <button type="submit" className="btn btn-primary login-btn">
+                כניסה
+              </button>
+            </form>
+            <button className="btn btn-secondary back-btn" onClick={() => navigate('/')}>
+              חזרה
+            </button>
+          </div>
+        </div>
       </div>
     )
   }
@@ -215,6 +299,9 @@ function AdminPage() {
             </button>
             <button className="btn btn-secondary" onClick={() => navigate('/')}>
               חזרה
+            </button>
+            <button className="btn btn-logout" onClick={handleAdminLogout}>
+              התנתק
             </button>
           </div>
         </header>
