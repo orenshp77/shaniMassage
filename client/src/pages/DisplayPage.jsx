@@ -126,13 +126,14 @@ function DisplayPage() {
   }
 
   // Calculate dynamic font size for content based on text length
+  // Uses clamp() for responsive sizing across different screen sizes
   const getContentFontSize = (length) => {
-    if (length <= 50) return '3rem'
-    if (length <= 100) return '2.5rem'
-    if (length <= 200) return '2rem'
-    if (length <= 400) return '1.6rem'
-    if (length <= 600) return '1.4rem'
-    return '1.2rem'
+    if (length <= 50) return 'clamp(2rem, 4vw, 3.5rem)'
+    if (length <= 100) return 'clamp(1.8rem, 3.5vw, 3rem)'
+    if (length <= 200) return 'clamp(1.5rem, 3vw, 2.5rem)'
+    if (length <= 400) return 'clamp(1.3rem, 2.5vw, 2rem)'
+    if (length <= 600) return 'clamp(1.2rem, 2vw, 1.8rem)'
+    return 'clamp(1rem, 1.8vw, 1.5rem)'
   }
 
   if (loading) {
