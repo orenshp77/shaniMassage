@@ -36,8 +36,14 @@ function LoginPage() {
         showConfirmButton: false,
         timer: 2000
       }).then(() => {
-        // Navigate to QR page after login
-        navigate('/qr')
+        // Check if there's a pending pairing code (user came from TV pairing)
+        const pendingPairingCode = sessionStorage.getItem('pendingPairingCode')
+        if (pendingPairingCode) {
+          sessionStorage.removeItem('pendingPairingCode')
+          navigate(`/pair?code=${pendingPairingCode}`)
+        } else {
+          navigate('/qr')
+        }
       })
     } catch (error) {
       const errorMessage = error.response?.data?.error || 'שגיאה בהתחברות'

@@ -40,7 +40,8 @@ function RegisterPage() {
     try {
       const response = await api.post('/auth/register', formData)
 
-      // Save workspace info to localStorage
+      // Save user and workspace info to localStorage
+      localStorage.setItem('user', JSON.stringify(response.data.user))
       localStorage.setItem('workspaceCode', response.data.user.workspace_code)
       localStorage.setItem('displayName', formData.displayName)
 
@@ -48,6 +49,7 @@ function RegisterPage() {
       const pendingPairingCode = sessionStorage.getItem('pendingPairingCode')
 
       if (pendingPairingCode) {
+        sessionStorage.removeItem('pendingPairingCode')
         Swal.fire({
           icon: 'success',
           title: 'נרשמת בהצלחה!',
