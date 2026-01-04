@@ -448,19 +448,7 @@
 .swal-incoming-popup {
   border-radius: 30px !important;
   padding: 40px !important;
-  animation: swalPulse 0.3s ease-in-out infinite alternate !important;
   box-shadow: 0 0 80px rgba(102, 126, 234, 0.8) !important;
-}
-
-@keyframes swalPulse {
-  0% {
-    transform: scale(1);
-    box-shadow: 0 0 50px rgba(102, 126, 234, 0.5);
-  }
-  100% {
-    transform: scale(1.02);
-    box-shadow: 0 0 80px rgba(102, 126, 234, 0.8);
-  }
 }
 
 .swal-incoming-content {
@@ -469,7 +457,7 @@
 
 .swal-bell-icon {
   font-size: 6rem;
-  animation: swalBellShake 0.5s ease-in-out infinite;
+  animation: swalBellShake 0.5s ease-in-out 4;
   margin-bottom: 10px;
 }
 
