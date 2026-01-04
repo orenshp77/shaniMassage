@@ -280,62 +280,11 @@
   }
 }
 
-/* 1920x1080 screens (65 inch TV) - applies to screens 1080px and wider */
-@media (min-width: 1080px) {
-  .logo-text {
-    font-size: 2.2rem;
-  }
+/* 1920x1080 screens (65 inch TV) - viewport units handle sizing automatically */
+/* Media query removed - clamp() with vw units now handles all screen sizes */
 
-  .message-subject {
-    font-size: 3.5rem;
-  }
-
-  .message-content {
-    font-size: 2.2rem;
-  }
-
-  .message-content-box {
-    max-height: 50vh;
-    padding: 15px 40px;
-  }
-
-  .pinned-content {
-    font-size: 1.3rem;
-  }
-}
-
-/* Tablets and smaller screens */
-@media (max-width: 1200px) {
-  .message-subject {
-    font-size: 4rem;
-  }
-
-  .message-content {
-    font-size: 2rem;
-  }
-
-  .message-content-box {
-    padding: 30px 40px;
-  }
-
-  .logo-text {
-    font-size: 4rem;
-  }
-}
-
+/* Tablets and smaller screens - only layout changes, not font sizes (clamp handles those) */
 @media (max-width: 768px) {
-  .logo-text {
-    font-size: 3rem;
-  }
-
-  .message-subject {
-    font-size: 2.5rem;
-  }
-
-  .message-content {
-    font-size: 1.5rem;
-  }
-
   .message-datetime {
     flex-direction: column;
     gap: 20px;
