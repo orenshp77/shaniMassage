@@ -10,9 +10,9 @@ const hashPassword = (password) => {
   return crypto.createHash('sha256').update(password).digest('hex')
 }
 
-// Generate random 6-character alphanumeric code for workspace
+// Generate random 3-digit numeric code for workspace
 const generateWorkspaceCode = () => {
-  return crypto.randomBytes(3).toString('hex').toUpperCase()
+  return Math.floor(100 + Math.random() * 900).toString()
 }
 
 const app = express()
