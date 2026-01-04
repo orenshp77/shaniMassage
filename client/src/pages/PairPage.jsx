@@ -50,8 +50,8 @@ function PairPage() {
         showConfirmButton: false,
         timer: 2000
       }).then(() => {
-        // Go to display page - same as TV
-        navigate(`/display/${workspaceCode}`)
+        // Phone goes to Input page to manage messages
+        navigate(`/input/${workspaceCode}`)
       })
     } catch (error) {
       setStatus('error')
