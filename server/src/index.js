@@ -668,6 +668,11 @@ app.post('/api/tv/pair', async (req, res) => {
     pairing.workspaceCode = workspaceCode
     pairing.displayName = userResult.rows[0].display_name
 
+    // Mark workspace as having TV connected
+    const ws = getWorkspace(workspaceCode)
+    ws.tvConnected = true
+    ws.tvConnectedAt = Date.now()
+
     res.json({
       success: true,
       message: 'הטלוויזיה צומדה בהצלחה!',
@@ -676,6 +681,24 @@ app.post('/api/tv/pair', async (req, res) => {
   } catch (error) {
     console.error('Error pairing TV:', error)
     res.status(500).json({ error: 'שגיאה בצימוד הטלוויזיה' })
+  }
+})
+
+// Check if TV is connected to workspace
+app.get('/api/tv/status', async (req, res) => {
+  try {
+    const { workspace } = req.query
+    if (!workspace) {
+      return res.status(400).json({ error: 'workspace code is required' })
+    }
+    const ws = getWorkspace(workspace)
+    res.json({
+      connected: ws.tvConnected || false,
+      connectedAt: ws.tvConnectedAt || null
+    })
+  } catch (error) {
+    console.error('Error checking TV status:', error)
+    res.status(500).json({ error: 'שגיאה בבדיקת סטטוס טלוויזיה' })
   }
 })
 
@@ -689,6 +712,7 @@ app.post('/api/tv/disconnect', async (req, res) => {
     const ws = getWorkspace(workspaceCode)
     ws.disconnected = true
     ws.disconnectedAt = Date.now()
+    ws.tvConnected = false  // Mark TV as disconnected
     res.json({ success: true })
   } catch (error) {
     console.error('Error disconnecting TV:', error)

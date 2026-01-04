@@ -9,6 +9,7 @@ function QRPage() {
   const [baseUrl, setBaseUrl] = useState('')
   const [workspaceCode, setWorkspaceCode] = useState('')
   const [displayName, setDisplayName] = useState('')
+  const [tvConnected, setTvConnected] = useState(false)
   const navigate = useNavigate()
   const { workspaceCode: urlWorkspaceCode } = useParams()
 
@@ -54,6 +55,21 @@ function QRPage() {
 
     setWorkspaceCode(storedWorkspace)
     setDisplayName(storedName || 'מרחב העבודה שלי')
+
+    // Check TV connection status
+    const checkTvStatus = async () => {
+      try {
+        const response = await api.get(`/tv/status?workspace=${storedWorkspace}`)
+        setTvConnected(response.data.connected)
+      } catch (error) {
+        console.error('Error checking TV status:', error)
+      }
+    }
+    checkTvStatus()
+
+    // Poll TV status every 5 seconds
+    const interval = setInterval(checkTvStatus, 5000)
+    return () => clearInterval(interval)
   }, [navigate, urlWorkspaceCode])
 
   // Go to pair page to connect TV
@@ -153,10 +169,17 @@ function QRPage() {
         </div>
 
         {/* TV Connect Button - below QR cards */}
-        <button className="tv-connect-btn" onClick={goToConnect}>
-          <span className="tv-icon">📺</span>
-          <span className="tv-text">חבר טלוויזיה</span>
-        </button>
+        {tvConnected ? (
+          <div className="tv-status-btn connected">
+            <span className="tv-icon">📺</span>
+            <span className="tv-text">מסך מחובר</span>
+          </div>
+        ) : (
+          <button className="tv-connect-btn" onClick={goToConnect}>
+            <span className="tv-icon">📺</span>
+            <span className="tv-text">חבר טלוויזיה</span>
+          </button>
+        )}
 
         <div className="qr-actions">
           <button onClick={handleLogout} className="action-btn logout-action">
