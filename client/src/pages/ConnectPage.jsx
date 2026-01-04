@@ -263,13 +263,6 @@ function ConnectPage() {
                 <span className="access-icon">⌨️</span>
                 <span className="access-label">ניהול</span>
               </button>
-              <button
-                className="access-type-btn display-btn"
-                onClick={() => selectAccessType('display')}
-              >
-                <span className="access-icon">📺</span>
-                <span className="access-label">תצוגה</span>
-              </button>
             </div>
           )}
 
