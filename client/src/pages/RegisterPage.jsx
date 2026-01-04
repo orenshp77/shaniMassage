@@ -40,19 +40,43 @@ function RegisterPage() {
     try {
       const response = await api.post('/auth/register', formData)
 
-      Swal.fire({
-        icon: 'success',
-        title: 'נרשמת בהצלחה!',
-        html: `
-          <div style="text-align: right; direction: rtl;">
-            <p><strong>קוד העבודה שלך:</strong> ${response.data.user.workspace_code}</p>
-            <p>שמור את הקוד הזה - תצטרך אותו להתחברות</p>
-          </div>
-        `,
-        confirmButtonText: 'המשך להתחברות'
-      }).then(() => {
-        navigate('/login')
-      })
+      // Save workspace info to localStorage
+      localStorage.setItem('workspaceCode', response.data.user.workspace_code)
+      localStorage.setItem('displayName', formData.displayName)
+
+      // Check if there's a pending pairing code
+      const pendingPairingCode = sessionStorage.getItem('pendingPairingCode')
+
+      if (pendingPairingCode) {
+        Swal.fire({
+          icon: 'success',
+          title: 'נרשמת בהצלחה!',
+          html: `
+            <div style="text-align: right; direction: rtl;">
+              <p><strong>קוד העבודה שלך:</strong> ${response.data.user.workspace_code}</p>
+              <p>עכשיו נחבר את הטלוויזיה...</p>
+            </div>
+          `,
+          confirmButtonText: 'חבר טלוויזיה',
+          timer: 3000
+        }).then(() => {
+          navigate(`/pair?code=${pendingPairingCode}`)
+        })
+      } else {
+        Swal.fire({
+          icon: 'success',
+          title: 'נרשמת בהצלחה!',
+          html: `
+            <div style="text-align: right; direction: rtl;">
+              <p><strong>קוד העבודה שלך:</strong> ${response.data.user.workspace_code}</p>
+              <p>שמור את הקוד הזה - תצטרך אותו להתחברות</p>
+            </div>
+          `,
+          confirmButtonText: 'המשך'
+        }).then(() => {
+          navigate('/qr')
+        })
+      }
     } catch (error) {
       Swal.fire({
         icon: 'error',

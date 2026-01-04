@@ -68,6 +68,12 @@ function PairPage() {
     navigate('/login')
   }
 
+  const goToRegister = () => {
+    // Save the pairing code so we can return after registration
+    sessionStorage.setItem('pendingPairingCode', pairingCode)
+    navigate('/register')
+  }
+
   return (
     <div className="pair-page">
       <div className="pair-bg">
@@ -101,7 +107,7 @@ function PairPage() {
               <button className="pair-btn primary" onClick={goToLogin}>
                 התחבר לחשבון
               </button>
-              <button className="pair-btn secondary" onClick={() => navigate('/register')}>
+              <button className="pair-btn secondary" onClick={goToRegister}>
                 יצירת חשבון חדש
               </button>
             </>
