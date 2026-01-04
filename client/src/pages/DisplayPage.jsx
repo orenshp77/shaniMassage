@@ -136,6 +136,15 @@ function DisplayPage() {
     return 'clamp(1rem, 1.8vw, 1.5rem)'
   }
 
+  // Calculate dynamic font size for pinned message (smaller than content)
+  const getPinnedFontSize = (length) => {
+    if (length <= 30) return 'clamp(1.3rem, 2.5vw, 2rem)'
+    if (length <= 60) return 'clamp(1.2rem, 2.2vw, 1.8rem)'
+    if (length <= 100) return 'clamp(1.1rem, 2vw, 1.5rem)'
+    if (length <= 150) return 'clamp(1rem, 1.8vw, 1.3rem)'
+    return 'clamp(0.9rem, 1.5vw, 1.2rem)'
+  }
+
   if (loading) {
     return (
       <div className="display-page">
@@ -182,7 +191,7 @@ function DisplayPage() {
               <div className="pinned-message-display">
                 <p
                   className="pinned-content"
-                  style={{ fontSize: getContentFontSize(pinnedMessage.length) }}
+                  style={{ fontSize: getPinnedFontSize(pinnedMessage.length) }}
                 >
                   {pinnedMessage}
                 </p>
@@ -208,7 +217,7 @@ function DisplayPage() {
                 <div className="pinned-message-display standalone">
                   <p
                     className="pinned-content"
-                    style={{ fontSize: getContentFontSize(pinnedMessage.length) }}
+                    style={{ fontSize: getPinnedFontSize(pinnedMessage.length) }}
                   >
                     {pinnedMessage}
                   </p>

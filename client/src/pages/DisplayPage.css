@@ -124,12 +124,12 @@
   animation: pinnedGradientShift 6s ease-in-out infinite;
   backdrop-filter: blur(10px);
   border: 1px solid rgba(255, 182, 193, 0.3);
-  border-radius: 20px;
-  padding: 20px 40px;
-  margin: 20px auto 10px;
-  max-width: 1400px;
-  width: 85%;
-  box-shadow: 0 0 30px rgba(255, 105, 180, 0.15);
+  border-radius: 15px;
+  padding: 12px 30px;
+  margin: 8px auto 5px;
+  max-width: 1200px;
+  width: 80%;
+  box-shadow: 0 0 20px rgba(255, 105, 180, 0.15);
 }
 
 @keyframes pinnedGradientShift {
@@ -149,9 +149,9 @@
 }
 
 .pinned-content {
-  font-size: 2rem;
+  font-size: 1.5rem;
   color: rgba(255, 255, 255, 0.95);
-  line-height: 1.4;
+  line-height: 1.3;
   font-weight: 400;
   word-wrap: break-word;
   overflow-wrap: break-word;
