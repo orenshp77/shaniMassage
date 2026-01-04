@@ -68,12 +68,31 @@ function DisplayPage() {
     })
   }
 
+  // Check if workspace was disconnected
+  const checkDisconnect = async () => {
+    try {
+      const response = await api.get(`/tv/check-disconnect?workspace=${workspaceCode.current}`)
+      if (response.data.disconnected) {
+        // User logged out, go back to home page
+        localStorage.removeItem('workspaceCode')
+        localStorage.removeItem('displayName')
+        localStorage.removeItem('tvMode')
+        navigate('/')
+      }
+    } catch (e) {
+      // Silent fail
+    }
+  }
+
   const fetchMessage = async () => {
     try {
       if (!workspaceCode.current) {
         navigate('/')
         return
       }
+
+      // Check for disconnect
+      await checkDisconnect()
 
       const response = await api.get(`/active-message?workspace=${workspaceCode.current}`)
       const { message: newMessage, theme, lastExplicitChange, pinnedMessage: serverPinnedMessage, pinnedMessageEnabled } = response.data

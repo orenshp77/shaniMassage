@@ -228,7 +228,11 @@ function InputPage() {
             <h1>{displayName}</h1>
             <div className="header-actions">
               <span className="workspace-badge">קוד: {workspaceCode}</span>
-              <button className="logout-btn" onClick={() => {
+              <button className="logout-btn" onClick={async () => {
+                // Notify server to disconnect TV
+                try {
+                  await api.post('/tv/disconnect', { workspaceCode })
+                } catch (e) {}
                 localStorage.removeItem('workspaceCode')
                 localStorage.removeItem('displayName')
                 localStorage.removeItem('user')

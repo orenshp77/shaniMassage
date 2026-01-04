@@ -119,7 +119,7 @@ function QRPage() {
           {/* Input Page QR */}
           <div className="qr-card input-card">
             <div className="qr-icon">📝</div>
-            <h2>עמוד ניהול</h2>
+            <h2>עמוד יצירת הודעות</h2>
             <p>סרוק כדי להזין ולנהל הודעות</p>
             <div className="qr-code-wrapper">
               <QRCodeSVG
@@ -136,7 +136,7 @@ function QRPage() {
               <button className="card-btn enter-btn" onClick={() => window.open(inputUrl, '_blank')}>
                 כניסה
               </button>
-              <button className="card-btn copy-btn" onClick={() => copyToClipboard(inputUrl, 'קישור לעמוד ניהול')}>
+              <button className="card-btn copy-btn" onClick={() => copyToClipboard(inputUrl, 'קישור לעמוד יצירת הודעות')}>
                 העתק קישור
               </button>
             </div>

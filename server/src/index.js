@@ -679,6 +679,43 @@ app.post('/api/tv/pair', async (req, res) => {
   }
 })
 
+// Disconnect TV (called when user logs out)
+app.post('/api/tv/disconnect', async (req, res) => {
+  try {
+    const { workspaceCode } = req.body
+    if (!workspaceCode) {
+      return res.status(400).json({ error: 'workspace code is required' })
+    }
+    const ws = getWorkspace(workspaceCode)
+    ws.disconnected = true
+    ws.disconnectedAt = Date.now()
+    res.json({ success: true })
+  } catch (error) {
+    console.error('Error disconnecting TV:', error)
+    res.status(500).json({ error: 'שגיאה בניתוק הטלוויזיה' })
+  }
+})
+
+// Check if workspace is disconnected (TV polls this)
+app.get('/api/tv/check-disconnect', async (req, res) => {
+  try {
+    const { workspace } = req.query
+    if (!workspace) {
+      return res.status(400).json({ error: 'workspace code is required' })
+    }
+    const ws = getWorkspace(workspace)
+    const disconnected = ws.disconnected || false
+    // Reset the flag after checking
+    if (disconnected) {
+      ws.disconnected = false
+    }
+    res.json({ disconnected })
+  } catch (error) {
+    console.error('Error checking disconnect:', error)
+    res.status(500).json({ error: 'שגיאה בבדיקת ניתוק' })
+  }
+})
+
 // Set active message (for display page) - with workspace
 app.post('/api/active-message', async (req, res) => {
   try {

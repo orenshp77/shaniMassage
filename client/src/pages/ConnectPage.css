@@ -304,21 +304,22 @@
 /* Code Display */
 .code-display {
   display: flex;
+  flex-direction: row-reverse;
   justify-content: center;
   gap: 0.8vh;
   margin-bottom: 1vh;
 }
 
 .code-digit {
-  width: clamp(35px, 5vh, 48px);
-  height: clamp(40px, 6vh, 56px);
+  width: clamp(40px, 5.75vh, 55px);
+  height: clamp(46px, 7vh, 64px);
   background: rgba(255, 255, 255, 0.05);
   border: 2px solid rgba(255, 255, 255, 0.2);
-  border-radius: 0.8vh;
+  border-radius: 0.9vh;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: clamp(1.2rem, 2.5vh, 1.7rem);
+  font-size: clamp(1.4rem, 2.9vh, 2rem);
   font-weight: 700;
   color: white;
   transition: all 0.3s ease;
@@ -349,22 +350,22 @@
   75% { transform: translateX(10px); }
 }
 
-/* Number Pad - viewport responsive */
+/* Number Pad - viewport responsive - enlarged 15% */
 .number-pad {
   display: grid;
-  grid-template-columns: repeat(3, clamp(40px, 6vh, 55px));
-  gap: 0.6vh;
-  margin-bottom: 1vh;
+  grid-template-columns: repeat(3, clamp(46px, 7vh, 63px));
+  gap: 0.7vh;
+  margin-bottom: 1.2vh;
 }
 
 .num-btn {
-  width: clamp(40px, 6vh, 55px);
-  height: clamp(30px, 4.5vh, 40px);
+  width: clamp(46px, 7vh, 63px);
+  height: clamp(35px, 5.2vh, 46px);
   border: none;
-  border-radius: 0.8vh;
+  border-radius: 0.9vh;
   background: rgba(255, 255, 255, 0.08);
   color: white;
-  font-size: clamp(1rem, 2vh, 1.3rem);
+  font-size: clamp(1.15rem, 2.3vh, 1.5rem);
   font-weight: 600;
   cursor: pointer;
   transition: all 0.2s ease;
