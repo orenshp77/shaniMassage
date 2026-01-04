@@ -160,6 +160,62 @@
   box-shadow: 0 20px 60px rgba(102, 126, 234, 0.2);
 }
 
+/* Card Action Buttons */
+.card-actions {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+  margin-top: 20px;
+}
+
+.card-btn {
+  padding: 10px 20px;
+  border: none;
+  border-radius: 10px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-family: inherit;
+}
+
+.card-btn.enter-btn {
+  background: linear-gradient(135deg, #667eea, #764ba2);
+  color: white;
+}
+
+.card-btn.enter-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(102, 126, 234, 0.4);
+}
+
+.card-btn.copy-btn {
+  background: rgba(255, 255, 255, 0.1);
+  color: rgba(255, 255, 255, 0.8);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.card-btn.copy-btn:hover {
+  background: rgba(255, 255, 255, 0.2);
+  color: white;
+}
+
+.display-card .card-btn.enter-btn {
+  background: linear-gradient(135deg, #00bcd4, #0097a7);
+}
+
+.display-card .card-btn.enter-btn:hover {
+  box-shadow: 0 8px 20px rgba(0, 188, 212, 0.4);
+}
+
+.input-card .card-btn.enter-btn {
+  background: linear-gradient(135deg, #ff69b4, #ff1493);
+}
+
+.input-card .card-btn.enter-btn:hover {
+  box-shadow: 0 8px 20px rgba(255, 105, 180, 0.4);
+}
+
 /* Action Buttons */
 .qr-actions {
   display: flex;

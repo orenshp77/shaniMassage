@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { QRCodeSVG } from 'qrcode.react'
+import Swal from 'sweetalert2'
 import './QRPage.css'
 
 function QRPage() {
@@ -8,6 +9,25 @@ function QRPage() {
   const [workspaceCode, setWorkspaceCode] = useState('')
   const [displayName, setDisplayName] = useState('')
   const navigate = useNavigate()
+
+  const copyToClipboard = async (url, label) => {
+    try {
+      await navigator.clipboard.writeText(url)
+      Swal.fire({
+        icon: 'success',
+        title: 'הקישור הועתק!',
+        text: `${label}`,
+        showConfirmButton: false,
+        timer: 1500
+      })
+    } catch (err) {
+      Swal.fire({
+        icon: 'error',
+        title: 'שגיאה',
+        text: 'לא ניתן להעתיק את הקישור'
+      })
+    }
+  }
 
   useEffect(() => {
     // Get the current base URL automatically
@@ -65,24 +85,6 @@ function QRPage() {
         </header>
 
         <div className="qr-cards">
-          {/* Input Page QR */}
-          <div className="qr-card input-card">
-            <div className="qr-icon">📝</div>
-            <h2>עמוד ניהול</h2>
-            <p>סרוק כדי להזין ולנהל הודעות</p>
-            <div className="qr-code-wrapper">
-              <QRCodeSVG
-                value={inputUrl}
-                size={200}
-                level="H"
-                includeMargin={true}
-                bgColor="#ffffff"
-                fgColor="#ff69b4"
-              />
-            </div>
-            <div className="url-hint">דורש PIN לניהול</div>
-          </div>
-
           {/* Display Page QR */}
           <div className="qr-card display-card">
             <div className="qr-icon">📺</div>
@@ -99,6 +101,40 @@ function QRPage() {
               />
             </div>
             <div className="url-hint">דורש PIN למסך</div>
+            <div className="card-actions">
+              <button className="card-btn enter-btn" onClick={() => window.open(displayUrl, '_blank')}>
+                כניסה
+              </button>
+              <button className="card-btn copy-btn" onClick={() => copyToClipboard(displayUrl, 'קישור למסך תצוגה')}>
+                העתק קישור
+              </button>
+            </div>
+          </div>
+
+          {/* Input Page QR */}
+          <div className="qr-card input-card">
+            <div className="qr-icon">📝</div>
+            <h2>עמוד ניהול</h2>
+            <p>סרוק כדי להזין ולנהל הודעות</p>
+            <div className="qr-code-wrapper">
+              <QRCodeSVG
+                value={inputUrl}
+                size={200}
+                level="H"
+                includeMargin={true}
+                bgColor="#ffffff"
+                fgColor="#ff69b4"
+              />
+            </div>
+            <div className="url-hint">דורש PIN לניהול</div>
+            <div className="card-actions">
+              <button className="card-btn enter-btn" onClick={() => window.open(inputUrl, '_blank')}>
+                כניסה
+              </button>
+              <button className="card-btn copy-btn" onClick={() => copyToClipboard(inputUrl, 'קישור לעמוד ניהול')}>
+                העתק קישור
+              </button>
+            </div>
           </div>
 
           {/* General Connect QR */}
@@ -117,6 +153,14 @@ function QRPage() {
               />
             </div>
             <div className="url-hint">בחירת ניהול/תצוגה</div>
+            <div className="card-actions">
+              <button className="card-btn enter-btn" onClick={() => window.open(connectUrl, '_blank')}>
+                כניסה
+              </button>
+              <button className="card-btn copy-btn" onClick={() => copyToClipboard(connectUrl, 'קישור להתחברות כללית')}>
+                העתק קישור
+              </button>
+            </div>
           </div>
         </div>
 
