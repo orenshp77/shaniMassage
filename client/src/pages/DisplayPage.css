@@ -433,3 +433,36 @@
   margin-top: 15px;
   opacity: 0.95;
 }
+
+/* Sound Enable Button */
+.sound-enable-btn {
+  position: fixed;
+  bottom: 30px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border: none;
+  padding: 20px 50px;
+  font-size: 1.8rem;
+  border-radius: 50px;
+  cursor: pointer;
+  animation: pulseBtn 2s ease-in-out infinite;
+  box-shadow: 0 10px 40px rgba(102, 126, 234, 0.5);
+  z-index: 100;
+  font-family: inherit;
+}
+
+.sound-enable-btn:hover {
+  transform: translateX(-50%) scale(1.05);
+  box-shadow: 0 15px 50px rgba(102, 126, 234, 0.7);
+}
+
+@keyframes pulseBtn {
+  0%, 100% {
+    box-shadow: 0 10px 40px rgba(102, 126, 234, 0.5);
+  }
+  50% {
+    box-shadow: 0 10px 60px rgba(102, 126, 234, 0.8);
+  }
+}

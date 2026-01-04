@@ -19,6 +19,7 @@ function DisplayPage() {
   const lastExplicitChangeRef = useRef(0) // Track last explicit change timestamp from server
   const audioRef = useRef(null)
   const audioUnlocked = useRef(false)
+  const [showSoundPrompt, setShowSoundPrompt] = useState(true)
   const workspaceCode = useRef(null)
   const navigate = useNavigate()
   const { workspaceCode: urlWorkspaceCode } = useParams()
@@ -32,7 +33,25 @@ function DisplayPage() {
         audioRef.current.currentTime = 0
         audioRef.current.volume = 0.8
         audioUnlocked.current = true
+        setShowSoundPrompt(false)
       }).catch(() => {})
+    }
+  }
+
+  // Enable sound when user clicks the prompt
+  const enableSound = () => {
+    if (audioRef.current) {
+      audioRef.current.volume = 0.8
+      audioRef.current.play().then(() => {
+        audioRef.current.pause()
+        audioRef.current.currentTime = 0
+        audioUnlocked.current = true
+        setShowSoundPrompt(false)
+      }).catch(() => {
+        setShowSoundPrompt(false)
+      })
+    } else {
+      setShowSoundPrompt(false)
     }
   }
 
@@ -297,6 +316,13 @@ function DisplayPage() {
         <div className="current-time">
           <CurrentTime />
         </div>
+
+        {/* Sound enable prompt - shows once until user clicks */}
+        {showSoundPrompt && (
+          <button className="sound-enable-btn" onClick={enableSound}>
+            🔔 לחץ להפעלת צלילים
+          </button>
+        )}
       </div>
     </div>
   )
