@@ -45,6 +45,50 @@
   animation: fadeInUp 0.8s ease-out;
 }
 
+/* TV Connect Button */
+.tv-connect-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 15px;
+  width: 100%;
+  max-width: 400px;
+  margin: 0 auto 30px;
+  padding: 20px 40px;
+  background: linear-gradient(135deg, #00bcd4, #00acc1);
+  border: none;
+  border-radius: 20px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 8px 30px rgba(0, 188, 212, 0.4);
+  animation: pulse 2s infinite;
+}
+
+.tv-connect-btn:hover {
+  transform: translateY(-3px) scale(1.02);
+  box-shadow: 0 12px 40px rgba(0, 188, 212, 0.5);
+}
+
+.tv-icon {
+  font-size: 2.5rem;
+}
+
+.tv-text {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: white;
+  font-family: inherit;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    box-shadow: 0 8px 30px rgba(0, 188, 212, 0.4);
+  }
+  50% {
+    box-shadow: 0 8px 40px rgba(0, 188, 212, 0.6);
+  }
+}
+
 /* Header */
 .qr-header {
   text-align: center;

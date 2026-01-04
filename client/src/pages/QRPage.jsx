@@ -78,6 +78,12 @@ function QRPage() {
       </div>
 
       <div className="qr-container">
+        {/* TV Connect Button */}
+        <button className="tv-connect-btn" onClick={() => navigate('/')}>
+          <span className="tv-icon">📺</span>
+          <span className="tv-text">חבר טלוויזיה</span>
+        </button>
+
         <header className="qr-header">
           <h1>{displayName}</h1>
           <p className="workspace-code-display">קוד עבודה: <strong>{workspaceCode}</strong></p>
