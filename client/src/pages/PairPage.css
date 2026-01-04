@@ -237,3 +237,48 @@
   color: rgba(255, 255, 255, 0.6);
   font-size: 1.2rem;
 }
+
+/* QR Section */
+.qr-wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-bottom: 25px;
+}
+
+.qr-frame {
+  position: relative;
+  background: white;
+  padding: 15px;
+  border-radius: 15px;
+  box-shadow: 0 0 30px rgba(0, 255, 255, 0.3);
+}
+
+.qr-frame svg {
+  display: block;
+}
+
+.scan-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  overflow: hidden;
+  border-radius: 15px;
+  pointer-events: none;
+}
+
+.scan-line {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, transparent, #00ffff, transparent);
+  animation: scanMove 2s ease-in-out infinite;
+}
+
+@keyframes scanMove {
+  0%, 100% { top: 10%; opacity: 0; }
+  50% { top: 90%; opacity: 1; }
+}
