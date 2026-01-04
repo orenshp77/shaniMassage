@@ -44,9 +44,9 @@ const workspaces = {}
 // In-memory storage for TV pairing codes (temporary, expires after 5 minutes)
 const tvPairingCodes = {}
 
-// Generate 6-digit numeric pairing code for TV
+// Generate 3-digit numeric pairing code for TV
 const generatePairingCode = () => {
-  return Math.floor(100000 + Math.random() * 900000).toString()
+  return Math.floor(100 + Math.random() * 900).toString()
 }
 
 // Get or create workspace state
