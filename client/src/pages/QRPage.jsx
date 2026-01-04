@@ -1,18 +1,44 @@
 import { useState, useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { QRCodeSVG } from 'qrcode.react'
 import './QRPage.css'
 
 function QRPage() {
   const [baseUrl, setBaseUrl] = useState('')
+  const [workspaceCode, setWorkspaceCode] = useState('')
+  const [displayName, setDisplayName] = useState('')
+  const navigate = useNavigate()
 
   useEffect(() => {
     // Get the current base URL automatically
     const url = window.location.origin
     setBaseUrl(url)
-  }, [])
 
-  const inputUrl = `${baseUrl}/input`
-  const displayUrl = `${baseUrl}/display`
+    // Get workspace info from localStorage
+    const storedWorkspace = localStorage.getItem('workspaceCode')
+    const storedName = localStorage.getItem('displayName')
+
+    if (!storedWorkspace) {
+      // Redirect to login if no workspace
+      navigate('/login')
+      return
+    }
+
+    setWorkspaceCode(storedWorkspace)
+    setDisplayName(storedName || 'מרחב העבודה שלי')
+  }, [navigate])
+
+  // URLs with workspace code
+  const inputUrl = `${baseUrl}/?ws=${workspaceCode}&type=input`
+  const displayUrl = `${baseUrl}/?ws=${workspaceCode}&type=display`
+  const connectUrl = `${baseUrl}/?ws=${workspaceCode}`
+
+  const handleLogout = () => {
+    localStorage.removeItem('workspaceCode')
+    localStorage.removeItem('displayName')
+    localStorage.removeItem('user')
+    navigate('/')
+  }
 
   return (
     <div className="qr-page">
@@ -33,7 +59,8 @@ function QRPage() {
 
       <div className="qr-container">
         <header className="qr-header">
-          <h1>Shani System</h1>
+          <h1>{displayName}</h1>
+          <p className="workspace-code-display">קוד עבודה: <strong>{workspaceCode}</strong></p>
           <p>סרוק את הקוד כדי להתחבר</p>
         </header>
 
@@ -41,8 +68,8 @@ function QRPage() {
           {/* Input Page QR */}
           <div className="qr-card input-card">
             <div className="qr-icon">📝</div>
-            <h2>עמוד הזנת הודעות</h2>
-            <p>סרוק כדי להזין הודעות חדשות</p>
+            <h2>עמוד ניהול</h2>
+            <p>סרוק כדי להזין ולנהל הודעות</p>
             <div className="qr-code-wrapper">
               <QRCodeSVG
                 value={inputUrl}
@@ -53,14 +80,14 @@ function QRPage() {
                 fgColor="#ff69b4"
               />
             </div>
-            <div className="url-display">{inputUrl}</div>
+            <div className="url-hint">דורש PIN לניהול</div>
           </div>
 
           {/* Display Page QR */}
           <div className="qr-card display-card">
             <div className="qr-icon">📺</div>
-            <h2>עמוד תצוגה</h2>
-            <p>סרוק להצגה על מסך גדול</p>
+            <h2>מסך תצוגה</h2>
+            <p>סרוק להצגה על טלוויזיה</p>
             <div className="qr-code-wrapper">
               <QRCodeSVG
                 value={displayUrl}
@@ -71,7 +98,25 @@ function QRPage() {
                 fgColor="#00bcd4"
               />
             </div>
-            <div className="url-display">{displayUrl}</div>
+            <div className="url-hint">דורש PIN למסך</div>
+          </div>
+
+          {/* General Connect QR */}
+          <div className="qr-card connect-card">
+            <div className="qr-icon">🔗</div>
+            <h2>התחברות כללית</h2>
+            <p>סרוק לבחירת סוג גישה</p>
+            <div className="qr-code-wrapper">
+              <QRCodeSVG
+                value={connectUrl}
+                size={200}
+                level="H"
+                includeMargin={true}
+                bgColor="#ffffff"
+                fgColor="#667eea"
+              />
+            </div>
+            <div className="url-hint">בחירת ניהול/תצוגה</div>
           </div>
         </div>
 
@@ -81,11 +126,19 @@ function QRPage() {
             <li>📱 פתח את המצלמה בטלפון</li>
             <li>🎯 כוון על הקוד הרצוי</li>
             <li>🔗 לחץ על הקישור שמופיע</li>
+            <li>🔢 הזן את קוד ה-PIN המתאים</li>
             <li>✨ זהו! אתה מחובר</li>
           </ol>
         </div>
 
-        <a href="/" className="back-link">חזור לעמוד הראשי</a>
+        <div className="qr-actions">
+          <button onClick={() => navigate('/input')} className="action-btn input-action">
+            עבור לניהול הודעות
+          </button>
+          <button onClick={handleLogout} className="action-btn logout-action">
+            התנתק
+          </button>
+        </div>
       </div>
     </div>
   )

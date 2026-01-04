@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
+import { useNavigate } from 'react-router-dom'
 import Swal from 'sweetalert2'
 import api from '../services/api'
 import AnimatedBackground from '../components/AnimatedBackgrounds'
@@ -13,10 +14,13 @@ function DisplayPage() {
   const [currentTheme, setCurrentTheme] = useState('hitech')
   const [pinnedMessage, setPinnedMessage] = useState('')
   const [pinnedEnabled, setPinnedEnabled] = useState(false)
+  const [displayName, setDisplayName] = useState('מוקד עידכונים')
   const lastMessageId = useRef(null)
   const lastExplicitChangeRef = useRef(0) // Track last explicit change timestamp from server
   const audioRef = useRef(null)
   const audioUnlocked = useRef(false)
+  const workspaceCode = useRef(localStorage.getItem('workspaceCode'))
+  const navigate = useNavigate()
 
   // Unlock audio on any user interaction (runs silently in background)
   const unlockAudio = () => {
@@ -66,7 +70,12 @@ function DisplayPage() {
 
   const fetchMessage = async () => {
     try {
-      const response = await api.get('/active-message')
+      if (!workspaceCode.current) {
+        navigate('/')
+        return
+      }
+
+      const response = await api.get(`/active-message?workspace=${workspaceCode.current}`)
       const { message: newMessage, theme, lastExplicitChange, pinnedMessage: serverPinnedMessage, pinnedMessageEnabled } = response.data
 
       // Update theme if changed
@@ -104,6 +113,18 @@ function DisplayPage() {
   }
 
   useEffect(() => {
+    // Check for workspace code
+    if (!workspaceCode.current) {
+      navigate('/')
+      return
+    }
+
+    // Get display name from localStorage
+    const storedName = localStorage.getItem('displayName')
+    if (storedName) {
+      setDisplayName(storedName)
+    }
+
     // Initialize audio
     audioRef.current = new Audio(BELL_SOUND_URL)
     audioRef.current.volume = 0.8
@@ -113,7 +134,7 @@ function DisplayPage() {
     // Poll for updates every 2 seconds
     const interval = setInterval(fetchMessage, 2000)
     return () => clearInterval(interval)
-  }, [])
+  }, [navigate])
 
   // Calculate dynamic font size for subject based on text length
   const getSubjectFontSize = (length) => {
@@ -166,7 +187,7 @@ function DisplayPage() {
         {/* Logo */}
         <div className="logo-container">
           <div className="logo">
-            <span className="logo-text">מוקד עידכונים</span>
+            <span className="logo-text">{displayName}</span>
           </div>
         </div>
 

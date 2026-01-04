@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
 import Swal from 'sweetalert2'
 import api from '../services/api'
 import { THEMES } from '../components/AnimatedBackgrounds'
@@ -15,16 +16,33 @@ function InputPage() {
   const [selectedTheme, setSelectedTheme] = useState('hitech')
   const [pinnedMessage, setPinnedMessage] = useState('')
   const [pinnedEnabled, setPinnedEnabled] = useState(false)
+  const [workspaceCode, setWorkspaceCode] = useState('')
+  const [displayName, setDisplayName] = useState('')
+  const navigate = useNavigate()
 
   useEffect(() => {
+    // Check for workspace code
+    const storedWorkspace = localStorage.getItem('workspaceCode')
+    const storedName = localStorage.getItem('displayName')
+
+    if (!storedWorkspace) {
+      navigate('/')
+      return
+    }
+
+    setWorkspaceCode(storedWorkspace)
+    setDisplayName(storedName || 'מרחב העבודה שלי')
+
     fetchMessages()
     fetchCurrentTheme()
     fetchPinnedMessage()
-  }, [])
+  }, [navigate])
 
   const fetchCurrentTheme = async () => {
     try {
-      const response = await api.get('/active-theme')
+      const ws = localStorage.getItem('workspaceCode')
+      if (!ws) return
+      const response = await api.get(`/active-theme?workspace=${ws}`)
       setSelectedTheme(response.data.theme)
     } catch (error) {
       console.error('Error fetching theme:', error)
@@ -33,7 +51,9 @@ function InputPage() {
 
   const fetchPinnedMessage = async () => {
     try {
-      const response = await api.get('/pinned-message')
+      const ws = localStorage.getItem('workspaceCode')
+      if (!ws) return
+      const response = await api.get(`/pinned-message?workspace=${ws}`)
       setPinnedMessage(response.data.message || '')
       setPinnedEnabled(response.data.enabled || false)
     } catch (error) {
@@ -44,7 +64,7 @@ function InputPage() {
   const handlePinnedMessageChange = async (message) => {
     setPinnedMessage(message)
     try {
-      await api.post('/pinned-message', { message })
+      await api.post('/pinned-message', { message, workspace: workspaceCode })
     } catch (error) {
       console.error('Error saving pinned message:', error)
     }
@@ -54,7 +74,7 @@ function InputPage() {
     const newEnabled = !pinnedEnabled
     setPinnedEnabled(newEnabled)
     try {
-      await api.post('/pinned-message', { enabled: newEnabled })
+      await api.post('/pinned-message', { enabled: newEnabled, workspace: workspaceCode })
       Swal.fire({
         icon: 'success',
         title: newEnabled ? 'הודעה נעוצה מופעלת' : 'הודעה נעוצה כבויה',
@@ -69,7 +89,7 @@ function InputPage() {
   const handleThemeChange = async (themeId) => {
     try {
       setSelectedTheme(themeId)
-      await api.post('/active-theme', { theme: themeId })
+      await api.post('/active-theme', { theme: themeId, workspace: workspaceCode })
       Swal.fire({
         icon: 'success',
         title: `הרקע שונה ל${THEMES[themeId].name}`,
@@ -83,7 +103,9 @@ function InputPage() {
 
   const fetchMessages = async () => {
     try {
-      const response = await api.get('/messages')
+      const ws = localStorage.getItem('workspaceCode')
+      if (!ws) return
+      const response = await api.get(`/messages?workspace=${ws}`)
       setMessages(response.data)
     } catch (error) {
       console.error('Error fetching messages:', error)
@@ -97,7 +119,8 @@ function InputPage() {
     try {
       const dataToSend = {
         ...formData,
-        displayDate: new Date().toISOString()
+        displayDate: new Date().toISOString(),
+        workspace: workspaceCode
       }
 
       if (editingId) {
@@ -112,7 +135,7 @@ function InputPage() {
       } else {
         // Create new message and set it as active
         const response = await api.post('/messages', dataToSend)
-        await api.post('/active-message', { messageId: response.data.id })
+        await api.post('/active-message', { messageId: response.data.id, workspace: workspaceCode })
         Swal.fire({
           icon: 'success',
           title: 'ההודעה נשלחה!',
@@ -139,7 +162,7 @@ function InputPage() {
   const handleDisplayMessage = async (message) => {
     try {
       // Set active message on server - Display page will auto-update with alert
-      await api.post('/active-message', { messageId: message.id })
+      await api.post('/active-message', { messageId: message.id, workspace: workspaceCode })
       Swal.fire({
         icon: 'success',
         title: 'ההודעה נשלחה למסך!',
@@ -168,7 +191,7 @@ function InputPage() {
     if (!window.confirm('האם למחוק את ההודעה?')) return
 
     try {
-      await api.delete(`/messages/${id}`)
+      await api.delete(`/messages/${id}?workspace=${workspaceCode}`)
       fetchMessages()
     } catch (error) {
       console.error('Error deleting message:', error)
@@ -201,7 +224,20 @@ function InputPage() {
 
       <div className="input-container">
         <header className="input-header">
-          <h1>מוקד עידכונים</h1>
+          <div className="header-content">
+            <h1>{displayName}</h1>
+            <div className="header-actions">
+              <span className="workspace-badge">קוד: {workspaceCode}</span>
+              <button className="logout-btn" onClick={() => {
+                localStorage.removeItem('workspaceCode')
+                localStorage.removeItem('displayName')
+                localStorage.removeItem('user')
+                navigate('/')
+              }}>
+                התנתק
+              </button>
+            </div>
+          </div>
         </header>
 
         <form onSubmit={handleSubmit} className="message-form">

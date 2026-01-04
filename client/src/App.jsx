@@ -3,6 +3,8 @@ import InputPage from './pages/InputPage'
 import DisplayPage from './pages/DisplayPage'
 import QRPage from './pages/QRPage'
 import ConnectPage from './pages/ConnectPage'
+import LoginPage from './pages/LoginPage'
+import RegisterPage from './pages/RegisterPage'
 
 function App() {
   return (
@@ -10,6 +12,8 @@ function App() {
       <div className="app">
         <Routes>
           <Route path="/" element={<ConnectPage />} />
+          <Route path="/login" element={<LoginPage />} />
+          <Route path="/register" element={<RegisterPage />} />
           <Route path="/input" element={<InputPage />} />
           <Route path="/display" element={<DisplayPage />} />
           <Route path="/qr" element={<QRPage />} />

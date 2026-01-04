@@ -2,7 +2,18 @@ const express = require('express')
 const cors = require('cors')
 const { Pool } = require('pg')
 const path = require('path')
+const crypto = require('crypto')
 require('dotenv').config({ path: path.join(__dirname, '..', '.env') })
+
+// Helper function to hash passwords
+const hashPassword = (password) => {
+  return crypto.createHash('sha256').update(password).digest('hex')
+}
+
+// Generate random 6-character alphanumeric code for workspace
+const generateWorkspaceCode = () => {
+  return crypto.randomBytes(3).toString('hex').toUpperCase()
+}
 
 const app = express()
 
@@ -23,17 +34,43 @@ const pool = new Pool({
   ssl: { rejectUnauthorized: false }
 })
 
-// Active message ID and theme (in-memory for real-time display)
-let activeMessageId = null
-let activeTheme = 'hitech' // Default theme
-let lastExplicitChange = 0 // Timestamp of last explicit message change (for alert triggering)
+// In-memory storage for active workspaces (keyed by workspace_code)
+const workspaces = {}
+
+// Get or create workspace state
+const getWorkspace = (workspaceCode) => {
+  if (!workspaces[workspaceCode]) {
+    workspaces[workspaceCode] = {
+      activeMessageId: null,
+      activeTheme: 'hitech',
+      lastExplicitChange: 0
+    }
+  }
+  return workspaces[workspaceCode]
+}
 
 // Initialize database table
 const initDB = async () => {
   try {
+    // Create users table
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS users (
+        id SERIAL PRIMARY KEY,
+        username VARCHAR(100) UNIQUE NOT NULL,
+        password_hash VARCHAR(255) NOT NULL,
+        display_name VARCHAR(255) NOT NULL,
+        workspace_code VARCHAR(10) UNIQUE NOT NULL,
+        input_pin VARCHAR(4) NOT NULL,
+        display_pin VARCHAR(4) NOT NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `)
+
+    // Create messages table with workspace_code
     await pool.query(`
       CREATE TABLE IF NOT EXISTS messages (
         id SERIAL PRIMARY KEY,
+        workspace_code VARCHAR(10) NOT NULL,
         subject VARCHAR(255) NOT NULL,
         content TEXT NOT NULL,
         display_date TIMESTAMP NOT NULL,
@@ -42,23 +79,15 @@ const initDB = async () => {
       )
     `)
 
-    // Create settings table for pinned message and other persistent settings
+    // Create settings table for pinned message and other persistent settings (per workspace)
     await pool.query(`
       CREATE TABLE IF NOT EXISTS settings (
-        key VARCHAR(100) PRIMARY KEY,
+        key VARCHAR(100) NOT NULL,
+        workspace_code VARCHAR(10) NOT NULL,
         value TEXT NOT NULL,
-        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        PRIMARY KEY (key, workspace_code)
       )
-    `)
-
-    // Initialize default settings if not exist
-    await pool.query(`
-      INSERT INTO settings (key, value) VALUES ('pinned_message', '')
-      ON CONFLICT (key) DO NOTHING
-    `)
-    await pool.query(`
-      INSERT INTO settings (key, value) VALUES ('pinned_enabled', 'false')
-      ON CONFLICT (key) DO NOTHING
     `)
 
     console.log('Database initialized successfully')
@@ -69,10 +98,149 @@ const initDB = async () => {
 
 // Routes
 
-// Get all messages
+// ============ AUTH ROUTES ============
+
+// Register new user
+app.post('/api/auth/register', async (req, res) => {
+  try {
+    const { username, password, displayName, inputPin, displayPin } = req.body
+
+    // Validate input
+    if (!username || !password || !displayName || !inputPin || !displayPin) {
+      return res.status(400).json({ error: 'כל השדות נדרשים' })
+    }
+
+    if (inputPin.length !== 4 || displayPin.length !== 4) {
+      return res.status(400).json({ error: 'הסיסמאות חייבות להיות 4 ספרות' })
+    }
+
+    // Check if username already exists
+    const existingUser = await pool.query('SELECT id FROM users WHERE username = $1', [username])
+    if (existingUser.rows.length > 0) {
+      return res.status(400).json({ error: 'שם המשתמש כבר קיים' })
+    }
+
+    // Generate unique workspace code
+    let workspaceCode
+    let isUnique = false
+    while (!isUnique) {
+      workspaceCode = generateWorkspaceCode()
+      const existing = await pool.query('SELECT id FROM users WHERE workspace_code = $1', [workspaceCode])
+      if (existing.rows.length === 0) isUnique = true
+    }
+
+    // Hash password and create user
+    const passwordHash = hashPassword(password)
+    const result = await pool.query(
+      `INSERT INTO users (username, password_hash, display_name, workspace_code, input_pin, display_pin)
+       VALUES ($1, $2, $3, $4, $5, $6) RETURNING id, username, display_name, workspace_code`,
+      [username, passwordHash, displayName, workspaceCode, inputPin, displayPin]
+    )
+
+    // Initialize default settings for this workspace
+    await pool.query(
+      `INSERT INTO settings (key, workspace_code, value) VALUES ('pinned_message', $1, '')`,
+      [workspaceCode]
+    )
+    await pool.query(
+      `INSERT INTO settings (key, workspace_code, value) VALUES ('pinned_enabled', $1, 'false')`,
+      [workspaceCode]
+    )
+
+    res.status(201).json({
+      success: true,
+      user: result.rows[0]
+    })
+  } catch (error) {
+    console.error('Error registering user:', error)
+    res.status(500).json({ error: 'שגיאה ביצירת המשתמש' })
+  }
+})
+
+// Login with username/password
+app.post('/api/auth/login', async (req, res) => {
+  try {
+    const { username, password } = req.body
+
+    const passwordHash = hashPassword(password)
+    const result = await pool.query(
+      'SELECT id, username, display_name, workspace_code FROM users WHERE username = $1 AND password_hash = $2',
+      [username, passwordHash]
+    )
+
+    if (result.rows.length === 0) {
+      return res.status(401).json({ error: 'שם משתמש או סיסמה שגויים' })
+    }
+
+    res.json({
+      success: true,
+      user: result.rows[0]
+    })
+  } catch (error) {
+    console.error('Error logging in:', error)
+    res.status(500).json({ error: 'שגיאה בהתחברות' })
+  }
+})
+
+// Login with PIN (for input page)
+app.post('/api/auth/pin-login', async (req, res) => {
+  try {
+    const { workspaceCode, pin, type } = req.body // type: 'input' or 'display'
+
+    const pinColumn = type === 'input' ? 'input_pin' : 'display_pin'
+    const result = await pool.query(
+      `SELECT id, username, display_name, workspace_code FROM users WHERE workspace_code = $1 AND ${pinColumn} = $2`,
+      [workspaceCode, pin]
+    )
+
+    if (result.rows.length === 0) {
+      return res.status(401).json({ error: 'קוד או סיסמה שגויים' })
+    }
+
+    res.json({
+      success: true,
+      user: result.rows[0],
+      accessType: type
+    })
+  } catch (error) {
+    console.error('Error PIN login:', error)
+    res.status(500).json({ error: 'שגיאה בהתחברות' })
+  }
+})
+
+// Get user by workspace code (for QR code scanning)
+app.get('/api/auth/workspace/:code', async (req, res) => {
+  try {
+    const { code } = req.params
+    const result = await pool.query(
+      'SELECT id, display_name, workspace_code FROM users WHERE workspace_code = $1',
+      [code]
+    )
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'קוד עבודה לא נמצא' })
+    }
+
+    res.json({
+      success: true,
+      workspace: result.rows[0]
+    })
+  } catch (error) {
+    console.error('Error fetching workspace:', error)
+    res.status(500).json({ error: 'שגיאה בטעינת מרחב העבודה' })
+  }
+})
+
+// ============ MESSAGE ROUTES (with workspace) ============
+
+// Get all messages for a workspace
 app.get('/api/messages', async (req, res) => {
   try {
-    const result = await pool.query('SELECT * FROM messages ORDER BY created_at DESC')
+    const { workspace } = req.query
+    if (!workspace) {
+      return res.status(400).json({ error: 'workspace code is required' })
+    }
+    const result = await pool.query('SELECT * FROM messages WHERE workspace_code = $1 ORDER BY created_at DESC', [workspace])
     res.json(result.rows)
   } catch (error) {
     console.error('Error fetching messages:', error)
@@ -83,7 +251,11 @@ app.get('/api/messages', async (req, res) => {
 // Get latest message (for display page)
 app.get('/api/messages/latest', async (req, res) => {
   try {
-    const result = await pool.query('SELECT * FROM messages ORDER BY created_at DESC LIMIT 1')
+    const { workspace } = req.query
+    if (!workspace) {
+      return res.status(400).json({ error: 'workspace code is required' })
+    }
+    const result = await pool.query('SELECT * FROM messages WHERE workspace_code = $1 ORDER BY created_at DESC LIMIT 1', [workspace])
     res.json(result.rows[0] || null)
   } catch (error) {
     console.error('Error fetching latest message:', error)
@@ -109,10 +281,13 @@ app.get('/api/messages/:id', async (req, res) => {
 // Create message
 app.post('/api/messages', async (req, res) => {
   try {
-    const { subject, content, displayDate } = req.body
+    const { subject, content, displayDate, workspace } = req.body
+    if (!workspace) {
+      return res.status(400).json({ error: 'workspace code is required' })
+    }
     const result = await pool.query(
-      'INSERT INTO messages (subject, content, display_date) VALUES ($1, $2, $3) RETURNING *',
-      [subject, content, displayDate]
+      'INSERT INTO messages (workspace_code, subject, content, display_date) VALUES ($1, $2, $3, $4) RETURNING *',
+      [workspace, subject, content, displayDate]
     )
     res.status(201).json(result.rows[0])
   } catch (error) {
@@ -144,6 +319,7 @@ app.put('/api/messages/:id', async (req, res) => {
 app.delete('/api/messages/:id', async (req, res) => {
   try {
     const { id } = req.params
+    const { workspace } = req.query
     const deletedId = parseInt(id)
 
     const result = await pool.query('DELETE FROM messages WHERE id = $1 RETURNING *', [id])
@@ -152,9 +328,12 @@ app.delete('/api/messages/:id', async (req, res) => {
     }
 
     // If deleted message was the active one, silently switch to next available
-    if (activeMessageId === deletedId) {
-      const nextMessage = await pool.query('SELECT id FROM messages ORDER BY created_at DESC LIMIT 1')
-      activeMessageId = nextMessage.rows[0]?.id || null
+    if (workspace) {
+      const ws = getWorkspace(workspace)
+      if (ws.activeMessageId === deletedId) {
+        const nextMessage = await pool.query('SELECT id FROM messages WHERE workspace_code = $1 ORDER BY created_at DESC LIMIT 1', [workspace])
+        ws.activeMessageId = nextMessage.rows[0]?.id || null
+      }
     }
 
     res.json({ message: 'ההודעה נמחקה בהצלחה' })
@@ -169,57 +348,67 @@ app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', message: 'השרת פועל!' })
 })
 
-// Set active message (for display page)
+// Set active message (for display page) - with workspace
 app.post('/api/active-message', async (req, res) => {
   try {
-    const { messageId } = req.body
-    activeMessageId = messageId
-    lastExplicitChange = Date.now() // Mark this as an explicit change (triggers alert)
-    res.json({ success: true, activeMessageId })
+    const { messageId, workspace } = req.body
+    if (!workspace) {
+      return res.status(400).json({ error: 'workspace code is required' })
+    }
+    const ws = getWorkspace(workspace)
+    ws.activeMessageId = messageId
+    ws.lastExplicitChange = Date.now() // Mark this as an explicit change (triggers alert)
+    res.json({ success: true, activeMessageId: ws.activeMessageId })
   } catch (error) {
     console.error('Error setting active message:', error)
     res.status(500).json({ error: 'שגיאה בהגדרת ההודעה הפעילה' })
   }
 })
 
-// Get active message (for display page polling)
+// Get active message (for display page polling) - with workspace
 app.get('/api/active-message', async (req, res) => {
   try {
+    const { workspace } = req.query
+    if (!workspace) {
+      return res.status(400).json({ error: 'workspace code is required' })
+    }
+
+    const ws = getWorkspace(workspace)
     let message = null
 
-    if (!activeMessageId) {
+    if (!ws.activeMessageId) {
       // If no active message, return latest
-      const result = await pool.query('SELECT * FROM messages ORDER BY created_at DESC LIMIT 1')
+      const result = await pool.query('SELECT * FROM messages WHERE workspace_code = $1 ORDER BY created_at DESC LIMIT 1', [workspace])
       message = result.rows[0] || null
       // Update activeMessageId silently so we track current message
       if (message) {
-        activeMessageId = message.id
+        ws.activeMessageId = message.id
       }
     } else {
-      const result = await pool.query('SELECT * FROM messages WHERE id = $1', [activeMessageId])
+      const result = await pool.query('SELECT * FROM messages WHERE id = $1 AND workspace_code = $2', [ws.activeMessageId, workspace])
       if (result.rows.length === 0) {
-        // If active message was deleted, return latest (already handled in delete)
-        activeMessageId = null
-        const latestResult = await pool.query('SELECT * FROM messages ORDER BY created_at DESC LIMIT 1')
+        // If active message was deleted, return latest
+        ws.activeMessageId = null
+        const latestResult = await pool.query('SELECT * FROM messages WHERE workspace_code = $1 ORDER BY created_at DESC LIMIT 1', [workspace])
         message = latestResult.rows[0] || null
         if (message) {
-          activeMessageId = message.id
+          ws.activeMessageId = message.id
         }
       } else {
         message = result.rows[0]
       }
     }
 
-    // Get pinned message from database
-    const pinnedMessageResult = await pool.query("SELECT value FROM settings WHERE key = 'pinned_message'")
-    const pinnedEnabledResult = await pool.query("SELECT value FROM settings WHERE key = 'pinned_enabled'")
+    // Get pinned message from database for this workspace
+    const pinnedMessageResult = await pool.query("SELECT value FROM settings WHERE key = 'pinned_message' AND workspace_code = $1", [workspace])
+    const pinnedEnabledResult = await pool.query("SELECT value FROM settings WHERE key = 'pinned_enabled' AND workspace_code = $1", [workspace])
 
     // Return message with theme, activeMessageId, lastExplicitChange, and pinned message
     res.json({
       message,
-      theme: activeTheme,
-      activeMessageId,
-      lastExplicitChange,
+      theme: ws.activeTheme,
+      activeMessageId: ws.activeMessageId,
+      lastExplicitChange: ws.lastExplicitChange,
       pinnedMessage: pinnedMessageResult.rows[0]?.value || '',
       pinnedMessageEnabled: pinnedEnabledResult.rows[0]?.value === 'true'
     })
@@ -229,28 +418,42 @@ app.get('/api/active-message', async (req, res) => {
   }
 })
 
-// Set active theme
+// Set active theme - with workspace
 app.post('/api/active-theme', (req, res) => {
   try {
-    const { theme } = req.body
-    activeTheme = theme
-    res.json({ success: true, theme: activeTheme })
+    const { theme, workspace } = req.body
+    if (!workspace) {
+      return res.status(400).json({ error: 'workspace code is required' })
+    }
+    const ws = getWorkspace(workspace)
+    ws.activeTheme = theme
+    res.json({ success: true, theme: ws.activeTheme })
   } catch (error) {
     console.error('Error setting active theme:', error)
     res.status(500).json({ error: 'שגיאה בהגדרת הנושא' })
   }
 })
 
-// Get active theme
+// Get active theme - with workspace
 app.get('/api/active-theme', (req, res) => {
-  res.json({ theme: activeTheme })
+  const { workspace } = req.query
+  if (!workspace) {
+    return res.status(400).json({ error: 'workspace code is required' })
+  }
+  const ws = getWorkspace(workspace)
+  res.json({ theme: ws.activeTheme })
 })
 
-// Get pinned message
+// Get pinned message - with workspace
 app.get('/api/pinned-message', async (req, res) => {
   try {
-    const messageResult = await pool.query("SELECT value FROM settings WHERE key = 'pinned_message'")
-    const enabledResult = await pool.query("SELECT value FROM settings WHERE key = 'pinned_enabled'")
+    const { workspace } = req.query
+    if (!workspace) {
+      return res.status(400).json({ error: 'workspace code is required' })
+    }
+
+    const messageResult = await pool.query("SELECT value FROM settings WHERE key = 'pinned_message' AND workspace_code = $1", [workspace])
+    const enabledResult = await pool.query("SELECT value FROM settings WHERE key = 'pinned_enabled' AND workspace_code = $1", [workspace])
 
     res.json({
       message: messageResult.rows[0]?.value || '',
@@ -262,27 +465,30 @@ app.get('/api/pinned-message', async (req, res) => {
   }
 })
 
-// Set pinned message
+// Set pinned message - with workspace
 app.post('/api/pinned-message', async (req, res) => {
   try {
-    const { message, enabled } = req.body
+    const { message, enabled, workspace } = req.body
+    if (!workspace) {
+      return res.status(400).json({ error: 'workspace code is required' })
+    }
 
     if (message !== undefined) {
       await pool.query(
-        "INSERT INTO settings (key, value, updated_at) VALUES ('pinned_message', $1, CURRENT_TIMESTAMP) ON CONFLICT (key) DO UPDATE SET value = $1, updated_at = CURRENT_TIMESTAMP",
-        [message]
+        "INSERT INTO settings (key, workspace_code, value, updated_at) VALUES ('pinned_message', $1, $2, CURRENT_TIMESTAMP) ON CONFLICT (key, workspace_code) DO UPDATE SET value = $2, updated_at = CURRENT_TIMESTAMP",
+        [workspace, message]
       )
     }
     if (enabled !== undefined) {
       await pool.query(
-        "INSERT INTO settings (key, value, updated_at) VALUES ('pinned_enabled', $1, CURRENT_TIMESTAMP) ON CONFLICT (key) DO UPDATE SET value = $1, updated_at = CURRENT_TIMESTAMP",
-        [enabled.toString()]
+        "INSERT INTO settings (key, workspace_code, value, updated_at) VALUES ('pinned_enabled', $1, $2, CURRENT_TIMESTAMP) ON CONFLICT (key, workspace_code) DO UPDATE SET value = $2, updated_at = CURRENT_TIMESTAMP",
+        [workspace, enabled.toString()]
       )
     }
 
     // Get current values
-    const messageResult = await pool.query("SELECT value FROM settings WHERE key = 'pinned_message'")
-    const enabledResult = await pool.query("SELECT value FROM settings WHERE key = 'pinned_enabled'")
+    const messageResult = await pool.query("SELECT value FROM settings WHERE key = 'pinned_message' AND workspace_code = $1", [workspace])
+    const enabledResult = await pool.query("SELECT value FROM settings WHERE key = 'pinned_enabled' AND workspace_code = $1", [workspace])
 
     res.json({
       success: true,

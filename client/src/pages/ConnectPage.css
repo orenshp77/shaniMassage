@@ -184,7 +184,117 @@
   cursor: not-allowed;
 }
 
-/* Hints */
+/* Access Type Selector */
+.access-type-selector {
+  display: flex;
+  gap: 20px;
+  justify-content: center;
+  margin-bottom: 30px;
+}
+
+.access-type-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  padding: 30px 40px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 2px solid rgba(255, 255, 255, 0.2);
+  border-radius: 20px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-family: inherit;
+}
+
+.access-type-btn:hover {
+  transform: translateY(-5px);
+  border-color: #00ffff;
+  box-shadow: 0 10px 30px rgba(0, 255, 255, 0.2);
+}
+
+.access-type-btn.input-btn:hover {
+  border-color: #ff69b4;
+  box-shadow: 0 10px 30px rgba(255, 105, 180, 0.2);
+}
+
+.access-icon {
+  font-size: 3rem;
+}
+
+.access-label {
+  font-size: 1.3rem;
+  font-weight: 600;
+  color: white;
+}
+
+.access-hint {
+  font-size: 0.9rem;
+  color: rgba(255, 255, 255, 0.5);
+}
+
+/* Workspace code display (6 digits) */
+.code-display.workspace-code {
+  gap: 10px;
+}
+
+.code-display.workspace-code .code-digit {
+  width: 60px;
+  height: 80px;
+  font-size: 2rem;
+}
+
+/* Alpha-numeric pad */
+.number-pad.alpha-pad {
+  grid-template-columns: repeat(6, 1fr);
+  max-width: 500px;
+}
+
+.alpha-pad .num-btn {
+  width: 70px;
+  height: 70px;
+  font-size: 1.5rem;
+}
+
+/* Back Link */
+.back-link {
+  display: block;
+  margin-top: 20px;
+  color: rgba(255, 255, 255, 0.5);
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 1rem;
+  font-family: inherit;
+  transition: color 0.3s;
+}
+
+.back-link:hover {
+  color: white;
+}
+
+/* Auth Links */
+.auth-links {
+  margin-top: 40px;
+  color: rgba(255, 255, 255, 0.4);
+  font-size: 1rem;
+}
+
+.auth-links a {
+  color: #00ffff;
+  text-decoration: none;
+  transition: color 0.3s;
+}
+
+.auth-links a:hover {
+  color: #ff69b4;
+  text-decoration: underline;
+}
+
+.auth-links span {
+  margin: 0 10px;
+}
+
+/* Hints - deprecated but keeping for reference */
 .code-hints {
   margin-top: 40px;
   color: rgba(255, 255, 255, 0.4);
