@@ -301,25 +301,25 @@
   width: 100%;
 }
 
-/* Code Display */
+/* Code Display - enlarged 15% more */
 .code-display {
   display: flex;
   flex-direction: row-reverse;
   justify-content: center;
-  gap: 0.8vh;
-  margin-bottom: 1vh;
+  gap: 1vh;
+  margin-bottom: 1.2vh;
 }
 
 .code-digit {
-  width: clamp(40px, 5.75vh, 55px);
-  height: clamp(46px, 7vh, 64px);
+  width: clamp(46px, 6.6vh, 63px);
+  height: clamp(53px, 8vh, 74px);
   background: rgba(255, 255, 255, 0.05);
   border: 2px solid rgba(255, 255, 255, 0.2);
-  border-radius: 0.9vh;
+  border-radius: 1vh;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: clamp(1.4rem, 2.9vh, 2rem);
+  font-size: clamp(1.6rem, 3.3vh, 2.3rem);
   font-weight: 700;
   color: white;
   transition: all 0.3s ease;
@@ -332,9 +332,9 @@
 }
 
 .workspace-code .code-digit {
-  width: clamp(40px, 6vh, 55px);
-  height: clamp(48px, 7vh, 64px);
-  font-size: clamp(1.4rem, 3vh, 2rem);
+  width: clamp(46px, 6.9vh, 63px);
+  height: clamp(55px, 8vh, 74px);
+  font-size: clamp(1.6rem, 3.5vh, 2.3rem);
 }
 
 .code-error {
@@ -350,22 +350,22 @@
   75% { transform: translateX(10px); }
 }
 
-/* Number Pad - viewport responsive - enlarged 15% */
+/* Number Pad - viewport responsive - enlarged 30% total */
 .number-pad {
   display: grid;
-  grid-template-columns: repeat(3, clamp(46px, 7vh, 63px));
-  gap: 0.7vh;
-  margin-bottom: 1.2vh;
+  grid-template-columns: repeat(3, clamp(53px, 8vh, 72px));
+  gap: 0.8vh;
+  margin-bottom: 1.4vh;
 }
 
 .num-btn {
-  width: clamp(46px, 7vh, 63px);
-  height: clamp(35px, 5.2vh, 46px);
+  width: clamp(53px, 8vh, 72px);
+  height: clamp(40px, 6vh, 53px);
   border: none;
-  border-radius: 0.9vh;
+  border-radius: 1vh;
   background: rgba(255, 255, 255, 0.08);
   color: white;
-  font-size: clamp(1.15rem, 2.3vh, 1.5rem);
+  font-size: clamp(1.3rem, 2.6vh, 1.7rem);
   font-weight: 600;
   cursor: pointer;
   transition: all 0.2s ease;
@@ -400,15 +400,15 @@
   background: rgba(255, 200, 100, 0.3);
 }
 
-/* Enter Button */
+/* Enter Button - enlarged */
 .enter-btn {
-  width: clamp(140px, 20vh, 177px);
-  padding: 1vh 2vh;
+  width: clamp(161px, 23vh, 204px);
+  padding: 1.2vh 2.3vh;
   border: none;
   border-radius: 1vh;
   background: linear-gradient(135deg, #00ffff, #00bcd4);
   color: #0c0c1e;
-  font-size: clamp(0.9rem, 1.8vh, 1.1rem);
+  font-size: clamp(1rem, 2vh, 1.3rem);
   font-weight: 700;
   cursor: pointer;
   transition: all 0.3s ease;
@@ -511,16 +511,23 @@
     height: 160px !important;
   }
 
+  /* Mobile - enlarged 70% */
   .code-digit {
-    width: 40px;
-    height: 48px;
-    font-size: 1.4rem;
+    width: 68px;
+    height: 82px;
+    font-size: 2.4rem;
   }
 
   .num-btn {
-    width: 45px;
-    height: 34px;
-    font-size: 1.1rem;
+    width: 77px;
+    height: 58px;
+    font-size: 1.9rem;
+  }
+
+  .enter-btn {
+    width: 240px;
+    padding: 14px 28px;
+    font-size: 1.4rem;
   }
 }
 
