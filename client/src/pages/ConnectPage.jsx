@@ -1,19 +1,32 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useNavigate, useSearchParams, Link } from 'react-router-dom'
+import { QRCodeSVG } from 'qrcode.react'
 import api from '../services/api'
 import './ConnectPage.css'
 
 function ConnectPage() {
+  // Phone/Connect side state
   const [code, setCode] = useState('')
   const [error, setError] = useState('')
   const [workspace, setWorkspace] = useState(null)
-  const [accessType, setAccessType] = useState(null) // 'input' or 'display'
-  const [step, setStep] = useState('workspace') // 'workspace' or 'pin'
+  const [accessType, setAccessType] = useState(null)
+  const [step, setStep] = useState('workspace')
+
+  // TV side state
+  const [pairingCode, setPairingCode] = useState('')
+  const [baseUrl, setBaseUrl] = useState('')
+  const [tvStatus, setTvStatus] = useState('waiting')
+
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
 
-  // Check for workspace code in URL (from QR scan)
+  // Initialize
   useEffect(() => {
+    const url = window.location.origin
+    setBaseUrl(url)
+    generatePairingCode()
+
+    // Check for workspace code in URL (from QR scan)
     const wsCode = searchParams.get('ws')
     const type = searchParams.get('type')
     if (wsCode) {
@@ -21,6 +34,48 @@ function ConnectPage() {
     }
   }, [searchParams])
 
+  // Generate TV pairing code
+  const generatePairingCode = async () => {
+    try {
+      const response = await api.post('/tv/generate-code')
+      setPairingCode(response.data.pairingCode)
+      setTvStatus('waiting')
+    } catch (error) {
+      console.error('Error generating pairing code:', error)
+      setTvStatus('error')
+    }
+  }
+
+  // Poll for TV pairing status
+  const checkPairingStatus = useCallback(async () => {
+    if (!pairingCode || tvStatus !== 'waiting') return
+
+    try {
+      const response = await api.get(`/tv/check-pairing/${pairingCode}`)
+      if (response.data.paired) {
+        setTvStatus('paired')
+
+        // Store workspace info
+        localStorage.setItem('workspaceCode', response.data.workspaceCode)
+        localStorage.setItem('displayName', response.data.displayName)
+        localStorage.setItem('tvMode', 'true')
+
+        // Navigate to display page after short delay
+        setTimeout(() => {
+          navigate('/display')
+        }, 2000)
+      }
+    } catch (error) {
+      // Pairing not found yet, continue polling
+    }
+  }, [pairingCode, tvStatus, navigate])
+
+  useEffect(() => {
+    const interval = setInterval(checkPairingStatus, 2000)
+    return () => clearInterval(interval)
+  }, [checkPairingStatus])
+
+  // Phone side functions
   const fetchWorkspace = async (wsCode, type = null) => {
     try {
       const response = await api.get(`/auth/workspace/${wsCode}`)
@@ -40,25 +95,21 @@ function ConnectPage() {
     e.preventDefault()
 
     if (step === 'workspace') {
-      // First step: enter workspace code (6 chars)
-      if (code.length === 6) {
-        await fetchWorkspace(code.toUpperCase())
+      if (code.length === 3) {
+        await fetchWorkspace(code)
       }
     } else if (step === 'pin') {
-      // Second step: enter PIN
       if (code.length === 4 && workspace) {
         try {
-          const response = await api.post('/auth/pin-login', {
+          await api.post('/auth/pin-login', {
             workspaceCode: workspace.workspace_code,
             pin: code,
-            type: accessType || 'input' // default to input if not specified
+            type: accessType || 'input'
           })
 
-          // Store workspace info
           localStorage.setItem('workspaceCode', workspace.workspace_code)
           localStorage.setItem('displayName', workspace.display_name)
 
-          // Navigate based on access type
           if (accessType === 'display') {
             navigate('/display')
           } else {
@@ -74,7 +125,7 @@ function ConnectPage() {
   }
 
   const handleKeyPress = (char) => {
-    const maxLength = step === 'workspace' ? 6 : 4
+    const maxLength = step === 'workspace' ? 3 : 4
     if (code.length < maxLength) {
       setCode(prev => prev + char)
     }
@@ -102,128 +153,165 @@ function ConnectPage() {
     setCode('')
   }
 
+  // QR URL for phone to scan
+  const pairUrl = `${baseUrl}/pair?code=${pairingCode}`
+
   return (
-    <div className="connect-page">
+    <div className="home-page">
       {/* Background animation */}
-      <div className="connect-bg">
-        {[...Array(30)].map((_, i) => (
+      <div className="home-bg">
+        {[...Array(40)].map((_, i) => (
           <div
             key={i}
-            className="connect-particle"
+            className="floating-particle"
             style={{
               left: `${Math.random() * 100}%`,
               top: `${Math.random() * 100}%`,
-              animationDelay: `${Math.random() * 5}s`
+              animationDelay: `${Math.random() * 10}s`,
+              animationDuration: `${15 + Math.random() * 15}s`
             }}
           />
         ))}
       </div>
 
-      <div className="connect-container">
-        <div className="connect-logo">
-          <h1>{workspace ? workspace.display_name : 'Shani'}</h1>
-          <p>
-            {step === 'workspace'
-              ? 'הזן קוד עבודה (6 תווים)'
-              : accessType
-                ? `הזן PIN ${accessType === 'display' ? 'למסך' : 'לניהול'}`
-                : 'בחר סוג גישה'
-            }
-          </p>
+      <div className="home-container">
+        {/* TV Section - Left Side */}
+        <div className="home-section tv-section">
+          {tvStatus === 'waiting' && (
+            <>
+              <div className="section-header">
+                <div className="section-icon">📺</div>
+                <h2>חיבור טלוויזיה</h2>
+                <p>סרוק את הקוד כדי להתחבר</p>
+              </div>
+
+              <div className="qr-wrapper">
+                <div className="qr-frame">
+                  <QRCodeSVG
+                    value={pairUrl}
+                    size={280}
+                    level="H"
+                    includeMargin={true}
+                    bgColor="#ffffff"
+                    fgColor="#1a1a2e"
+                  />
+                  <div className="scan-overlay">
+                    <div className="scan-line"></div>
+                  </div>
+                </div>
+                <div className="pairing-code">
+                  קוד צימוד: <span>{pairingCode}</span>
+                </div>
+              </div>
+            </>
+          )}
+
+          {tvStatus === 'paired' && (
+            <div className="paired-success">
+              <div className="success-icon">✓</div>
+              <h2>הטלוויזיה מחוברת!</h2>
+              <p>עובר למסך התצוגה...</p>
+            </div>
+          )}
+
+          {tvStatus === 'error' && (
+            <div className="error-state">
+              <h2>שגיאה בחיבור</h2>
+              <button onClick={generatePairingCode} className="retry-btn">נסה שוב</button>
+            </div>
+          )}
         </div>
 
-        {step === 'pin' && !accessType && (
-          <div className="access-type-selector">
-            <button
-              className="access-type-btn input-btn"
-              onClick={() => selectAccessType('input')}
-            >
-              <span className="access-icon">⌨️</span>
-              <span className="access-label">ניהול הודעות</span>
-              <span className="access-hint">עמוד הקלדה</span>
-            </button>
-            <button
-              className="access-type-btn display-btn"
-              onClick={() => selectAccessType('display')}
-            >
-              <span className="access-icon">📺</span>
-              <span className="access-label">מסך תצוגה</span>
-              <span className="access-hint">טלוויזיה</span>
-            </button>
+        {/* Divider */}
+        <div className="section-divider">
+          <div className="divider-line"></div>
+          <span>או</span>
+          <div className="divider-line"></div>
+        </div>
+
+        {/* Phone Section - Right Side */}
+        <div className="home-section phone-section">
+          <div className="section-header">
+            <div className="section-icon">📱</div>
+            <h2>{workspace ? workspace.display_name : 'התחברות'}</h2>
+            <p>
+              {step === 'workspace'
+                ? 'הזן קוד עבודה (3 ספרות)'
+                : accessType
+                  ? `הזן PIN ${accessType === 'display' ? 'למסך' : 'לניהול'}`
+                  : 'בחר סוג גישה'
+              }
+            </p>
           </div>
-        )}
 
-        {(step === 'workspace' || accessType) && (
-          <form onSubmit={handleSubmit} className="code-form">
-            {/* Code display */}
-            <div className={`code-display ${step === 'workspace' ? 'workspace-code' : ''}`}>
-              {[...Array(step === 'workspace' ? 6 : 4)].map((_, i) => (
-                <div key={i} className={`code-digit ${code[i] ? 'filled' : ''}`}>
-                  {code[i] || ''}
-                </div>
-              ))}
-            </div>
-
-            {error && <div className="code-error">{error}</div>}
-
-            {/* Number/Letter pad */}
-            <div className={`number-pad ${step === 'workspace' ? 'alpha-pad' : ''}`}>
-              {step === 'workspace' ? (
-                // Alphanumeric pad for workspace code
-                <>
-                  {['1', '2', '3', 'A', 'B', 'C', '4', '5', '6', 'D', 'E', 'F', '7', '8', '9', '0'].map((char) => (
-                    <button
-                      key={char}
-                      type="button"
-                      className="num-btn"
-                      onClick={() => handleKeyPress(char)}
-                    >
-                      {char}
-                    </button>
-                  ))}
-                  <button type="button" className="num-btn clear-btn" onClick={handleClear}>C</button>
-                  <button type="button" className="num-btn back-btn" onClick={handleBackspace}>←</button>
-                </>
-              ) : (
-                // Numeric pad for PIN
-                <>
-                  {[1, 2, 3, 4, 5, 6, 7, 8, 9].map((num) => (
-                    <button
-                      key={num}
-                      type="button"
-                      className="num-btn"
-                      onClick={() => handleKeyPress(num.toString())}
-                    >
-                      {num}
-                    </button>
-                  ))}
-                  <button type="button" className="num-btn clear-btn" onClick={handleClear}>C</button>
-                  <button type="button" className="num-btn" onClick={() => handleKeyPress('0')}>0</button>
-                  <button type="button" className="num-btn back-btn" onClick={handleBackspace}>←</button>
-                </>
-              )}
-            </div>
-
-            <button
-              type="submit"
-              className="enter-btn"
-              disabled={step === 'workspace' ? code.length !== 6 : code.length !== 4}
-            >
-              {step === 'workspace' ? 'המשך' : 'כניסה'}
-            </button>
-
-            {step === 'pin' && (
-              <button type="button" className="back-link" onClick={handleBack}>
-                חזרה לבחירת קוד עבודה
+          {step === 'pin' && !accessType && (
+            <div className="access-type-selector">
+              <button
+                className="access-type-btn input-btn"
+                onClick={() => selectAccessType('input')}
+              >
+                <span className="access-icon">⌨️</span>
+                <span className="access-label">ניהול</span>
               </button>
-            )}
-          </form>
-        )}
+              <button
+                className="access-type-btn display-btn"
+                onClick={() => selectAccessType('display')}
+              >
+                <span className="access-icon">📺</span>
+                <span className="access-label">תצוגה</span>
+              </button>
+            </div>
+          )}
 
-        <div className="auth-links">
-          <Link to="/login">התחברות עם סיסמה</Link>
-          <span> | </span>
-          <Link to="/register">הרשמה</Link>
+          {(step === 'workspace' || accessType) && (
+            <form onSubmit={handleSubmit} className="code-form">
+              <div className={`code-display ${step === 'workspace' ? 'workspace-code' : ''}`}>
+                {[...Array(step === 'workspace' ? 3 : 4)].map((_, i) => (
+                  <div key={i} className={`code-digit ${code[i] ? 'filled' : ''}`}>
+                    {code[i] || ''}
+                  </div>
+                ))}
+              </div>
+
+              {error && <div className="code-error">{error}</div>}
+
+              <div className="number-pad">
+                {[1, 2, 3, 4, 5, 6, 7, 8, 9].map((num) => (
+                  <button
+                    key={num}
+                    type="button"
+                    className="num-btn"
+                    onClick={() => handleKeyPress(num.toString())}
+                  >
+                    {num}
+                  </button>
+                ))}
+                <button type="button" className="num-btn clear-btn" onClick={handleClear}>C</button>
+                <button type="button" className="num-btn" onClick={() => handleKeyPress('0')}>0</button>
+                <button type="button" className="num-btn back-btn" onClick={handleBackspace}>←</button>
+              </div>
+
+              <button
+                type="submit"
+                className="enter-btn"
+                disabled={step === 'workspace' ? code.length !== 3 : code.length !== 4}
+              >
+                {step === 'workspace' ? 'המשך' : 'כניסה'}
+              </button>
+
+              {step === 'pin' && (
+                <button type="button" className="back-link" onClick={handleBack}>
+                  חזרה
+                </button>
+              )}
+            </form>
+          )}
+
+          <div className="auth-links">
+            <Link to="/login">התחברות עם סיסמה</Link>
+            <span> | </span>
+            <Link to="/register">הרשמה</Link>
+          </div>
         </div>
       </div>
     </div>
