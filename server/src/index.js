@@ -348,7 +348,143 @@ app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', message: 'השרת פועל!' })
 })
 
-// Admin: Clear all data (temporary endpoint - remove in production)
+// ============ ADMIN ROUTES ============
+
+// Admin: Get all users
+app.get('/api/admin/users', async (req, res) => {
+  try {
+    const result = await pool.query(
+      'SELECT id, username, display_name, workspace_code, input_pin, display_pin, created_at FROM users ORDER BY created_at DESC'
+    )
+    res.json(result.rows)
+  } catch (error) {
+    console.error('Error fetching users:', error)
+    res.status(500).json({ error: 'שגיאה בטעינת המשתמשים' })
+  }
+})
+
+// Admin: Delete user
+app.delete('/api/admin/users/:id', async (req, res) => {
+  try {
+    const { id } = req.params
+
+    // Get user workspace code first
+    const userResult = await pool.query('SELECT workspace_code FROM users WHERE id = $1', [id])
+    if (userResult.rows.length === 0) {
+      return res.status(404).json({ error: 'משתמש לא נמצא' })
+    }
+
+    const workspaceCode = userResult.rows[0].workspace_code
+
+    // Delete user's settings, messages, then the user
+    await pool.query('DELETE FROM settings WHERE workspace_code = $1', [workspaceCode])
+    await pool.query('DELETE FROM messages WHERE workspace_code = $1', [workspaceCode])
+    await pool.query('DELETE FROM users WHERE id = $1', [id])
+
+    res.json({ success: true, message: 'המשתמש נמחק בהצלחה' })
+  } catch (error) {
+    console.error('Error deleting user:', error)
+    res.status(500).json({ error: 'שגיאה במחיקת המשתמש' })
+  }
+})
+
+// Admin: Update user password
+app.put('/api/admin/users/:id/password', async (req, res) => {
+  try {
+    const { id } = req.params
+    const { password } = req.body
+
+    if (!password || password.length < 1) {
+      return res.status(400).json({ error: 'סיסמה נדרשת' })
+    }
+
+    const passwordHash = hashPassword(password)
+    const result = await pool.query(
+      'UPDATE users SET password_hash = $1 WHERE id = $2 RETURNING id, username, display_name',
+      [passwordHash, id]
+    )
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'משתמש לא נמצא' })
+    }
+
+    res.json({ success: true, message: 'הסיסמה עודכנה בהצלחה' })
+  } catch (error) {
+    console.error('Error updating password:', error)
+    res.status(500).json({ error: 'שגיאה בעדכון הסיסמה' })
+  }
+})
+
+// Admin: Update user PINs
+app.put('/api/admin/users/:id/pins', async (req, res) => {
+  try {
+    const { id } = req.params
+    const { inputPin, displayPin } = req.body
+
+    if (inputPin && inputPin.length !== 4) {
+      return res.status(400).json({ error: 'PIN לניהול חייב להיות 4 ספרות' })
+    }
+    if (displayPin && displayPin.length !== 4) {
+      return res.status(400).json({ error: 'PIN למסך חייב להיות 4 ספרות' })
+    }
+
+    let query = 'UPDATE users SET '
+    const values = []
+    const updates = []
+
+    if (inputPin) {
+      values.push(inputPin)
+      updates.push(`input_pin = $${values.length}`)
+    }
+    if (displayPin) {
+      values.push(displayPin)
+      updates.push(`display_pin = $${values.length}`)
+    }
+
+    if (updates.length === 0) {
+      return res.status(400).json({ error: 'לא סופקו ערכים לעדכון' })
+    }
+
+    values.push(id)
+    query += updates.join(', ') + ` WHERE id = $${values.length} RETURNING id, username`
+
+    const result = await pool.query(query, values)
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'משתמש לא נמצא' })
+    }
+
+    res.json({ success: true, message: 'קודי PIN עודכנו בהצלחה' })
+  } catch (error) {
+    console.error('Error updating PINs:', error)
+    res.status(500).json({ error: 'שגיאה בעדכון קודי PIN' })
+  }
+})
+
+// Admin: Login as user (get their workspace access)
+app.post('/api/admin/login-as/:id', async (req, res) => {
+  try {
+    const { id } = req.params
+    const result = await pool.query(
+      'SELECT id, username, display_name, workspace_code FROM users WHERE id = $1',
+      [id]
+    )
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'משתמש לא נמצא' })
+    }
+
+    res.json({
+      success: true,
+      user: result.rows[0]
+    })
+  } catch (error) {
+    console.error('Error logging in as user:', error)
+    res.status(500).json({ error: 'שגיאה בכניסה כמשתמש' })
+  }
+})
+
+// Admin: Clear all data
 app.delete('/api/admin/clear-all', async (req, res) => {
   try {
     await pool.query('DELETE FROM settings')
