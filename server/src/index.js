@@ -513,6 +513,58 @@ app.delete('/api/admin/clear-all', async (req, res) => {
   }
 })
 
+// Admin: Reset database (drop and recreate tables)
+app.post('/api/admin/reset-db', async (req, res) => {
+  try {
+    console.log('Resetting database...')
+    await pool.query('DROP TABLE IF EXISTS settings CASCADE')
+    await pool.query('DROP TABLE IF EXISTS messages CASCADE')
+    await pool.query('DROP TABLE IF EXISTS users CASCADE')
+
+    // Recreate tables
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS users (
+        id SERIAL PRIMARY KEY,
+        username VARCHAR(100) UNIQUE NOT NULL,
+        password_hash VARCHAR(255) NOT NULL,
+        display_name VARCHAR(255) NOT NULL,
+        workspace_code VARCHAR(10) UNIQUE NOT NULL,
+        input_pin VARCHAR(4) NOT NULL,
+        display_pin VARCHAR(4) NOT NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `)
+
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS messages (
+        id SERIAL PRIMARY KEY,
+        workspace_code VARCHAR(10) NOT NULL,
+        subject VARCHAR(255) NOT NULL,
+        content TEXT NOT NULL,
+        display_date TIMESTAMP NOT NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `)
+
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS settings (
+        key VARCHAR(100) NOT NULL,
+        workspace_code VARCHAR(10) NOT NULL,
+        value TEXT NOT NULL,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        PRIMARY KEY (key, workspace_code)
+      )
+    `)
+
+    console.log('Database reset complete!')
+    res.json({ success: true, message: 'Database reset complete' })
+  } catch (error) {
+    console.error('Error resetting database:', error)
+    res.status(500).json({ error: 'שגיאה באיפוס הדאטאבייס' })
+  }
+})
+
 // Set active message (for display page) - with workspace
 app.post('/api/active-message', async (req, res) => {
   try {

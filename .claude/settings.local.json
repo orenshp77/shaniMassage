@@ -14,7 +14,8 @@
       "Bash(git branch:*)",
       "Bash(git push:*)",
       "Bash(git commit:*)",
-      "Bash(PGPASSWORD=npg_2yqacA9bLVRl psql \"postgresql://neondb_owner:npg_2yqacA9bLVRl@ep-wandering-smoke-ahholl77-pooler.c-3.us-east-1.aws.neon.tech/neondb?sslmode=require\" -c \"DELETE FROM settings; DELETE FROM messages; DELETE FROM users;\")"
+      "Bash(PGPASSWORD=npg_2yqacA9bLVRl psql \"postgresql://neondb_owner:npg_2yqacA9bLVRl@ep-wandering-smoke-ahholl77-pooler.c-3.us-east-1.aws.neon.tech/neondb?sslmode=require\" -c \"DELETE FROM settings; DELETE FROM messages; DELETE FROM users;\")",
+      "Bash(PGPASSWORD=npg_2yqacA9bLVRl psql:*)"
     ]
   }
 }
