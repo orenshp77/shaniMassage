@@ -52,6 +52,22 @@ const getWorkspace = (workspaceCode) => {
 // Initialize database table
 const initDB = async () => {
   try {
+    // Drop old tables and recreate with new schema (one-time migration)
+    // Check if users table has the workspace_code column
+    const checkColumn = await pool.query(`
+      SELECT column_name FROM information_schema.columns
+      WHERE table_name = 'users' AND column_name = 'workspace_code'
+    `)
+
+    if (checkColumn.rows.length === 0) {
+      // Old schema exists, need to migrate
+      console.log('Migrating database to new schema...')
+      await pool.query('DROP TABLE IF EXISTS settings CASCADE')
+      await pool.query('DROP TABLE IF EXISTS messages CASCADE')
+      await pool.query('DROP TABLE IF EXISTS users CASCADE')
+      console.log('Old tables dropped')
+    }
+
     // Create users table
     await pool.query(`
       CREATE TABLE IF NOT EXISTS users (
