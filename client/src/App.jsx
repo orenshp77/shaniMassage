@@ -20,13 +20,13 @@ function App() {
           <Route path="/login" element={<LoginPage />} />
           <Route path="/register" element={<RegisterPage />} />
           <Route path="/display" element={<DisplayPage />} />
+          <Route path="/pair" element={<PairPage />} />
 
           {/* Protected routes - require password login */}
           <Route path="/admin" element={<ProtectedRoute><AdminPage /></ProtectedRoute>} />
           <Route path="/input" element={<ProtectedRoute><InputPage /></ProtectedRoute>} />
           <Route path="/qr" element={<ProtectedRoute><QRPage /></ProtectedRoute>} />
           <Route path="/tv" element={<ProtectedRoute><TVPairPage /></ProtectedRoute>} />
-          <Route path="/pair" element={<ProtectedRoute><PairPage /></ProtectedRoute>} />
         </Routes>
       </div>
     </Router>
