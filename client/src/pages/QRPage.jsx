@@ -64,7 +64,6 @@ function QRPage() {
   // URLs with workspace code in path
   const inputUrl = `${baseUrl}/input/${workspaceCode}`
   const displayUrl = `${baseUrl}/display/${workspaceCode}`
-  const connectUrl = `${baseUrl}/?ws=${workspaceCode}`
 
   const handleLogout = async () => {
     // Notify server to disconnect TV
@@ -117,9 +116,8 @@ function QRPage() {
                 fgColor="#00bcd4"
               />
             </div>
-            <div className="url-hint">דורש PIN למסך</div>
             <div className="card-actions">
-              <button className="card-btn enter-btn" onClick={() => window.open(displayUrl, '_blank')}>
+              <button className="card-btn enter-btn" onClick={() => navigate(`/display/${workspaceCode}`)}>
                 כניסה
               </button>
               <button className="card-btn copy-btn" onClick={() => copyToClipboard(displayUrl, 'קישור למסך תצוגה')}>
@@ -131,7 +129,7 @@ function QRPage() {
           {/* Input Page QR */}
           <div className="qr-card input-card">
             <div className="qr-icon">📝</div>
-            <h2>עמוד יצירת הודעות</h2>
+            <h2>ניהול הודעות</h2>
             <p>סרוק כדי להזין ולנהל הודעות</p>
             <div className="qr-code-wrapper">
               <QRCodeSVG
@@ -143,38 +141,11 @@ function QRPage() {
                 fgColor="#ff69b4"
               />
             </div>
-            <div className="url-hint">דורש PIN לניהול</div>
             <div className="card-actions">
-              <button className="card-btn enter-btn" onClick={() => window.open(inputUrl, '_blank')}>
+              <button className="card-btn enter-btn" onClick={() => navigate(`/input/${workspaceCode}`)}>
                 כניסה
               </button>
-              <button className="card-btn copy-btn" onClick={() => copyToClipboard(inputUrl, 'קישור לעמוד יצירת הודעות')}>
-                העתק קישור
-              </button>
-            </div>
-          </div>
-
-          {/* General Connect QR */}
-          <div className="qr-card connect-card">
-            <div className="qr-icon">🔗</div>
-            <h2>התחברות כללית</h2>
-            <p>סרוק לבחירת סוג גישה</p>
-            <div className="qr-code-wrapper">
-              <QRCodeSVG
-                value={connectUrl}
-                size={200}
-                level="H"
-                includeMargin={true}
-                bgColor="#ffffff"
-                fgColor="#667eea"
-              />
-            </div>
-            <div className="url-hint">בחירת ניהול/תצוגה</div>
-            <div className="card-actions">
-              <button className="card-btn enter-btn" onClick={() => window.open(connectUrl, '_blank')}>
-                כניסה
-              </button>
-              <button className="card-btn copy-btn" onClick={() => copyToClipboard(connectUrl, 'קישור להתחברות כללית')}>
+              <button className="card-btn copy-btn" onClick={() => copyToClipboard(inputUrl, 'קישור לניהול הודעות')}>
                 העתק קישור
               </button>
             </div>
@@ -184,24 +155,10 @@ function QRPage() {
         {/* TV Connect Button - below QR cards */}
         <button className="tv-connect-btn" onClick={goToConnect}>
           <span className="tv-icon">📺</span>
-          <span className="tv-text">חבר מסך</span>
+          <span className="tv-text">חבר טלוויזיה</span>
         </button>
 
-        <div className="qr-instructions">
-          <h3>איך זה עובד?</h3>
-          <ol>
-            <li>📱 פתח את המצלמה בטלפון</li>
-            <li>🎯 כוון על הקוד הרצוי</li>
-            <li>🔗 לחץ על הקישור שמופיע</li>
-            <li>🔢 הזן את קוד ה-PIN המתאים</li>
-            <li>✨ זהו! אתה מחובר</li>
-          </ol>
-        </div>
-
         <div className="qr-actions">
-          <button onClick={() => navigate('/input')} className="action-btn input-action">
-            עבור לניהול הודעות
-          </button>
           <button onClick={handleLogout} className="action-btn logout-action">
             התנתק
           </button>

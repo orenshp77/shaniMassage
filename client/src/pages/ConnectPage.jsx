@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useNavigate, useSearchParams, Link } from 'react-router-dom'
 import { QRCodeSVG } from 'qrcode.react'
+import Swal from 'sweetalert2'
 import api from '../services/api'
 import './ConnectPage.css'
 
@@ -84,8 +85,15 @@ function ConnectPage() {
       localStorage.setItem('displayName', ws.display_name)
       navigate('/qr')
     } catch (error) {
-      setError('קוד עבודה לא נמצא')
-      setTimeout(() => setError(''), 2000)
+      // Show ALERT for wrong code
+      Swal.fire({
+        icon: 'error',
+        title: 'קוד שגוי',
+        text: 'קוד העבודה לא נמצא במערכת',
+        confirmButtonText: 'נסה שוב',
+        confirmButtonColor: '#00bcd4'
+      })
+      setCode('')
     }
   }
 

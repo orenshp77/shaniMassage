@@ -50,7 +50,8 @@ function PairPage() {
         showConfirmButton: false,
         timer: 2000
       }).then(() => {
-        navigate('/qr')
+        // Go to display page - same as TV
+        navigate(`/display/${workspaceCode}`)
       })
     } catch (error) {
       setStatus('error')
