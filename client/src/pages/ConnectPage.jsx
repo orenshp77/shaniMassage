@@ -152,11 +152,7 @@ function ConnectPage() {
   }
 
   const selectAccessType = (type) => {
-    if (type === 'input') {
-      // For management - redirect to login page (requires password)
-      navigate('/login')
-      return
-    }
+    // Set access type and show PIN input
     setAccessType(type)
     setCode('')
   }
