@@ -77,11 +77,21 @@ function HomePage() {
     setLinkHighlight(false)
   }
 
-  // Show connection instructions popup
+  // Show connection instructions popup (mobile) or navigate directly (desktop)
   const showConnectionInstructions = (e) => {
     e.preventDefault()
     setMenuOpen(false)
 
+    // Check if mobile (width <= 768px)
+    const isMobile = window.innerWidth <= 768
+
+    if (!isMobile) {
+      // Desktop - go directly to connect page
+      navigate('/connect')
+      return
+    }
+
+    // Mobile - show alert with instructions
     Swal.fire({
       html: `
         <div style="text-align: center; direction: rtl;">
