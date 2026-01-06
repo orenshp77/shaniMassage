@@ -27,8 +27,12 @@ function ConnectPage() {
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
   const [scannerOpen, setScannerOpen] = useState(false)
+  const [zoomLevel, setZoomLevel] = useState(1)
+  const [maxZoom, setMaxZoom] = useState(1)
+  const [zoomSupported, setZoomSupported] = useState(false)
   const scannerRef = useRef(null)
   const html5QrCodeRef = useRef(null)
+  const videoTrackRef = useRef(null)
 
   // Scroll handler for navbar
   useEffect(() => {
@@ -146,6 +150,20 @@ function ConnectPage() {
     setScannerOpen(true)
   }
 
+  // Apply zoom to camera
+  const applyZoom = async (newZoom) => {
+    if (videoTrackRef.current && zoomSupported) {
+      try {
+        await videoTrackRef.current.applyConstraints({
+          advanced: [{ zoom: newZoom }]
+        })
+        setZoomLevel(newZoom)
+      } catch (err) {
+        console.error("Error applying zoom:", err)
+      }
+    }
+  }
+
   // Start QR scanner when modal opens
   useEffect(() => {
     if (scannerOpen && scannerRef.current && !html5QrCodeRef.current) {
@@ -167,6 +185,7 @@ function ConnectPage() {
           // Stop scanner
           html5QrCode.stop().then(() => {
             html5QrCodeRef.current = null
+            videoTrackRef.current = null
           }).catch(err => console.error("Error stopping scanner:", err))
 
           setScannerOpen(false)
@@ -214,7 +233,26 @@ function ConnectPage() {
         (errorMessage) => {
           // QR scan error - ignore, keep scanning
         }
-      ).catch(err => {
+      ).then(() => {
+        // Get video track for zoom control
+        setTimeout(() => {
+          const videoElement = document.querySelector('#qr-reader video')
+          if (videoElement && videoElement.srcObject) {
+            const track = videoElement.srcObject.getVideoTracks()[0]
+            if (track) {
+              videoTrackRef.current = track
+              const capabilities = track.getCapabilities()
+              if (capabilities.zoom) {
+                setZoomSupported(true)
+                setMaxZoom(capabilities.zoom.max || 5)
+                setZoomLevel(capabilities.zoom.min || 1)
+              } else {
+                setZoomSupported(false)
+              }
+            }
+          }
+        }, 500) // Wait for video to initialize
+      }).catch(err => {
         console.error("Error starting scanner:", err)
         setScannerOpen(false)
         Swal.fire({
@@ -239,8 +277,12 @@ function ConnectPage() {
       if (html5QrCodeRef.current) {
         html5QrCodeRef.current.stop().then(() => {
           html5QrCodeRef.current = null
+          videoTrackRef.current = null
         }).catch(err => console.error("Error stopping scanner:", err))
       }
+      // Reset zoom state when closing
+      setZoomLevel(1)
+      setZoomSupported(false)
     }
   }, [scannerOpen, navigate])
 
@@ -570,8 +612,40 @@ function ConnectPage() {
             <h3>סרקו את קוד ה-QR</h3>
             <p>קרבו את הטלפון לקוד עד שהוא ממלא את המסגרת</p>
             <div id="qr-reader" ref={scannerRef}></div>
+
+            {/* Zoom Control */}
+            {zoomSupported && (
+              <div className="zoom-control">
+                <span className="zoom-icon">🔍</span>
+                <button
+                  className="zoom-btn"
+                  onClick={() => applyZoom(Math.max(1, zoomLevel - 0.5))}
+                  disabled={zoomLevel <= 1}
+                >
+                  −
+                </button>
+                <input
+                  type="range"
+                  min="1"
+                  max={maxZoom}
+                  step="0.1"
+                  value={zoomLevel}
+                  onChange={(e) => applyZoom(parseFloat(e.target.value))}
+                  className="zoom-slider"
+                />
+                <button
+                  className="zoom-btn"
+                  onClick={() => applyZoom(Math.min(maxZoom, zoomLevel + 0.5))}
+                  disabled={zoomLevel >= maxZoom}
+                >
+                  +
+                </button>
+                <span className="zoom-level">{zoomLevel.toFixed(1)}x</span>
+              </div>
+            )}
+
             <div className="scanner-tip">
-              <span>💡</span> טיפ: החזיקו את הטלפון יציב וקרוב לקוד
+              <span>💡</span> {zoomSupported ? 'השתמשו בזום כדי להתקרב לקוד' : 'טיפ: החזיקו את הטלפון יציב וקרוב לקוד'}
             </div>
           </div>
         </div>
