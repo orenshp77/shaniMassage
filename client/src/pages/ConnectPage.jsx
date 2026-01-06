@@ -15,8 +15,48 @@ function ConnectPage() {
   const [baseUrl, setBaseUrl] = useState('')
   const [tvStatus, setTvStatus] = useState('waiting')
 
+  // Menu and accessibility state
+  const [menuOpen, setMenuOpen] = useState(false)
+  const [scrolled, setScrolled] = useState(false)
+  const [accessibilityOpen, setAccessibilityOpen] = useState(false)
+  const [fontSize, setFontSize] = useState(100)
+  const [highContrast, setHighContrast] = useState(false)
+  const [linkHighlight, setLinkHighlight] = useState(false)
+
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
+
+  // Scroll handler for navbar
+  useEffect(() => {
+    const handleScroll = () => {
+      setScrolled(window.scrollY > 50)
+    }
+    window.addEventListener('scroll', handleScroll)
+    return () => window.removeEventListener('scroll', handleScroll)
+  }, [])
+
+  // Apply accessibility settings
+  useEffect(() => {
+    document.documentElement.style.fontSize = `${fontSize}%`
+    if (highContrast) {
+      document.body.classList.add('high-contrast')
+    } else {
+      document.body.classList.remove('high-contrast')
+    }
+    if (linkHighlight) {
+      document.body.classList.add('link-highlight')
+    } else {
+      document.body.classList.remove('link-highlight')
+    }
+  }, [fontSize, highContrast, linkHighlight])
+
+  const increaseFontSize = () => setFontSize(prev => Math.min(prev + 10, 150))
+  const decreaseFontSize = () => setFontSize(prev => Math.max(prev - 10, 80))
+  const resetAccessibility = () => {
+    setFontSize(100)
+    setHighContrast(false)
+    setLinkHighlight(false)
+  }
 
   // Initialize - generate pairing code only once
   useEffect(() => {
@@ -63,6 +103,12 @@ function ConnectPage() {
         setTimeout(() => {
           navigate('/display')
         }, 2000)
+
+        // Generate new pairing code for next connection
+        setTimeout(() => {
+          setTvStatus('waiting')
+          generatePairingCode()
+        }, 3000)
       }
     } catch (error) {
       // Pairing not found yet, continue polling
@@ -124,6 +170,81 @@ function ConnectPage() {
 
   return (
     <div className="home-page">
+      {/* Accessibility Widget */}
+      <div className="accessibility-widget">
+        <button
+          className="accessibility-toggle"
+          onClick={() => setAccessibilityOpen(!accessibilityOpen)}
+          aria-label="פתח תפריט נגישות"
+          title="נגישות"
+        >
+          <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="accessibility-icon">
+            <circle cx="12" cy="4" r="2.5" fill="currentColor"/>
+            <path d="M12 8C12 8 8 9 5 9.5C4.5 9.6 4 10.1 4 10.7C4 11.4 4.6 12 5.3 12C5.4 12 5.5 12 5.6 12L10 11V14L7.5 20.5C7.2 21.2 7.5 22 8.2 22.3C8.9 22.6 9.7 22.3 10 21.6L12 16L14 21.6C14.3 22.3 15.1 22.6 15.8 22.3C16.5 22 16.8 21.2 16.5 20.5L14 14V11L18.4 12C18.5 12 18.6 12 18.7 12C19.4 12 20 11.4 20 10.7C20 10.1 19.5 9.6 19 9.5C16 9 12 8 12 8Z" fill="currentColor"/>
+          </svg>
+        </button>
+
+        {accessibilityOpen && (
+          <div className="accessibility-menu">
+            <h3>נגישות</h3>
+
+            <div className="accessibility-option">
+              <span>גודל טקסט</span>
+              <div className="font-controls">
+                <button onClick={decreaseFontSize} aria-label="הקטן טקסט">א-</button>
+                <span>{fontSize}%</span>
+                <button onClick={increaseFontSize} aria-label="הגדל טקסט">א+</button>
+              </div>
+            </div>
+
+            <div className="accessibility-option">
+              <label>
+                <input
+                  type="checkbox"
+                  checked={highContrast}
+                  onChange={(e) => setHighContrast(e.target.checked)}
+                />
+                ניגודיות גבוהה
+              </label>
+            </div>
+
+            <div className="accessibility-option">
+              <label>
+                <input
+                  type="checkbox"
+                  checked={linkHighlight}
+                  onChange={(e) => setLinkHighlight(e.target.checked)}
+                />
+                הדגשת קישורים
+              </label>
+            </div>
+
+            <button className="accessibility-reset" onClick={resetAccessibility}>
+              איפוס הגדרות
+            </button>
+          </div>
+        )}
+      </div>
+
+      {/* Navigation Bar */}
+      <nav className={`nav-bar ${scrolled ? 'scrolled' : ''}`}>
+        <div className="nav-container">
+          <Link to="/" className="nav-logo">
+            <img src="/logo.png" alt="AB" />
+          </Link>
+
+          <button className="menu-toggle" onClick={() => setMenuOpen(!menuOpen)}>
+            <span className={menuOpen ? 'open' : ''}></span>
+          </button>
+
+          <div className={`nav-menu ${menuOpen ? 'open' : ''}`}>
+            <Link to="/#about" onClick={() => setMenuOpen(false)}>נעים מאוד</Link>
+            <Link to="/connect" className="nav-btn-connect" onClick={() => setMenuOpen(false)}>בואו נתחבר</Link>
+            <Link to="/#contact" onClick={() => setMenuOpen(false)}>צור קשר</Link>
+          </div>
+        </div>
+      </nav>
+
       {/* Background animation */}
       <div className="home-bg">
         {[...Array(40)].map((_, i) => (

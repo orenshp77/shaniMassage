@@ -1,4 +1,5 @@
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
+import HomePage from './pages/HomePage'
 import InputPage from './pages/InputPage'
 import DisplayPage from './pages/DisplayPage'
 import QRPage from './pages/QRPage'
@@ -14,8 +15,9 @@ function App() {
     <Router>
       <div className="app">
         <Routes>
-          {/* All routes are public - workspace code in URL handles access */}
-          <Route path="/" element={<ConnectPage />} />
+          {/* Landing page as home */}
+          <Route path="/" element={<HomePage />} />
+          <Route path="/connect" element={<ConnectPage />} />
           <Route path="/login" element={<LoginPage />} />
           <Route path="/register" element={<RegisterPage />} />
           <Route path="/display" element={<DisplayPage />} />
