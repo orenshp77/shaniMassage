@@ -1,5 +1,6 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useSearchParams, useNavigate } from 'react-router-dom'
+import { Html5Qrcode } from 'html5-qrcode'
 import api from '../services/api'
 import Swal from 'sweetalert2'
 import './PairPage.css'
@@ -11,6 +12,15 @@ function PairPage() {
   const [status, setStatus] = useState('checking') // checking, needLogin, ready, pairing, success, error
   const [workspaceCode, setWorkspaceCode] = useState('')
   const [displayName, setDisplayName] = useState('')
+
+  // QR Scanner state
+  const [scannerOpen, setScannerOpen] = useState(false)
+  const [zoomLevel, setZoomLevel] = useState(1)
+  const [maxZoom, setMaxZoom] = useState(1)
+  const [zoomSupported, setZoomSupported] = useState(false)
+  const scannerRef = useRef(null)
+  const html5QrCodeRef = useRef(null)
+  const videoTrackRef = useRef(null)
 
   useEffect(() => {
     const code = searchParams.get('code')
@@ -105,6 +115,165 @@ function PairPage() {
     navigate('/register')
   }
 
+  // Apply zoom to camera
+  const applyZoom = async (newZoom) => {
+    if (videoTrackRef.current && zoomSupported) {
+      try {
+        await videoTrackRef.current.applyConstraints({
+          advanced: [{ zoom: newZoom }]
+        })
+        setZoomLevel(newZoom)
+      } catch (err) {
+        console.error("Error applying zoom:", err)
+      }
+    }
+  }
+
+  // Open QR scanner
+  const openScanner = () => {
+    setScannerOpen(true)
+  }
+
+  // Close scanner
+  const closeScanner = () => {
+    if (html5QrCodeRef.current) {
+      html5QrCodeRef.current.stop().then(() => {
+        html5QrCodeRef.current = null
+        videoTrackRef.current = null
+      }).catch(err => console.error("Error stopping scanner:", err))
+    }
+    setScannerOpen(false)
+  }
+
+  // Start QR scanner when modal opens
+  useEffect(() => {
+    if (scannerOpen && scannerRef.current && !html5QrCodeRef.current) {
+      const html5QrCode = new Html5Qrcode("pair-qr-reader")
+      html5QrCodeRef.current = html5QrCode
+
+      html5QrCode.start(
+        { facingMode: "environment" },
+        {
+          fps: 15,
+          qrbox: { width: 280, height: 280 },
+          aspectRatio: 1.0,
+          disableFlip: false
+        },
+        (decodedText) => {
+          console.log("QR Scanned:", decodedText)
+
+          html5QrCode.stop().then(() => {
+            html5QrCodeRef.current = null
+            videoTrackRef.current = null
+          }).catch(err => console.error("Error stopping scanner:", err))
+
+          setScannerOpen(false)
+
+          // Extract pairing code from URL or use as-is
+          try {
+            const url = new URL(decodedText)
+            const code = url.searchParams.get('code')
+            if (code) {
+              setPairingCode(code)
+              // Auto-pair immediately
+              setTimeout(() => handlePairWithCode(code), 100)
+            }
+          } catch (e) {
+            // Not a URL - check if it's just a pairing code
+            if (/^\d{3}$/.test(decodedText)) {
+              setPairingCode(decodedText)
+              setTimeout(() => handlePairWithCode(decodedText), 100)
+            } else {
+              Swal.fire({
+                icon: 'warning',
+                title: 'קוד לא מזוהה',
+                text: 'זה לא נראה כמו קוד צימוד. נסו לסרוק שוב.',
+                confirmButtonText: 'אוקי',
+                confirmButtonColor: '#00bcd4',
+                background: '#0c0c1e',
+                color: '#fff'
+              })
+            }
+          }
+        },
+        () => {}
+      ).then(() => {
+        setTimeout(() => {
+          const videoElement = document.querySelector('#pair-qr-reader video')
+          if (videoElement && videoElement.srcObject) {
+            const track = videoElement.srcObject.getVideoTracks()[0]
+            if (track) {
+              videoTrackRef.current = track
+              const capabilities = track.getCapabilities()
+              if (capabilities.zoom) {
+                setZoomSupported(true)
+                setMaxZoom(capabilities.zoom.max || 5)
+                setZoomLevel(capabilities.zoom.min || 1)
+              } else {
+                setZoomSupported(false)
+              }
+            }
+          }
+        }, 500)
+      }).catch(err => {
+        console.error("Error starting scanner:", err)
+        setScannerOpen(false)
+        Swal.fire({
+          icon: 'error',
+          title: 'שגיאה',
+          html: `<div style="direction: rtl;"><p>לא ניתן לפתוח את המצלמה</p></div>`,
+          confirmButtonText: 'אוקי',
+          confirmButtonColor: '#00bcd4',
+          background: '#0c0c1e',
+          color: '#fff'
+        })
+      })
+    }
+
+    return () => {
+      if (html5QrCodeRef.current) {
+        html5QrCodeRef.current.stop().then(() => {
+          html5QrCodeRef.current = null
+          videoTrackRef.current = null
+        }).catch(err => console.error("Error stopping scanner:", err))
+      }
+      setZoomLevel(1)
+      setZoomSupported(false)
+    }
+  }, [scannerOpen])
+
+  // Pair with a specific code
+  const handlePairWithCode = async (code) => {
+    if (!workspaceCode || !code) return
+
+    setStatus('pairing')
+
+    try {
+      const response = await api.post('/tv/pair', {
+        pairingCode: code,
+        workspaceCode
+      })
+
+      setStatus('success')
+      Swal.fire({
+        icon: 'success',
+        title: 'הטלוויזיה מחוברת!',
+        text: response.data.message,
+        showConfirmButton: false,
+        timer: 2000
+      }).then(() => {
+        navigate(`/input/${workspaceCode}`)
+      })
+    } catch (error) {
+      setStatus('error')
+      Swal.fire({
+        icon: 'error',
+        title: 'שגיאה',
+        text: error.response?.data?.error || 'לא ניתן לצמד את הטלוויזיה'
+      })
+    }
+  }
+
   return (
     <div className="pair-page">
       <div className="pair-bg">
@@ -153,8 +322,8 @@ function PairPage() {
                 <span className="workspace-name">{displayName}</span>
                 <span className="workspace-code-small">{workspaceCode}</span>
               </div>
-              <button className="pair-btn primary large" onClick={handlePair}>
-                חבר את הטלוויזיה
+              <button className="pair-btn primary large" onClick={pairingCode ? handlePair : openScanner}>
+                {pairingCode ? 'חבר את הטלוויזיה' : '📷 סרוק קוד QR לחיבור'}
               </button>
               <button className="pair-btn secondary" onClick={() => navigate('/qr')}>
                 ביטול
@@ -195,6 +364,53 @@ function PairPage() {
           )}
         </div>
       </div>
+
+      {/* QR Scanner Modal */}
+      {scannerOpen && (
+        <div className="qr-scanner-modal">
+          <div className="qr-scanner-container">
+            <button className="close-scanner" onClick={closeScanner}>✕</button>
+            <h3>סרקו את קוד ה-QR</h3>
+            <p>כוונו את המצלמה לקוד שעל מסך הטלוויזיה</p>
+            <div id="pair-qr-reader" ref={scannerRef}></div>
+
+            {/* Zoom Control */}
+            {zoomSupported && (
+              <div className="zoom-control">
+                <span className="zoom-icon">🔍</span>
+                <button
+                  className="zoom-btn"
+                  onClick={() => applyZoom(Math.max(1, zoomLevel - 0.5))}
+                  disabled={zoomLevel <= 1}
+                >
+                  −
+                </button>
+                <input
+                  type="range"
+                  min="1"
+                  max={maxZoom}
+                  step="0.1"
+                  value={zoomLevel}
+                  onChange={(e) => applyZoom(parseFloat(e.target.value))}
+                  className="zoom-slider"
+                />
+                <button
+                  className="zoom-btn"
+                  onClick={() => applyZoom(Math.min(maxZoom, zoomLevel + 0.5))}
+                  disabled={zoomLevel >= maxZoom}
+                >
+                  +
+                </button>
+                <span className="zoom-level">{zoomLevel.toFixed(1)}x</span>
+              </div>
+            )}
+
+            <div className="scanner-tip">
+              <span>💡</span> {zoomSupported ? 'השתמשו בזום כדי להתקרב לקוד' : 'קרבו את הטלפון לקוד עד שהוא ממלא את המסגרת'}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
