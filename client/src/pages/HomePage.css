@@ -625,6 +625,8 @@
   color: white;
   font-family: inherit;
   transition: all 0.3s ease;
+  text-align: right;
+  direction: rtl;
 }
 
 .contact-form input:focus,

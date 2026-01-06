@@ -349,21 +349,21 @@ function HomePage() {
                 <span className="contact-icon">📧</span>
                 <div>
                   <h4>אימייל</h4>
-                  <a href="mailto:info@ab-service.co.il">info@ab-service.co.il</a>
+                  <a href="mailto:orenshp77@gmail.com">orenshp77@gmail.com</a>
                 </div>
               </div>
               <div className="contact-item">
                 <span className="contact-icon">📞</span>
                 <div>
                   <h4>טלפון</h4>
-                  <a href="tel:03-1234567">03-1234567</a>
+                  <a href="tel:0523715599">052-3715599</a>
                 </div>
               </div>
               <div className="contact-item">
                 <span className="contact-icon">💬</span>
                 <div>
                   <h4>וואטסאפ</h4>
-                  <a href="https://wa.me/972501234567" target="_blank" rel="noopener noreferrer">שלח הודעה</a>
+                  <a href="https://wa.me/972523715599" target="_blank" rel="noopener noreferrer">שלח הודעה</a>
                 </div>
               </div>
             </div>
