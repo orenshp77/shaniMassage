@@ -251,7 +251,7 @@ function ConnectPage() {
     }
   }, [scannerOpen, navigate])
 
-  // Close scanner
+  // Close scanner and go back to home page
   const closeScanner = () => {
     if (html5QrCodeRef.current) {
       html5QrCodeRef.current.stop().then(() => {
@@ -259,6 +259,7 @@ function ConnectPage() {
       }).catch(err => console.error("Error stopping scanner:", err))
     }
     setScannerOpen(false)
+    navigate('/')
   }
 
   // Initialize - generate pairing code only once
