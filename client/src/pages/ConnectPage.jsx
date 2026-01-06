@@ -474,11 +474,11 @@ function ConnectPage() {
                 <p>סרוק את הקוד כדי להתחבר</p>
               </div>
 
-              <div className="qr-wrapper">
-                <div className="qr-frame">
+              <div className="qr-wrapper centered">
+                <div className="qr-frame small">
                   <QRCodeSVG
                     value={pairUrl}
-                    size={280}
+                    size={200}
                     level="H"
                     includeMargin={true}
                     bgColor="#ffffff"
@@ -487,9 +487,6 @@ function ConnectPage() {
                   <div className="scan-overlay">
                     <div className="scan-line"></div>
                   </div>
-                </div>
-                <div className="pairing-code" onClick={() => navigate('/login')} style={{ cursor: 'pointer' }}>
-                  קוד צימוד: <span>{pairingCode}</span>
                 </div>
               </div>
             </>

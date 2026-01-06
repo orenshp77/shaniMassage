@@ -149,6 +149,11 @@
   align-items: center;
 }
 
+.qr-wrapper.centered {
+  justify-content: center;
+  flex: 1;
+}
+
 .qr-frame {
   position: relative;
   background: white;
@@ -156,6 +161,17 @@
   border-radius: 15px;
   box-shadow: 0 0 30px rgba(0, 255, 255, 0.3);
   margin-top: 6px;
+}
+
+.qr-frame.small {
+  padding: 10px;
+  border-radius: 12px;
+}
+
+.qr-frame.small svg {
+  display: block;
+  width: 180px !important;
+  height: 180px !important;
 }
 
 .qr-frame svg {
