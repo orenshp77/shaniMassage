@@ -137,60 +137,24 @@ function ConnectPage() {
     })
   }
 
-  // Open camera for QR code scanning
-  const openCameraForScanning = async () => {
-    try {
-      // Check if the browser supports getUserMedia
-      if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
-        // Request camera permission
-        const stream = await navigator.mediaDevices.getUserMedia({
-          video: { facingMode: 'environment' }
-        })
+  // Open camera directly using file input with capture attribute
+  const openCameraForScanning = () => {
+    // Create a hidden file input that triggers the camera directly
+    const input = document.createElement('input')
+    input.type = 'file'
+    input.accept = 'image/*'
+    input.capture = 'environment' // Opens back camera directly on mobile
+    input.style.display = 'none'
 
-        // Stop the stream immediately - we just wanted to trigger the permission
-        stream.getTracks().forEach(track => track.stop())
-
-        // Show a message that they should use their native camera app
-        Swal.fire({
-          icon: 'info',
-          title: 'פתחו את המצלמה',
-          html: `
-            <div style="direction: rtl; text-align: center;">
-              <p>פתחו את אפליקציית המצלמה בטלפון</p>
-              <p>וסרקו את קוד ה-QR שמופיע על מסך הטלוויזיה</p>
-            </div>
-          `,
-          confirmButtonText: 'הבנתי',
-          confirmButtonColor: '#00bcd4',
-          background: '#0c0c1e',
-          color: '#fff'
-        })
-      } else {
-        // Browser doesn't support camera
-        Swal.fire({
-          icon: 'info',
-          title: 'סרקו את הקוד',
-          html: `
-            <div style="direction: rtl; text-align: center;">
-              <p>פתחו את אפליקציית המצלמה בטלפון</p>
-              <p>וסרקו את קוד ה-QR שמופיע על מסך הטלוויזיה</p>
-            </div>
-          `,
-          confirmButtonText: 'הבנתי',
-          confirmButtonColor: '#00bcd4',
-          background: '#0c0c1e',
-          color: '#fff'
-        })
-      }
-    } catch (error) {
-      // Camera permission denied or error
+    input.onchange = () => {
+      // User took a photo - show message to scan QR manually
       Swal.fire({
         icon: 'info',
         title: 'סרקו את הקוד',
         html: `
           <div style="direction: rtl; text-align: center;">
-            <p>פתחו את אפליקציית המצלמה בטלפון</p>
-            <p>וסרקו את קוד ה-QR שמופיע על מסך הטלוויזיה</p>
+            <p>השתמשו באפליקציית המצלמה הרגילה</p>
+            <p>כדי לסרוק את קוד ה-QR שמופיע על מסך הטלוויזיה</p>
           </div>
         `,
         confirmButtonText: 'הבנתי',
@@ -198,7 +162,15 @@ function ConnectPage() {
         background: '#0c0c1e',
         color: '#fff'
       })
+      document.body.removeChild(input)
     }
+
+    input.oncancel = () => {
+      document.body.removeChild(input)
+    }
+
+    document.body.appendChild(input)
+    input.click()
   }
 
   // Initialize - generate pairing code only once
