@@ -58,6 +58,149 @@ function ConnectPage() {
     setLinkHighlight(false)
   }
 
+  // Show connection instructions popup
+  const showConnectionInstructions = (e) => {
+    e.preventDefault()
+    setMenuOpen(false)
+
+    Swal.fire({
+      html: `
+        <div style="text-align: center; direction: rtl;">
+          <div style="margin-bottom: 20px;">
+            <svg width="120" height="100" viewBox="0 0 120 100" style="margin: 0 auto;">
+              <!-- TV Screen -->
+              <rect x="30" y="10" width="60" height="45" rx="3" fill="#1a1a2e" stroke="#00ffff" stroke-width="2"/>
+              <rect x="35" y="15" width="50" height="35" fill="#0a0a1a"/>
+              <text x="60" y="37" text-anchor="middle" fill="#00ffff" font-size="8">aabb.co.il</text>
+              <!-- TV Stand -->
+              <rect x="50" y="55" width="20" height="5" fill="#333"/>
+              <rect x="40" y="60" width="40" height="3" rx="1" fill="#333"/>
+              <!-- Left Hand with Remote -->
+              <g class="hand-left" style="animation: pointLeft 1.5s ease-in-out infinite;">
+                <ellipse cx="15" cy="50" rx="8" ry="10" fill="#ffdbac"/>
+                <rect x="10" y="35" width="10" height="20" rx="2" fill="#333"/>
+                <circle cx="15" cy="40" r="2" fill="#ff0000"/>
+                <!-- Signal waves -->
+                <path d="M25 45 Q35 40 45 45" stroke="#00ffff" stroke-width="1" fill="none" opacity="0.6"/>
+                <path d="M25 50 Q35 45 45 50" stroke="#00ffff" stroke-width="1" fill="none" opacity="0.4"/>
+              </g>
+              <!-- Right Hand with Phone -->
+              <g class="hand-right" style="animation: pointRight 1.5s ease-in-out infinite 0.5s;">
+                <ellipse cx="105" cy="50" rx="8" ry="10" fill="#ffdbac"/>
+                <rect x="95" y="35" width="15" height="25" rx="2" fill="#333"/>
+                <rect x="97" y="37" width="11" height="18" fill="#1a1a2e"/>
+                <circle cx="102" cy="58" r="1.5" fill="#666"/>
+              </g>
+            </svg>
+          </div>
+
+          <style>
+            @keyframes pointLeft {
+              0%, 100% { transform: translateX(0); }
+              50% { transform: translateX(5px); }
+            }
+            @keyframes pointRight {
+              0%, 100% { transform: translateX(0); }
+              50% { transform: translateX(-5px); }
+            }
+          </style>
+
+          <div style="background: linear-gradient(135deg, #1a1a2e, #2a2a4e); padding: 20px; border-radius: 15px; margin: 15px 0;">
+            <div style="display: flex; align-items: center; margin-bottom: 15px; text-align: right;">
+              <span style="background: #00ffff; color: #1a1a2e; width: 30px; height: 30px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; margin-left: 10px; flex-shrink: 0;">1</span>
+              <span style="color: white; font-size: 16px;">כנסו לדפדפן במסך הטלוויזיה ורשמו<br><strong style="color: #00ffff; font-size: 18px;">aabb.co.il</strong></span>
+            </div>
+
+            <div style="display: flex; align-items: center; text-align: right;">
+              <span style="background: #ff69b4; color: white; width: 30px; height: 30px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; margin-left: 10px; flex-shrink: 0;">2</span>
+              <span style="color: white; font-size: 16px;">פתחו את מצלמת הטלפון וכוונו לסורק<br><strong style="color: #ff69b4;">התחברו למסך</strong></span>
+            </div>
+          </div>
+        </div>
+      `,
+      confirmButtonText: 'הבנתי',
+      confirmButtonColor: '#00bcd4',
+      background: '#0c0c1e',
+      color: '#fff',
+      width: '400px',
+      showClass: {
+        popup: 'animate__animated animate__fadeInDown'
+      },
+      hideClass: {
+        popup: 'animate__animated animate__fadeOutUp'
+      }
+    }).then((result) => {
+      if (result.isConfirmed) {
+        // Try to open camera for QR scanning
+        openCameraForScanning()
+      }
+    })
+  }
+
+  // Open camera for QR code scanning
+  const openCameraForScanning = async () => {
+    try {
+      // Check if the browser supports getUserMedia
+      if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+        // Request camera permission
+        const stream = await navigator.mediaDevices.getUserMedia({
+          video: { facingMode: 'environment' }
+        })
+
+        // Stop the stream immediately - we just wanted to trigger the permission
+        stream.getTracks().forEach(track => track.stop())
+
+        // Show a message that they should use their native camera app
+        Swal.fire({
+          icon: 'info',
+          title: 'פתחו את המצלמה',
+          html: `
+            <div style="direction: rtl; text-align: center;">
+              <p>פתחו את אפליקציית המצלמה בטלפון</p>
+              <p>וסרקו את קוד ה-QR שמופיע על מסך הטלוויזיה</p>
+            </div>
+          `,
+          confirmButtonText: 'הבנתי',
+          confirmButtonColor: '#00bcd4',
+          background: '#0c0c1e',
+          color: '#fff'
+        })
+      } else {
+        // Browser doesn't support camera
+        Swal.fire({
+          icon: 'info',
+          title: 'סרקו את הקוד',
+          html: `
+            <div style="direction: rtl; text-align: center;">
+              <p>פתחו את אפליקציית המצלמה בטלפון</p>
+              <p>וסרקו את קוד ה-QR שמופיע על מסך הטלוויזיה</p>
+            </div>
+          `,
+          confirmButtonText: 'הבנתי',
+          confirmButtonColor: '#00bcd4',
+          background: '#0c0c1e',
+          color: '#fff'
+        })
+      }
+    } catch (error) {
+      // Camera permission denied or error
+      Swal.fire({
+        icon: 'info',
+        title: 'סרקו את הקוד',
+        html: `
+          <div style="direction: rtl; text-align: center;">
+            <p>פתחו את אפליקציית המצלמה בטלפון</p>
+            <p>וסרקו את קוד ה-QR שמופיע על מסך הטלוויזיה</p>
+          </div>
+        `,
+        confirmButtonText: 'הבנתי',
+        confirmButtonColor: '#00bcd4',
+        background: '#0c0c1e',
+        color: '#fff'
+      })
+    }
+  }
+
   // Initialize - generate pairing code only once
   useEffect(() => {
     const url = window.location.origin
@@ -239,7 +382,7 @@ function ConnectPage() {
 
           <div className={`nav-menu ${menuOpen ? 'open' : ''}`}>
             <Link to="/#about" onClick={() => setMenuOpen(false)}>נעים מאוד</Link>
-            <Link to="/connect" className="nav-btn-connect" onClick={() => setMenuOpen(false)}>בואו נתחבר</Link>
+            <a href="#" className="nav-btn-connect" onClick={showConnectionInstructions}>בואו נתחבר</a>
             <Link to="/#contact" onClick={() => setMenuOpen(false)}>צור קשר</Link>
           </div>
         </div>
