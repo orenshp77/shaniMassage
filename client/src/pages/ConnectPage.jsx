@@ -1,6 +1,7 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { useNavigate, useSearchParams, Link } from 'react-router-dom'
 import { QRCodeSVG } from 'qrcode.react'
+import { Html5Qrcode } from 'html5-qrcode'
 import Swal from 'sweetalert2'
 import api from '../services/api'
 import './ConnectPage.css'
@@ -25,6 +26,9 @@ function ConnectPage() {
 
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
+  const [scannerOpen, setScannerOpen] = useState(false)
+  const scannerRef = useRef(null)
+  const html5QrCodeRef = useRef(null)
 
   // Scroll handler for navbar
   useEffect(() => {
@@ -137,40 +141,115 @@ function ConnectPage() {
     })
   }
 
-  // Open camera directly using file input with capture attribute
+  // Open QR scanner
   const openCameraForScanning = () => {
-    // Create a hidden file input that triggers the camera directly
-    const input = document.createElement('input')
-    input.type = 'file'
-    input.accept = 'image/*'
-    input.capture = 'environment' // Opens back camera directly on mobile
-    input.style.display = 'none'
+    setScannerOpen(true)
+  }
 
-    input.onchange = () => {
-      // User took a photo - show message to scan QR manually
-      Swal.fire({
-        icon: 'info',
-        title: 'סרקו את הקוד',
-        html: `
-          <div style="direction: rtl; text-align: center;">
-            <p>השתמשו באפליקציית המצלמה הרגילה</p>
-            <p>כדי לסרוק את קוד ה-QR שמופיע על מסך הטלוויזיה</p>
-          </div>
-        `,
-        confirmButtonText: 'הבנתי',
-        confirmButtonColor: '#00bcd4',
-        background: '#0c0c1e',
-        color: '#fff'
+  // Start QR scanner when modal opens
+  useEffect(() => {
+    if (scannerOpen && scannerRef.current && !html5QrCodeRef.current) {
+      const html5QrCode = new Html5Qrcode("qr-reader")
+      html5QrCodeRef.current = html5QrCode
+
+      html5QrCode.start(
+        { facingMode: "environment" }, // Back camera
+        {
+          fps: 10,
+          qrbox: { width: 250, height: 250 }
+        },
+        (decodedText) => {
+          // Successfully scanned
+          console.log("QR Scanned:", decodedText)
+
+          // Stop scanner
+          html5QrCode.stop().then(() => {
+            html5QrCodeRef.current = null
+          }).catch(err => console.error("Error stopping scanner:", err))
+
+          setScannerOpen(false)
+
+          // Check if it's a valid pairing URL
+          try {
+            const url = new URL(decodedText)
+            const pairCode = url.searchParams.get('code')
+
+            if (pairCode) {
+              // Navigate to pair page with the code
+              navigate(`/pair?code=${pairCode}`)
+            } else if (url.pathname.includes('/pair')) {
+              // Direct pair URL
+              navigate(url.pathname + url.search)
+            } else {
+              // Unknown URL - show error
+              Swal.fire({
+                icon: 'warning',
+                title: 'קוד לא מזוהה',
+                text: 'זה לא נראה כמו קוד חיבור. נסו לסרוק שוב.',
+                confirmButtonText: 'אוקי',
+                confirmButtonColor: '#00bcd4',
+                background: '#0c0c1e',
+                color: '#fff'
+              })
+            }
+          } catch (e) {
+            // Not a URL - check if it's just a pairing code
+            if (/^\d{3}$/.test(decodedText)) {
+              navigate(`/pair?code=${decodedText}`)
+            } else {
+              Swal.fire({
+                icon: 'warning',
+                title: 'קוד לא מזוהה',
+                text: 'זה לא נראה כמו קוד חיבור. נסו לסרוק שוב.',
+                confirmButtonText: 'אוקי',
+                confirmButtonColor: '#00bcd4',
+                background: '#0c0c1e',
+                color: '#fff'
+              })
+            }
+          }
+        },
+        (errorMessage) => {
+          // QR scan error - ignore, keep scanning
+        }
+      ).catch(err => {
+        console.error("Error starting scanner:", err)
+        setScannerOpen(false)
+        Swal.fire({
+          icon: 'error',
+          title: 'שגיאה',
+          html: `
+            <div style="direction: rtl; text-align: center;">
+              <p>לא ניתן לפתוח את המצלמה</p>
+              <p>אנא אשרו גישה למצלמה ונסו שוב</p>
+            </div>
+          `,
+          confirmButtonText: 'אוקי',
+          confirmButtonColor: '#00bcd4',
+          background: '#0c0c1e',
+          color: '#fff'
+        })
       })
-      document.body.removeChild(input)
     }
 
-    input.oncancel = () => {
-      document.body.removeChild(input)
+    // Cleanup when modal closes
+    return () => {
+      if (html5QrCodeRef.current) {
+        html5QrCodeRef.current.stop().then(() => {
+          html5QrCodeRef.current = null
+        }).catch(err => console.error("Error stopping scanner:", err))
+      }
     }
+  }, [scannerOpen, navigate])
 
-    document.body.appendChild(input)
-    input.click()
+  // Close scanner
+  const closeScanner = () => {
+    if (html5QrCodeRef.current) {
+      html5QrCodeRef.current.stop().then(() => {
+        html5QrCodeRef.current = null
+      }).catch(err => console.error("Error stopping scanner:", err))
+    }
+    setScannerOpen(false)
   }
 
   // Initialize - generate pairing code only once
@@ -480,6 +559,18 @@ function ConnectPage() {
           </div>
         </div>
       </div>
+
+      {/* QR Scanner Modal */}
+      {scannerOpen && (
+        <div className="qr-scanner-modal">
+          <div className="qr-scanner-container">
+            <button className="close-scanner" onClick={closeScanner}>✕</button>
+            <h3>סרקו את קוד ה-QR</h3>
+            <p>כוונו את המצלמה אל קוד ה-QR על מסך הטלוויזיה</p>
+            <div id="qr-reader" ref={scannerRef}></div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
