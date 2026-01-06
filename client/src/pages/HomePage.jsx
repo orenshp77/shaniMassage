@@ -387,9 +387,9 @@ function HomePage() {
         <div className="section-container">
           <h2>מוכנים להתחיל?</h2>
           <p>הצטרפו לאלפי עסקים שכבר משתמשים במערכת</p>
-          <Link to="/connect" className="btn btn-primary btn-large">
+          <button onClick={showConnectionInstructions} className="btn btn-primary btn-large">
             התחברו עכשיו - חינם!
-          </Link>
+          </button>
         </div>
       </section>
 

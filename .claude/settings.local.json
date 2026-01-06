@@ -23,7 +23,11 @@
       "Bash(copy \"d:\\\\אתרים\\\\shani_system\\\\logoo.png\" \"d:\\\\אתרים\\\\shani_system\\\\client\\\\public\\\\logo.png\")",
       "Bash(git merge:*)",
       "Bash(netstat:*)",
-      "Bash(findstr:*)"
+      "Bash(findstr:*)",
+      "Bash(npm run build:*)",
+      "Bash(npx vite build)",
+      "Bash(grep:*)",
+      "Bash(git fetch:*)"
     ]
   }
 }
