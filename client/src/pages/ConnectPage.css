@@ -1067,6 +1067,25 @@ body.link-highlight .nav-btn-connect {
   display: none !important;
 }
 
+.scanner-tip {
+  margin-top: 15px;
+  padding: 12px 15px;
+  background: rgba(0, 255, 255, 0.1);
+  border-radius: 10px;
+  border: 1px solid rgba(0, 255, 255, 0.2);
+  color: rgba(255, 255, 255, 0.9);
+  font-size: 0.9rem;
+  text-align: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.scanner-tip span {
+  font-size: 1.2rem;
+}
+
 /* Mobile responsive for scanner */
 @media (max-width: 480px) {
   .qr-scanner-container {
@@ -1076,5 +1095,10 @@ body.link-highlight .nav-btn-connect {
 
   .qr-scanner-container h3 {
     font-size: 1.3rem;
+  }
+
+  .scanner-tip {
+    font-size: 0.85rem;
+    padding: 10px 12px;
   }
 }

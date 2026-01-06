@@ -155,8 +155,10 @@ function ConnectPage() {
       html5QrCode.start(
         { facingMode: "environment" }, // Back camera
         {
-          fps: 10,
-          qrbox: { width: 250, height: 250 }
+          fps: 15,
+          qrbox: { width: 280, height: 280 },
+          aspectRatio: 1.0,
+          disableFlip: false
         },
         (decodedText) => {
           // Successfully scanned
@@ -566,8 +568,11 @@ function ConnectPage() {
           <div className="qr-scanner-container">
             <button className="close-scanner" onClick={closeScanner}>✕</button>
             <h3>סרקו את קוד ה-QR</h3>
-            <p>כוונו את המצלמה אל קוד ה-QR על מסך הטלוויזיה</p>
+            <p>קרבו את הטלפון לקוד עד שהוא ממלא את המסגרת</p>
             <div id="qr-reader" ref={scannerRef}></div>
+            <div className="scanner-tip">
+              <span>💡</span> טיפ: החזיקו את הטלפון יציב וקרוב לקוד
+            </div>
           </div>
         </div>
       )}
