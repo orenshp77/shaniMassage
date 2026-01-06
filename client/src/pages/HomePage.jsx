@@ -107,7 +107,7 @@ function HomePage() {
 
             <div style="display: flex; align-items: center; text-align: right;">
               <span style="background: #ff69b4; color: white; width: 30px; height: 30px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; margin-left: 10px; flex-shrink: 0;">2</span>
-              <span style="color: white; font-size: 16px;">פתחו את מצלמת הטלפון וכוונו לסורק<br><strong style="color: #ff69b4;">התחברו למסך</strong></span>
+              <span style="color: white; font-size: 16px;">סרקו את הקוד באמצעות AI<br><strong style="color: #ff69b4;">התחברו למסך</strong></span>
             </div>
           </div>
         </div>
@@ -125,8 +125,8 @@ function HomePage() {
       }
     }).then((result) => {
       if (result.isConfirmed) {
-        // Navigate to connect page and try to open camera
-        navigate('/connect')
+        // Navigate to connect page with scan parameter to auto-open scanner
+        navigate('/connect?scan=1')
       }
     })
   }
