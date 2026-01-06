@@ -142,7 +142,7 @@ function HomePage() {
         </button>
 
         {accessibilityOpen && (
-          <div className="accessibility-menu">
+          <div className="accessibility-menu" onClick={(e) => e.stopPropagation()}>
             <h3>נגישות</h3>
 
             <div className="accessibility-option">

@@ -267,7 +267,6 @@ function ConnectPage() {
           {tvStatus === 'waiting' && (
             <>
               <div className="section-header">
-                <div className="section-icon">📺</div>
                 <h2>חיבור טלוויזיה</h2>
                 <p>סרוק את הקוד כדי להתחבר</p>
               </div>
@@ -319,7 +318,6 @@ function ConnectPage() {
         {/* Phone Section - Right Side */}
         <div className="home-section phone-section">
           <div className="section-header">
-            <div className="section-icon">📱</div>
             <h2>התחברות</h2>
             <p>הזן קוד עבודה (3 ספרות)</p>
           </div>
