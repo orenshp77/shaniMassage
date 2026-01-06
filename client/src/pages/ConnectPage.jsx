@@ -74,44 +74,9 @@ function ConnectPage() {
     Swal.fire({
       html: `
         <div style="text-align: center; direction: rtl;">
-          <div style="margin-bottom: 20px;">
-            <svg width="120" height="100" viewBox="0 0 120 100" style="margin: 0 auto;">
-              <!-- TV Screen -->
-              <rect x="30" y="10" width="60" height="45" rx="3" fill="#1a1a2e" stroke="#00ffff" stroke-width="2"/>
-              <rect x="35" y="15" width="50" height="35" fill="#0a0a1a"/>
-              <text x="60" y="37" text-anchor="middle" fill="#00ffff" font-size="8">aabb.co.il</text>
-              <!-- TV Stand -->
-              <rect x="50" y="55" width="20" height="5" fill="#333"/>
-              <rect x="40" y="60" width="40" height="3" rx="1" fill="#333"/>
-              <!-- Left Hand with Remote -->
-              <g class="hand-left" style="animation: pointLeft 1.5s ease-in-out infinite;">
-                <ellipse cx="15" cy="50" rx="8" ry="10" fill="#ffdbac"/>
-                <rect x="10" y="35" width="10" height="20" rx="2" fill="#333"/>
-                <circle cx="15" cy="40" r="2" fill="#ff0000"/>
-                <!-- Signal waves -->
-                <path d="M25 45 Q35 40 45 45" stroke="#00ffff" stroke-width="1" fill="none" opacity="0.6"/>
-                <path d="M25 50 Q35 45 45 50" stroke="#00ffff" stroke-width="1" fill="none" opacity="0.4"/>
-              </g>
-              <!-- Right Hand with Phone -->
-              <g class="hand-right" style="animation: pointRight 1.5s ease-in-out infinite 0.5s;">
-                <ellipse cx="105" cy="50" rx="8" ry="10" fill="#ffdbac"/>
-                <rect x="95" y="35" width="15" height="25" rx="2" fill="#333"/>
-                <rect x="97" y="37" width="11" height="18" fill="#1a1a2e"/>
-                <circle cx="102" cy="58" r="1.5" fill="#666"/>
-              </g>
-            </svg>
+          <div style="margin-bottom: 15px;">
+            <img src="/tv.png" alt="TV" style="max-width: 100%; height: auto; margin: 0 auto; display: block;" />
           </div>
-
-          <style>
-            @keyframes pointLeft {
-              0%, 100% { transform: translateX(0); }
-              50% { transform: translateX(5px); }
-            }
-            @keyframes pointRight {
-              0%, 100% { transform: translateX(0); }
-              50% { transform: translateX(-5px); }
-            }
-          </style>
 
           <div style="background: linear-gradient(135deg, #1a1a2e, #2a2a4e); padding: 20px; border-radius: 15px; margin: 15px 0;">
             <div style="display: flex; align-items: center; margin-bottom: 15px; text-align: right;">
