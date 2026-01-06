@@ -131,15 +131,11 @@ const initDB = async () => {
 // Register new user
 app.post('/api/auth/register', async (req, res) => {
   try {
-    const { username, password, displayName, inputPin, displayPin } = req.body
+    const { username, password, displayName } = req.body
 
     // Validate input
-    if (!username || !password || !displayName || !inputPin || !displayPin) {
+    if (!username || !password || !displayName) {
       return res.status(400).json({ error: 'כל השדות נדרשים' })
-    }
-
-    if (inputPin.length !== 4 || displayPin.length !== 4) {
-      return res.status(400).json({ error: 'הסיסמאות חייבות להיות 4 ספרות' })
     }
 
     // Check if username already exists
@@ -160,9 +156,9 @@ app.post('/api/auth/register', async (req, res) => {
     // Hash password and create user
     const passwordHash = hashPassword(password)
     const result = await pool.query(
-      `INSERT INTO users (username, password_hash, display_name, workspace_code, input_pin, display_pin)
-       VALUES ($1, $2, $3, $4, $5, $6) RETURNING id, username, display_name, workspace_code`,
-      [username, passwordHash, displayName, workspaceCode, inputPin, displayPin]
+      `INSERT INTO users (username, password_hash, display_name, workspace_code)
+       VALUES ($1, $2, $3, $4) RETURNING id, username, display_name, workspace_code`,
+      [username, passwordHash, displayName, workspaceCode]
     )
 
     // Initialize default settings for this workspace

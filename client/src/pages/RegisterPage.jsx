@@ -9,33 +9,17 @@ function RegisterPage() {
   const [formData, setFormData] = useState({
     username: '',
     password: '',
-    displayName: '',
-    inputPin: '',
-    displayPin: ''
+    displayName: ''
   })
   const [loading, setLoading] = useState(false)
 
   const handleChange = (e) => {
     const { name, value } = e.target
-    // For PIN fields, only allow digits and max 4 characters
-    if ((name === 'inputPin' || name === 'displayPin') && value.length > 4) return
-    if ((name === 'inputPin' || name === 'displayPin') && !/^\d*$/.test(value)) return
-
     setFormData(prev => ({ ...prev, [name]: value }))
   }
 
   const handleSubmit = async (e) => {
     e.preventDefault()
-
-    if (formData.inputPin.length !== 4 || formData.displayPin.length !== 4) {
-      Swal.fire({
-        icon: 'error',
-        title: 'שגיאה',
-        text: 'סיסמאות ה-PIN חייבות להכיל 4 ספרות'
-      })
-      return
-    }
-
     setLoading(true)
     try {
       const response = await api.post('/auth/register', formData)
@@ -142,38 +126,6 @@ function RegisterPage() {
                 placeholder="השם שיופיע על מסך התצוגה"
                 required
               />
-            </div>
-
-            <div className="pin-row">
-              <div className="form-group">
-                <label>PIN לניהול (4 ספרות)</label>
-                <input
-                  type="password"
-                  name="inputPin"
-                  value={formData.inputPin}
-                  onChange={handleChange}
-                  placeholder="0000"
-                  maxLength={4}
-                  pattern="\d{4}"
-                  required
-                />
-                <span className="hint">לכניסה לעמוד הניהול</span>
-              </div>
-
-              <div className="form-group">
-                <label>PIN למסך (4 ספרות)</label>
-                <input
-                  type="password"
-                  name="displayPin"
-                  value={formData.displayPin}
-                  onChange={handleChange}
-                  placeholder="0000"
-                  maxLength={4}
-                  pattern="\d{4}"
-                  required
-                />
-                <span className="hint">להצגה על הטלוויזיה</span>
-              </div>
             </div>
 
             <button type="submit" className="auth-btn" disabled={loading}>
