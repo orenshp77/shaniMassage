@@ -39,7 +39,7 @@
 }
 
 .logo-text {
-  font-size: clamp(1.5rem, 2.5vw, 2.5rem);
+  font-size: clamp(2rem, 3.3vw, 3.3rem);
   font-weight: 700;
   background: linear-gradient(135deg, #00ffff, #8a2be2, #ff0080, #00ffff);
   background-size: 300% 300%;
