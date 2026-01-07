@@ -30,7 +30,7 @@ app.use(cors({
   ],
   credentials: true
 }))
-app.use(express.json())
+app.use(express.json({ limit: '5mb' }))
 
 // PostgreSQL connection (Neon)
 const pool = new Pool({
@@ -791,14 +791,20 @@ app.get('/api/active-message', async (req, res) => {
     const pinnedMessageResult = await pool.query("SELECT value FROM settings WHERE key = 'pinned_message' AND workspace_code = $1", [workspace])
     const pinnedEnabledResult = await pool.query("SELECT value FROM settings WHERE key = 'pinned_enabled' AND workspace_code = $1", [workspace])
 
-    // Return message with theme, activeMessageId, lastExplicitChange, and pinned message
+    // Get pinned image from database for this workspace
+    const pinnedImageResult = await pool.query("SELECT value FROM settings WHERE key = 'pinned_image' AND workspace_code = $1", [workspace])
+    const pinnedImageEnabledResult = await pool.query("SELECT value FROM settings WHERE key = 'pinned_image_enabled' AND workspace_code = $1", [workspace])
+
+    // Return message with theme, activeMessageId, lastExplicitChange, pinned message and pinned image
     res.json({
       message,
       theme: ws.activeTheme,
       activeMessageId: ws.activeMessageId,
       lastExplicitChange: ws.lastExplicitChange,
       pinnedMessage: pinnedMessageResult.rows[0]?.value || '',
-      pinnedMessageEnabled: pinnedEnabledResult.rows[0]?.value === 'true'
+      pinnedMessageEnabled: pinnedEnabledResult.rows[0]?.value === 'true',
+      pinnedImage: pinnedImageResult.rows[0]?.value || '',
+      pinnedImageEnabled: pinnedImageEnabledResult.rows[0]?.value === 'true'
     })
   } catch (error) {
     console.error('Error fetching active message:', error)
@@ -886,6 +892,84 @@ app.post('/api/pinned-message', async (req, res) => {
   } catch (error) {
     console.error('Error setting pinned message:', error)
     res.status(500).json({ error: 'שגיאה בהגדרת ההודעה הנעוצה' })
+  }
+})
+
+// Get pinned image - with workspace
+app.get('/api/pinned-image', async (req, res) => {
+  try {
+    const { workspace } = req.query
+    if (!workspace) {
+      return res.status(400).json({ error: 'workspace code is required' })
+    }
+
+    const imageResult = await pool.query("SELECT value FROM settings WHERE key = 'pinned_image' AND workspace_code = $1", [workspace])
+    const enabledResult = await pool.query("SELECT value FROM settings WHERE key = 'pinned_image_enabled' AND workspace_code = $1", [workspace])
+
+    res.json({
+      image: imageResult.rows[0]?.value || '',
+      enabled: enabledResult.rows[0]?.value === 'true'
+    })
+  } catch (error) {
+    console.error('Error fetching pinned image:', error)
+    res.status(500).json({ error: 'שגיאה בטעינת התמונה הנעוצה' })
+  }
+})
+
+// Set pinned image - with workspace
+app.post('/api/pinned-image', async (req, res) => {
+  try {
+    const { image, enabled, workspace } = req.body
+    if (!workspace) {
+      return res.status(400).json({ error: 'workspace code is required' })
+    }
+
+    if (image !== undefined) {
+      await pool.query(
+        "INSERT INTO settings (key, workspace_code, value, updated_at) VALUES ('pinned_image', $1, $2, CURRENT_TIMESTAMP) ON CONFLICT (key, workspace_code) DO UPDATE SET value = $2, updated_at = CURRENT_TIMESTAMP",
+        [workspace, image]
+      )
+    }
+    if (enabled !== undefined) {
+      await pool.query(
+        "INSERT INTO settings (key, workspace_code, value, updated_at) VALUES ('pinned_image_enabled', $1, $2, CURRENT_TIMESTAMP) ON CONFLICT (key, workspace_code) DO UPDATE SET value = $2, updated_at = CURRENT_TIMESTAMP",
+        [workspace, enabled.toString()]
+      )
+    }
+
+    // Get current values
+    const imageResult = await pool.query("SELECT value FROM settings WHERE key = 'pinned_image' AND workspace_code = $1", [workspace])
+    const enabledResult = await pool.query("SELECT value FROM settings WHERE key = 'pinned_image_enabled' AND workspace_code = $1", [workspace])
+
+    res.json({
+      success: true,
+      image: imageResult.rows[0]?.value || '',
+      enabled: enabledResult.rows[0]?.value === 'true'
+    })
+  } catch (error) {
+    console.error('Error setting pinned image:', error)
+    res.status(500).json({ error: 'שגיאה בהגדרת התמונה הנעוצה' })
+  }
+})
+
+// Delete pinned image - with workspace
+app.delete('/api/pinned-image', async (req, res) => {
+  try {
+    const { workspace } = req.query
+    if (!workspace) {
+      return res.status(400).json({ error: 'workspace code is required' })
+    }
+
+    await pool.query("DELETE FROM settings WHERE key = 'pinned_image' AND workspace_code = $1", [workspace])
+    await pool.query(
+      "INSERT INTO settings (key, workspace_code, value, updated_at) VALUES ('pinned_image_enabled', $1, 'false', CURRENT_TIMESTAMP) ON CONFLICT (key, workspace_code) DO UPDATE SET value = 'false', updated_at = CURRENT_TIMESTAMP",
+      [workspace]
+    )
+
+    res.json({ success: true })
+  } catch (error) {
+    console.error('Error deleting pinned image:', error)
+    res.status(500).json({ error: 'שגיאה במחיקת התמונה הנעוצה' })
   }
 })
 

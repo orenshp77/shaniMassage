@@ -16,6 +16,8 @@ function InputPage() {
   const [selectedTheme, setSelectedTheme] = useState('hitech')
   const [pinnedMessage, setPinnedMessage] = useState('')
   const [pinnedEnabled, setPinnedEnabled] = useState(false)
+  const [pinnedImage, setPinnedImage] = useState('')
+  const [pinnedImageEnabled, setPinnedImageEnabled] = useState(false)
   const [workspaceCode, setWorkspaceCode] = useState('')
   const [displayName, setDisplayName] = useState('')
   const navigate = useNavigate()
@@ -45,6 +47,7 @@ function InputPage() {
     fetchMessages(storedWorkspace)
     fetchCurrentTheme(storedWorkspace)
     fetchPinnedMessage(storedWorkspace)
+    fetchPinnedImage(storedWorkspace)
   }, [navigate, urlWorkspaceCode])
 
   const fetchCurrentTheme = async (ws) => {
@@ -92,6 +95,109 @@ function InputPage() {
       })
     } catch (error) {
       console.error('Error toggling pinned message:', error)
+    }
+  }
+
+  const fetchPinnedImage = async (ws) => {
+    try {
+      const workspace = ws || localStorage.getItem('workspaceCode')
+      if (!workspace) return
+      const response = await api.get(`/pinned-image?workspace=${workspace}`)
+      setPinnedImage(response.data.image || '')
+      setPinnedImageEnabled(response.data.enabled || false)
+    } catch (error) {
+      console.error('Error fetching pinned image:', error)
+    }
+  }
+
+  const handleImageUpload = async (e) => {
+    const file = e.target.files[0]
+    if (!file) return
+
+    // Check file size (max 2MB)
+    if (file.size > 2 * 1024 * 1024) {
+      Swal.fire({
+        icon: 'error',
+        title: 'קובץ גדול מדי',
+        text: 'הקובץ חייב להיות קטן מ-2MB'
+      })
+      return
+    }
+
+    // Check file type
+    if (!file.type.startsWith('image/')) {
+      Swal.fire({
+        icon: 'error',
+        title: 'סוג קובץ לא נתמך',
+        text: 'אנא בחר קובץ תמונה (PNG, JPG, GIF)'
+      })
+      return
+    }
+
+    // Convert to base64
+    const reader = new FileReader()
+    reader.onload = async () => {
+      const base64 = reader.result
+      setPinnedImage(base64)
+      try {
+        await api.post('/pinned-image', { image: base64, workspace: workspaceCode })
+        Swal.fire({
+          icon: 'success',
+          title: 'התמונה הועלתה בהצלחה!',
+          showConfirmButton: false,
+          timer: 1000
+        })
+      } catch (error) {
+        console.error('Error uploading image:', error)
+        Swal.fire({
+          icon: 'error',
+          title: 'שגיאה בהעלאת התמונה'
+        })
+      }
+    }
+    reader.readAsDataURL(file)
+  }
+
+  const handleImageToggle = async () => {
+    const newEnabled = !pinnedImageEnabled
+    setPinnedImageEnabled(newEnabled)
+    try {
+      await api.post('/pinned-image', { enabled: newEnabled, workspace: workspaceCode })
+      Swal.fire({
+        icon: 'success',
+        title: newEnabled ? 'תמונה נעוצה מופעלת' : 'תמונה נעוצה כבויה',
+        showConfirmButton: false,
+        timer: 1000
+      })
+    } catch (error) {
+      console.error('Error toggling pinned image:', error)
+    }
+  }
+
+  const handleDeleteImage = async () => {
+    const result = await Swal.fire({
+      title: 'האם למחוק את התמונה?',
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonText: 'כן, מחק',
+      cancelButtonText: 'ביטול',
+      confirmButtonColor: '#d33'
+    })
+
+    if (result.isConfirmed) {
+      try {
+        await api.delete(`/pinned-image?workspace=${workspaceCode}`)
+        setPinnedImage('')
+        setPinnedImageEnabled(false)
+        Swal.fire({
+          icon: 'success',
+          title: 'התמונה נמחקה',
+          showConfirmButton: false,
+          timer: 1000
+        })
+      } catch (error) {
+        console.error('Error deleting image:', error)
+      }
     }
   }
 
@@ -312,6 +418,60 @@ function InputPage() {
             rows={3}
           />
           <p className="pinned-hint">ההודעה הנעוצה תוצג מתחת להודעה הראשית במסך התצוגה</p>
+        </div>
+
+        {/* Pinned Image Section */}
+        <div className="pinned-image-section">
+          <div className="pinned-header">
+            <h2>🖼️ תמונה/לוגו נעוץ</h2>
+            <div className="pinned-toggle">
+              <span className="toggle-label">{pinnedImageEnabled ? 'מוצג' : 'מוסתר'}</span>
+              <label className="switch">
+                <input
+                  type="checkbox"
+                  checked={pinnedImageEnabled}
+                  onChange={handleImageToggle}
+                  disabled={!pinnedImage}
+                />
+                <span className="slider"></span>
+              </label>
+            </div>
+          </div>
+
+          <div className="image-upload-area">
+            {pinnedImage ? (
+              <div className="image-preview">
+                <img src={pinnedImage} alt="תמונה נעוצה" />
+                <div className="image-actions">
+                  <label className="change-image-btn">
+                    החלף תמונה
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={handleImageUpload}
+                      hidden
+                    />
+                  </label>
+                  <button className="delete-image-btn" onClick={handleDeleteImage}>
+                    מחק תמונה
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <label className="upload-placeholder">
+                <span className="upload-icon">📤</span>
+                <span>לחץ להעלאת תמונה או לוגו</span>
+                <span className="upload-hint">PNG, JPG, GIF - עד 2MB</span>
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={handleImageUpload}
+                  hidden
+                />
+              </label>
+            )}
+          </div>
+          <p className="pinned-hint">התמונה תוצג מעל שם העסק במסך התצוגה</p>
         </div>
 
         {/* Theme Selector */}

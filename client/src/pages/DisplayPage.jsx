@@ -14,6 +14,8 @@ function DisplayPage() {
   const [currentTheme, setCurrentTheme] = useState('hitech')
   const [pinnedMessage, setPinnedMessage] = useState('')
   const [pinnedEnabled, setPinnedEnabled] = useState(false)
+  const [pinnedImage, setPinnedImage] = useState('')
+  const [pinnedImageEnabled, setPinnedImageEnabled] = useState(false)
   const [displayName, setDisplayName] = useState('מוקד עידכונים')
   const lastMessageId = useRef(null)
   const lastExplicitChangeRef = useRef(0) // Track last explicit change timestamp from server
@@ -115,7 +117,7 @@ function DisplayPage() {
       await checkDisconnect()
 
       const response = await api.get(`/active-message?workspace=${workspaceCode.current}`)
-      const { message: newMessage, theme, lastExplicitChange, pinnedMessage: serverPinnedMessage, pinnedMessageEnabled } = response.data
+      const { message: newMessage, theme, lastExplicitChange, pinnedMessage: serverPinnedMessage, pinnedMessageEnabled, pinnedImage: serverPinnedImage, pinnedImageEnabled: serverPinnedImageEnabled } = response.data
 
       // Update theme if changed
       if (theme && theme !== currentTheme) {
@@ -125,6 +127,10 @@ function DisplayPage() {
       // Update pinned message
       setPinnedMessage(serverPinnedMessage || '')
       setPinnedEnabled(pinnedMessageEnabled || false)
+
+      // Update pinned image
+      setPinnedImage(serverPinnedImage || '')
+      setPinnedImageEnabled(serverPinnedImageEnabled || false)
 
       // Only show alert if there was an explicit change (someone pressed "הצג" or sent new message)
       // This won't trigger on deletions since those don't update lastExplicitChange
@@ -233,6 +239,13 @@ function DisplayPage() {
 
       {/* Content */}
       <div className="display-content">
+        {/* Pinned Image - above logo */}
+        {pinnedImageEnabled && pinnedImage && (
+          <div className="pinned-image-container">
+            <img src={pinnedImage} alt="לוגו" className="pinned-image" />
+          </div>
+        )}
+
         {/* Logo */}
         <div className="logo-container">
           <div className="logo">

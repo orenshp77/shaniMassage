@@ -25,6 +25,24 @@
   animation: fadeInUp 1s ease-out;
 }
 
+/* Pinned Image */
+.pinned-image-container {
+  margin-bottom: 10px;
+  flex-shrink: 0;
+  animation: fadeInUp 0.8s ease-out;
+  text-align: center;
+}
+
+.pinned-image {
+  max-height: 15vh;
+  max-width: 40vw;
+  width: auto;
+  height: auto;
+  object-fit: contain;
+  filter: drop-shadow(0 0 20px rgba(255, 255, 255, 0.3));
+  border-radius: 10px;
+}
+
 /* Logo */
 .logo-container {
   margin-bottom: 5px;
