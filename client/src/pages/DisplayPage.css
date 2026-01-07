@@ -34,8 +34,8 @@
 }
 
 .pinned-image {
-  max-height: 15vh;
-  max-width: 40vw;
+  max-height: 22vh;
+  max-width: 60vw;
   width: auto;
   height: auto;
   object-fit: contain;
