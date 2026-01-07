@@ -102,12 +102,12 @@ function HomePage() {
           <div style="background: linear-gradient(135deg, #1a1a2e, #2a2a4e); padding: 20px; border-radius: 15px; margin: 15px 0;">
             <div style="display: flex; align-items: center; margin-bottom: 15px; text-align: right;">
               <span style="background: #00ffff; color: #1a1a2e; width: 30px; height: 30px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; margin-left: 10px; flex-shrink: 0;">1</span>
-              <span style="color: white; font-size: 16px;">כנסו לדפדפן במסך הטלוויזיה ורשמו<br><strong style="color: #00ffff; font-size: 18px;">aabb.co.il</strong></span>
+              <span style="color: white; font-size: 16px;">כנסו לדפדפן במסך הטלוויזיה ורשמו בשורת הכתובת את שם האתר:<br><strong style="color: #00ffff; font-size: 18px;">aabb.co.il</strong></span>
             </div>
 
             <div style="display: flex; align-items: center; text-align: right;">
               <span style="background: #ff69b4; color: white; width: 30px; height: 30px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; margin-left: 10px; flex-shrink: 0;">2</span>
-              <span style="color: white; font-size: 16px;">סרקו את הקוד באמצעות AI<br><strong style="color: #ff69b4;">התחברו למסך</strong></span>
+              <span style="color: white; font-size: 16px;">סרקו את הקוד באמצעות מצלמת הטלפון</span>
             </div>
           </div>
         </div>
