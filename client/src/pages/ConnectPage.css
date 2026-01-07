@@ -604,6 +604,17 @@
 
 /* Large screens - TV 1920x1080 and above */
 @media (min-width: 1600px) {
+  /* QR code - 50% larger for TV */
+  .qr-frame.small {
+    padding: 15px;
+    border-radius: 18px;
+  }
+
+  .qr-frame.small svg {
+    width: 270px !important;
+    height: 270px !important;
+  }
+
   /* Number pad - larger buttons for TV */
   .number-pad {
     grid-template-columns: repeat(3, 85px);
