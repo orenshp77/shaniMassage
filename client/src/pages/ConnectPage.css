@@ -602,6 +602,70 @@
   }
 }
 
+/* Large screens - TV 1920x1080 and above */
+@media (min-width: 1600px) {
+  /* Number pad - larger buttons for TV */
+  .number-pad {
+    grid-template-columns: repeat(3, 85px);
+    gap: 12px;
+  }
+
+  .num-btn {
+    width: 85px;
+    height: 65px;
+    font-size: 1.8rem;
+    border-radius: 14px;
+  }
+
+  /* Code digits - larger for TV */
+  .code-digit {
+    width: 70px;
+    height: 85px;
+    font-size: 2.5rem;
+    border-radius: 14px;
+  }
+
+  .workspace-code .code-digit {
+    width: 70px;
+    height: 85px;
+    font-size: 2.5rem;
+  }
+
+  .code-display {
+    gap: 15px;
+    margin-bottom: 20px;
+  }
+
+  /* Enter button - larger for TV */
+  .enter-btn {
+    width: 270px;
+    padding: 18px 35px;
+    font-size: 1.5rem;
+    border-radius: 14px;
+  }
+
+  /* Section headers - larger for TV */
+  .section-header h2 {
+    font-size: 2.5rem;
+  }
+
+  .section-header p {
+    font-size: 1.3rem;
+  }
+
+  /* Auth links - larger for TV */
+  .auth-links {
+    font-size: 1.1rem;
+    margin-top: 25px;
+  }
+
+  /* Back link - larger for TV */
+  .back-link {
+    font-size: 1rem;
+    margin-top: 15px;
+  }
+}
+
 /* ==================== */
 /* Import Assistant Font */
 /* ==================== */
