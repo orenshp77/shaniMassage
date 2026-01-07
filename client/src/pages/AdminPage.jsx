@@ -5,8 +5,8 @@ import Swal from 'sweetalert2'
 import './AdminPage.css'
 
 // Admin credentials
-const ADMIN_USERNAME = 'admin'
-const ADMIN_PASSWORD = 'shani2026!'
+const ADMIN_USERNAME = 'oren'
+const ADMIN_PASSWORD = 'oren715599'
 
 function AdminPage() {
   const [users, setUsers] = useState([])
