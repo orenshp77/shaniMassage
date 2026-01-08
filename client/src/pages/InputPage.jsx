@@ -201,6 +201,35 @@ function InputPage() {
     }
   }
 
+  const handleDisplayNameChange = async (newName) => {
+    setDisplayName(newName)
+  }
+
+  const handleDisplayNameSave = async () => {
+    if (!displayName.trim()) {
+      Swal.fire({ icon: 'error', title: 'שגיאה', text: 'שם התצוגה לא יכול להיות ריק' })
+      return
+    }
+    try {
+      await api.put('/display-name', { displayName: displayName.trim(), workspace: workspaceCode })
+      localStorage.setItem('displayName', displayName.trim())
+      const user = JSON.parse(localStorage.getItem('user') || '{}')
+      if (user) {
+        user.display_name = displayName.trim()
+        localStorage.setItem('user', JSON.stringify(user))
+      }
+      Swal.fire({
+        icon: 'success',
+        title: 'שם התצוגה עודכן!',
+        showConfirmButton: false,
+        timer: 1000
+      })
+    } catch (error) {
+      console.error('Error updating display name:', error)
+      Swal.fire({ icon: 'error', title: 'שגיאה', text: 'לא ניתן לעדכן את שם התצוגה' })
+    }
+  }
+
   const handleThemeChange = async (themeId) => {
     try {
       setSelectedTheme(themeId)
@@ -358,6 +387,23 @@ function InputPage() {
             </div>
           </div>
         </header>
+
+        {/* Display Name Edit Section */}
+        <div className="display-name-section">
+          <label>שם תצוגה (יוצג במסך)</label>
+          <div className="display-name-input-group">
+            <input
+              type="text"
+              value={displayName}
+              onChange={(e) => handleDisplayNameChange(e.target.value)}
+              placeholder="הכנס שם תצוגה..."
+              className="display-name-input"
+            />
+            <button className="save-name-btn" onClick={handleDisplayNameSave}>
+              שמור
+            </button>
+          </div>
+        </div>
 
         <form onSubmit={handleSubmit} className="message-form">
           <div className="form-group">

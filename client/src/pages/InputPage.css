@@ -96,6 +96,65 @@
   margin-top: 5px;
 }
 
+/* Display Name Section */
+.display-name-section {
+  background: rgba(255, 255, 255, 0.9);
+  border-radius: 20px;
+  padding: 20px;
+  margin-bottom: 25px;
+  box-shadow: 0 10px 40px rgba(255, 105, 180, 0.15);
+  border: 1px solid rgba(255, 105, 180, 0.2);
+}
+
+.display-name-section label {
+  display: block;
+  font-weight: 600;
+  color: #c4627e;
+  margin-bottom: 10px;
+  font-size: 1rem;
+}
+
+.display-name-input-group {
+  display: flex;
+  gap: 10px;
+}
+
+.display-name-input {
+  flex: 1;
+  padding: 12px 18px;
+  border: 2px solid rgba(255, 105, 180, 0.3);
+  border-radius: 12px;
+  font-size: 1.1rem;
+  font-family: inherit;
+  background: rgba(255, 255, 255, 0.9);
+  color: #333;
+  transition: all 0.3s ease;
+}
+
+.display-name-input:focus {
+  outline: none;
+  border-color: #ff69b4;
+  box-shadow: 0 0 15px rgba(255, 105, 180, 0.2);
+}
+
+.save-name-btn {
+  padding: 12px 25px;
+  background: linear-gradient(135deg, #ff69b4, #ff1493);
+  color: white;
+  border: none;
+  border-radius: 12px;
+  font-size: 1rem;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.save-name-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 5px 20px rgba(255, 105, 180, 0.4);
+}
+
 /* Form */
 .message-form {
   background: rgba(255, 255, 255, 0.9);

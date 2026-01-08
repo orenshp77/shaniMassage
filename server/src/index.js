@@ -485,6 +485,31 @@ app.put('/api/admin/users/:id/pins', async (req, res) => {
   }
 })
 
+// Update display name by workspace code
+app.put('/api/display-name', async (req, res) => {
+  try {
+    const { workspace, displayName } = req.body
+
+    if (!workspace || !displayName) {
+      return res.status(400).json({ error: 'חסרים פרטים' })
+    }
+
+    const result = await pool.query(
+      'UPDATE users SET display_name = $1 WHERE workspace_code = $2 RETURNING id, display_name',
+      [displayName, workspace]
+    )
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'משתמש לא נמצא' })
+    }
+
+    res.json({ success: true, displayName: result.rows[0].display_name })
+  } catch (error) {
+    console.error('Error updating display name:', error)
+    res.status(500).json({ error: 'שגיאה בעדכון שם התצוגה' })
+  }
+})
+
 // Admin: Login as user (get their workspace access)
 app.post('/api/admin/login-as/:id', async (req, res) => {
   try {
