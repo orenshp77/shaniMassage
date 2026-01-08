@@ -117,7 +117,7 @@ function DisplayPage() {
       await checkDisconnect()
 
       const response = await api.get(`/active-message?workspace=${workspaceCode.current}`)
-      const { message: newMessage, theme, lastExplicitChange, pinnedMessage: serverPinnedMessage, pinnedMessageEnabled, pinnedImage: serverPinnedImage, pinnedImageEnabled: serverPinnedImageEnabled } = response.data
+      const { message: newMessage, theme, lastExplicitChange, pinnedMessage: serverPinnedMessage, pinnedMessageEnabled, pinnedImage: serverPinnedImage, pinnedImageEnabled: serverPinnedImageEnabled, displayName: serverDisplayName } = response.data
 
       // Update theme if changed
       if (theme && theme !== currentTheme) {
@@ -131,6 +131,11 @@ function DisplayPage() {
       // Update pinned image
       setPinnedImage(serverPinnedImage || '')
       setPinnedImageEnabled(serverPinnedImageEnabled || false)
+
+      // Update display name
+      if (serverDisplayName) {
+        setDisplayName(serverDisplayName)
+      }
 
       // Only show alert if there was an explicit change (someone pressed "הצג" or sent new message)
       // This won't trigger on deletions since those don't update lastExplicitChange

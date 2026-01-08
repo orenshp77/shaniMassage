@@ -820,7 +820,11 @@ app.get('/api/active-message', async (req, res) => {
     const pinnedImageResult = await pool.query("SELECT value FROM settings WHERE key = 'pinned_image' AND workspace_code = $1", [workspace])
     const pinnedImageEnabledResult = await pool.query("SELECT value FROM settings WHERE key = 'pinned_image_enabled' AND workspace_code = $1", [workspace])
 
-    // Return message with theme, activeMessageId, lastExplicitChange, pinned message and pinned image
+    // Get display name from users table
+    const userResult = await pool.query('SELECT display_name FROM users WHERE workspace_code = $1', [workspace])
+    const displayName = userResult.rows[0]?.display_name || 'מוקד עידכונים'
+
+    // Return message with theme, activeMessageId, lastExplicitChange, pinned message, pinned image and displayName
     res.json({
       message,
       theme: ws.activeTheme,
@@ -829,7 +833,8 @@ app.get('/api/active-message', async (req, res) => {
       pinnedMessage: pinnedMessageResult.rows[0]?.value || '',
       pinnedMessageEnabled: pinnedEnabledResult.rows[0]?.value === 'true',
       pinnedImage: pinnedImageResult.rows[0]?.value || '',
-      pinnedImageEnabled: pinnedImageEnabledResult.rows[0]?.value === 'true'
+      pinnedImageEnabled: pinnedImageEnabledResult.rows[0]?.value === 'true',
+      displayName
     })
   } catch (error) {
     console.error('Error fetching active message:', error)
