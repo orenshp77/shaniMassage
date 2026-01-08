@@ -13,8 +13,6 @@ function AdminPage() {
   const [loading, setLoading] = useState(true)
   const [selectedUser, setSelectedUser] = useState(null)
   const [newPassword, setNewPassword] = useState('')
-  const [newInputPin, setNewInputPin] = useState('')
-  const [newDisplayPin, setNewDisplayPin] = useState('')
   const [isAuthenticated, setIsAuthenticated] = useState(false)
   const [adminUsername, setAdminUsername] = useState('')
   const [adminPassword, setAdminPassword] = useState('')
@@ -99,43 +97,6 @@ function AdminPage() {
       setSelectedUser(null)
     } catch (error) {
       Swal.fire({ icon: 'error', title: 'שגיאה', text: 'לא ניתן לעדכן את הסיסמה' })
-    }
-  }
-
-  const handleUpdatePins = async () => {
-    if (!newInputPin && !newDisplayPin) {
-      Swal.fire({ icon: 'error', title: 'שגיאה', text: 'יש להזין לפחות PIN אחד' })
-      return
-    }
-
-    if (newInputPin && newInputPin.length !== 4) {
-      Swal.fire({ icon: 'error', title: 'שגיאה', text: 'PIN לניהול חייב להיות 4 ספרות' })
-      return
-    }
-
-    if (newDisplayPin && newDisplayPin.length !== 4) {
-      Swal.fire({ icon: 'error', title: 'שגיאה', text: 'PIN למסך חייב להיות 4 ספרות' })
-      return
-    }
-
-    try {
-      const data = {}
-      if (newInputPin) data.inputPin = newInputPin
-      if (newDisplayPin) data.displayPin = newDisplayPin
-
-      await api.put(`/admin/users/${selectedUser.id}/pins`, data)
-      Swal.fire({
-        icon: 'success',
-        title: 'קודי PIN עודכנו',
-        showConfirmButton: false,
-        timer: 1500
-      })
-      setNewInputPin('')
-      setNewDisplayPin('')
-      setSelectedUser(null)
-      fetchUsers()
-    } catch (error) {
-      Swal.fire({ icon: 'error', title: 'שגיאה', text: 'לא ניתן לעדכן את קודי PIN' })
     }
   }
 
@@ -324,8 +285,6 @@ function AdminPage() {
                     <th>שם תצוגה</th>
                     <th>שם משתמש</th>
                     <th>קוד עבודה</th>
-                    <th>PIN ניהול</th>
-                    <th>PIN מסך</th>
                     <th>נוצר</th>
                     <th>פעולות</th>
                   </tr>
@@ -336,8 +295,6 @@ function AdminPage() {
                       <td className="display-name">{user.display_name}</td>
                       <td>{user.username}</td>
                       <td className="workspace-code">{user.workspace_code}</td>
-                      <td className="pin">{user.input_pin}</td>
-                      <td className="pin">{user.display_pin}</td>
                       <td className="date">{formatDate(user.created_at)}</td>
                       <td className="actions">
                         <button
@@ -391,48 +348,9 @@ function AdminPage() {
                 </div>
               </div>
 
-              <div className="modal-section">
-                <h4>שינוי קודי PIN</h4>
-                <div className="pin-inputs">
-                  <div className="input-group">
-                    <label>PIN לניהול (4 ספרות)</label>
-                    <input
-                      type="text"
-                      value={newInputPin}
-                      onChange={(e) => {
-                        if (/^\d*$/.test(e.target.value) && e.target.value.length <= 4) {
-                          setNewInputPin(e.target.value)
-                        }
-                      }}
-                      placeholder={selectedUser.input_pin}
-                      maxLength={4}
-                    />
-                  </div>
-                  <div className="input-group">
-                    <label>PIN למסך (4 ספרות)</label>
-                    <input
-                      type="text"
-                      value={newDisplayPin}
-                      onChange={(e) => {
-                        if (/^\d*$/.test(e.target.value) && e.target.value.length <= 4) {
-                          setNewDisplayPin(e.target.value)
-                        }
-                      }}
-                      placeholder={selectedUser.display_pin}
-                      maxLength={4}
-                    />
-                  </div>
-                </div>
-                <button className="btn btn-primary" onClick={handleUpdatePins}>
-                  עדכן קודי PIN
-                </button>
-              </div>
-
               <button className="btn btn-secondary close-btn" onClick={() => {
                 setSelectedUser(null)
                 setNewPassword('')
-                setNewInputPin('')
-                setNewDisplayPin('')
               }}>
                 סגור
               </button>
