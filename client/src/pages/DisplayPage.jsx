@@ -5,8 +5,8 @@ import api from '../services/api'
 import AnimatedBackground from '../components/AnimatedBackgrounds'
 import './DisplayPage.css'
 
-// Bell sound URL
-const BELL_SOUND_URL = 'https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3'
+// Bell sound URL - classic bell/chime sound
+const BELL_SOUND_URL = 'https://assets.mixkit.co/active_storage/sfx/2462/2462-preview.mp3'
 
 function DisplayPage() {
   const [message, setMessage] = useState(null)
