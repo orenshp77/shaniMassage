@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import Swal from 'sweetalert2'
 import api from '../services/api'
@@ -201,14 +201,42 @@ function InputPage() {
     }
   }
 
+  const saveTimeoutRef = useRef(null)
+
   const handleDisplayNameChange = async (newName) => {
     setDisplayName(newName)
+
+    // Clear previous timeout
+    if (saveTimeoutRef.current) {
+      clearTimeout(saveTimeoutRef.current)
+    }
+
+    // Auto-save after 500ms of no typing
+    if (newName.trim()) {
+      saveTimeoutRef.current = setTimeout(async () => {
+        try {
+          await api.put('/display-name', { displayName: newName.trim(), workspace: workspaceCode })
+          localStorage.setItem('displayName', newName.trim())
+          const user = JSON.parse(localStorage.getItem('user') || '{}')
+          if (user) {
+            user.display_name = newName.trim()
+            localStorage.setItem('user', JSON.stringify(user))
+          }
+        } catch (error) {
+          console.error('Error auto-saving display name:', error)
+        }
+      }, 500)
+    }
   }
 
   const handleDisplayNameSave = async () => {
     if (!displayName.trim()) {
       Swal.fire({ icon: 'error', title: 'שגיאה', text: 'שם התצוגה לא יכול להיות ריק' })
       return
+    }
+    // Clear any pending auto-save
+    if (saveTimeoutRef.current) {
+      clearTimeout(saveTimeoutRef.current)
     }
     try {
       await api.put('/display-name', { displayName: displayName.trim(), workspace: workspaceCode })
