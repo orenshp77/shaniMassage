@@ -186,7 +186,19 @@ app.post('/api/auth/register', async (req, res) => {
       user: result.rows[0]
     })
   } catch (error) {
-    console.error('Error registering user:', error)
+    console.error('Error registering user:', error.message)
+    console.error('Error details:', error)
+
+    // Check for specific database errors
+    if (error.code === '23505') {
+      // Unique constraint violation
+      return res.status(400).json({ error: 'שם המשתמש או קוד העבודה כבר קיים' })
+    }
+    if (error.code === '42P01') {
+      // Table doesn't exist
+      return res.status(500).json({ error: 'שגיאה במסד הנתונים - טבלה לא קיימת' })
+    }
+
     res.status(500).json({ error: 'בעיה בחיבור למערכת, נסה שוב מאוחר יותר' })
   }
 })
