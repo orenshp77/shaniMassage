@@ -134,14 +134,23 @@ app.post('/api/auth/register', async (req, res) => {
     const { username, password, displayName } = req.body
 
     // Validate input
-    if (!username || !password || !displayName) {
-      return res.status(400).json({ error: 'כל השדות נדרשים' })
+    if (!username) {
+      return res.status(400).json({ error: 'נא להזין שם משתמש' })
+    }
+    if (!password) {
+      return res.status(400).json({ error: 'נא להזין סיסמה' })
+    }
+    if (!displayName) {
+      return res.status(400).json({ error: 'נא להזין שם תצוגה' })
+    }
+    if (password.length < 4) {
+      return res.status(400).json({ error: 'הסיסמה חייבת להכיל לפחות 4 תווים' })
     }
 
     // Check if username already exists
     const existingUser = await pool.query('SELECT id FROM users WHERE username = $1', [username])
     if (existingUser.rows.length > 0) {
-      return res.status(400).json({ error: 'שם המשתמש כבר קיים' })
+      return res.status(400).json({ error: 'שם המשתמש כבר קיים במערכת, נסה שם אחר' })
     }
 
     // Generate unique workspace code
@@ -178,7 +187,7 @@ app.post('/api/auth/register', async (req, res) => {
     })
   } catch (error) {
     console.error('Error registering user:', error)
-    res.status(500).json({ error: 'שגיאה ביצירת המשתמש' })
+    res.status(500).json({ error: 'בעיה בחיבור למערכת, נסה שוב מאוחר יותר' })
   }
 })
 
@@ -187,6 +196,16 @@ app.post('/api/auth/login', async (req, res) => {
   try {
     const { username, password } = req.body
 
+    if (!username || !password) {
+      return res.status(400).json({ error: 'נא להזין שם משתמש וסיסמה' })
+    }
+
+    // First check if user exists
+    const userExists = await pool.query('SELECT id FROM users WHERE username = $1', [username])
+    if (userExists.rows.length === 0) {
+      return res.status(401).json({ error: 'שם משתמש לא קיים במערכת' })
+    }
+
     const passwordHash = hashPassword(password)
     const result = await pool.query(
       'SELECT id, username, display_name, workspace_code FROM users WHERE username = $1 AND password_hash = $2',
@@ -194,7 +213,7 @@ app.post('/api/auth/login', async (req, res) => {
     )
 
     if (result.rows.length === 0) {
-      return res.status(401).json({ error: 'שם משתמש או סיסמה שגויים' })
+      return res.status(401).json({ error: 'סיסמה שגויה, נסה שוב' })
     }
 
     res.json({
@@ -203,7 +222,7 @@ app.post('/api/auth/login', async (req, res) => {
     })
   } catch (error) {
     console.error('Error logging in:', error)
-    res.status(500).json({ error: 'שגיאה בהתחברות' })
+    res.status(500).json({ error: 'בעיה בחיבור למערכת, נסה שוב מאוחר יותר' })
   }
 })
 
@@ -212,6 +231,16 @@ app.post('/api/auth/pin-login', async (req, res) => {
   try {
     const { workspaceCode, pin, type } = req.body // type: 'input' or 'display'
 
+    if (!workspaceCode || !pin) {
+      return res.status(400).json({ error: 'נא להזין קוד עבודה וקוד PIN' })
+    }
+
+    // First check if workspace exists
+    const workspaceExists = await pool.query('SELECT id FROM users WHERE workspace_code = $1', [workspaceCode])
+    if (workspaceExists.rows.length === 0) {
+      return res.status(401).json({ error: 'קוד עבודה לא קיים במערכת' })
+    }
+
     const pinColumn = type === 'input' ? 'input_pin' : 'display_pin'
     const result = await pool.query(
       `SELECT id, username, display_name, workspace_code FROM users WHERE workspace_code = $1 AND ${pinColumn} = $2`,
@@ -219,7 +248,7 @@ app.post('/api/auth/pin-login', async (req, res) => {
     )
 
     if (result.rows.length === 0) {
-      return res.status(401).json({ error: 'קוד או סיסמה שגויים' })
+      return res.status(401).json({ error: 'קוד PIN שגוי, נסה שוב' })
     }
 
     res.json({
@@ -229,7 +258,7 @@ app.post('/api/auth/pin-login', async (req, res) => {
     })
   } catch (error) {
     console.error('Error PIN login:', error)
-    res.status(500).json({ error: 'שגיאה בהתחברות' })
+    res.status(500).json({ error: 'בעיה בחיבור למערכת, נסה שוב מאוחר יותר' })
   }
 })
 
@@ -237,13 +266,18 @@ app.post('/api/auth/pin-login', async (req, res) => {
 app.get('/api/auth/workspace/:code', async (req, res) => {
   try {
     const { code } = req.params
+
+    if (!code) {
+      return res.status(400).json({ error: 'נא להזין קוד עבודה' })
+    }
+
     const result = await pool.query(
       'SELECT id, display_name, workspace_code FROM users WHERE workspace_code = $1',
       [code]
     )
 
     if (result.rows.length === 0) {
-      return res.status(404).json({ error: 'קוד עבודה לא נמצא' })
+      return res.status(404).json({ error: 'קוד עבודה לא נמצא במערכת' })
     }
 
     res.json({
@@ -252,7 +286,7 @@ app.get('/api/auth/workspace/:code', async (req, res) => {
     })
   } catch (error) {
     console.error('Error fetching workspace:', error)
-    res.status(500).json({ error: 'שגיאה בטעינת מרחב העבודה' })
+    res.status(500).json({ error: 'בעיה בחיבור למערכת, נסה שוב מאוחר יותר' })
   }
 })
 
