@@ -1,9 +1,29 @@
 const express = require('express')
 const cors = require('cors')
-const { Pool } = require('pg')
 const path = require('path')
 const crypto = require('crypto')
+const admin = require('firebase-admin')
 require('dotenv').config({ path: path.join(__dirname, '..', '.env') })
+
+// Initialize Firebase Admin SDK
+const serviceAccount = {
+  type: 'service_account',
+  project_id: process.env.FIREBASE_PROJECT_ID,
+  private_key_id: process.env.FIREBASE_PRIVATE_KEY_ID,
+  private_key: process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, '\n'),
+  client_email: process.env.FIREBASE_CLIENT_EMAIL,
+  client_id: process.env.FIREBASE_CLIENT_ID,
+  auth_uri: 'https://accounts.google.com/o/oauth2/auth',
+  token_uri: 'https://oauth2.googleapis.com/token',
+  auth_provider_x509_cert_url: 'https://www.googleapis.com/oauth2/v1/certs',
+  client_x509_cert_url: process.env.FIREBASE_CERT_URL
+}
+
+admin.initializeApp({
+  credential: admin.credential.cert(serviceAccount)
+})
+
+const db = admin.firestore()
 
 // Helper function to hash passwords
 const hashPassword = (password) => {
@@ -32,12 +52,6 @@ app.use(cors({
 }))
 app.use(express.json({ limit: '5mb' }))
 
-// PostgreSQL connection (Neon)
-const pool = new Pool({
-  connectionString: process.env.DATABASE_URL,
-  ssl: { rejectUnauthorized: false }
-})
-
 // In-memory storage for active workspaces (keyed by workspace_code)
 const workspaces = {}
 
@@ -59,69 +73,6 @@ const getWorkspace = (workspaceCode) => {
     }
   }
   return workspaces[workspaceCode]
-}
-
-// Initialize database table
-const initDB = async () => {
-  try {
-    // Drop old tables and recreate with new schema (one-time migration)
-    // Check if users table has the workspace_code column
-    const checkColumn = await pool.query(`
-      SELECT column_name FROM information_schema.columns
-      WHERE table_name = 'users' AND column_name = 'workspace_code'
-    `)
-
-    if (checkColumn.rows.length === 0) {
-      // Old schema exists, need to migrate
-      console.log('Migrating database to new schema...')
-      await pool.query('DROP TABLE IF EXISTS settings CASCADE')
-      await pool.query('DROP TABLE IF EXISTS messages CASCADE')
-      await pool.query('DROP TABLE IF EXISTS users CASCADE')
-      console.log('Old tables dropped')
-    }
-
-    // Create users table
-    await pool.query(`
-      CREATE TABLE IF NOT EXISTS users (
-        id SERIAL PRIMARY KEY,
-        username VARCHAR(100) UNIQUE NOT NULL,
-        password_hash VARCHAR(255) NOT NULL,
-        display_name VARCHAR(255) NOT NULL,
-        workspace_code VARCHAR(10) UNIQUE NOT NULL,
-        input_pin VARCHAR(4) NOT NULL,
-        display_pin VARCHAR(4) NOT NULL,
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-      )
-    `)
-
-    // Create messages table with workspace_code
-    await pool.query(`
-      CREATE TABLE IF NOT EXISTS messages (
-        id SERIAL PRIMARY KEY,
-        workspace_code VARCHAR(10) NOT NULL,
-        subject VARCHAR(255) NOT NULL,
-        content TEXT NOT NULL,
-        display_date TIMESTAMP NOT NULL,
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-      )
-    `)
-
-    // Create settings table for pinned message and other persistent settings (per workspace)
-    await pool.query(`
-      CREATE TABLE IF NOT EXISTS settings (
-        key VARCHAR(100) NOT NULL,
-        workspace_code VARCHAR(10) NOT NULL,
-        value TEXT NOT NULL,
-        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        PRIMARY KEY (key, workspace_code)
-      )
-    `)
-
-    console.log('Database initialized successfully')
-  } catch (error) {
-    console.error('Error initializing database:', error)
-  }
 }
 
 // Routes
@@ -148,8 +99,9 @@ app.post('/api/auth/register', async (req, res) => {
     }
 
     // Check if username already exists
-    const existingUser = await pool.query('SELECT id FROM users WHERE username = $1', [username])
-    if (existingUser.rows.length > 0) {
+    const usersRef = db.collection('users')
+    const existingUser = await usersRef.where('username', '==', username).get()
+    if (!existingUser.empty) {
       return res.status(400).json({ error: 'שם המשתמש כבר קיים במערכת, נסה שם אחר' })
     }
 
@@ -158,47 +110,50 @@ app.post('/api/auth/register', async (req, res) => {
     let isUnique = false
     while (!isUnique) {
       workspaceCode = generateWorkspaceCode()
-      const existing = await pool.query('SELECT id FROM users WHERE workspace_code = $1', [workspaceCode])
-      if (existing.rows.length === 0) isUnique = true
+      const existing = await usersRef.where('workspace_code', '==', workspaceCode).get()
+      if (existing.empty) isUnique = true
     }
 
     // Hash password and create user (with default PINs)
     const passwordHash = hashPassword(password)
     const defaultPin = '1111'
-    const result = await pool.query(
-      `INSERT INTO users (username, password_hash, display_name, workspace_code, input_pin, display_pin)
-       VALUES ($1, $2, $3, $4, $5, $6) RETURNING id, username, display_name, workspace_code`,
-      [username, passwordHash, displayName, workspaceCode, defaultPin, defaultPin]
-    )
+    const userDoc = await usersRef.add({
+      username,
+      password_hash: passwordHash,
+      display_name: displayName,
+      workspace_code: workspaceCode,
+      input_pin: defaultPin,
+      display_pin: defaultPin,
+      created_at: admin.firestore.FieldValue.serverTimestamp()
+    })
 
     // Initialize default settings for this workspace
-    await pool.query(
-      `INSERT INTO settings (key, workspace_code, value) VALUES ('pinned_message', $1, '')`,
-      [workspaceCode]
-    )
-    await pool.query(
-      `INSERT INTO settings (key, workspace_code, value) VALUES ('pinned_enabled', $1, 'false')`,
-      [workspaceCode]
-    )
+    const settingsRef = db.collection('settings')
+    await settingsRef.doc(`pinned_message_${workspaceCode}`).set({
+      key: 'pinned_message',
+      workspace_code: workspaceCode,
+      value: '',
+      updated_at: admin.firestore.FieldValue.serverTimestamp()
+    })
+    await settingsRef.doc(`pinned_enabled_${workspaceCode}`).set({
+      key: 'pinned_enabled',
+      workspace_code: workspaceCode,
+      value: 'false',
+      updated_at: admin.firestore.FieldValue.serverTimestamp()
+    })
 
     res.status(201).json({
       success: true,
-      user: result.rows[0]
+      user: {
+        id: userDoc.id,
+        username,
+        display_name: displayName,
+        workspace_code: workspaceCode
+      }
     })
   } catch (error) {
     console.error('Error registering user:', error.message)
     console.error('Error details:', error)
-
-    // Check for specific database errors
-    if (error.code === '23505') {
-      // Unique constraint violation
-      return res.status(400).json({ error: 'שם המשתמש או קוד העבודה כבר קיים' })
-    }
-    if (error.code === '42P01') {
-      // Table doesn't exist
-      return res.status(500).json({ error: 'שגיאה במסד הנתונים - טבלה לא קיימת' })
-    }
-
     res.status(500).json({ error: 'בעיה בחיבור למערכת, נסה שוב מאוחר יותר' })
   }
 })
@@ -213,24 +168,28 @@ app.post('/api/auth/login', async (req, res) => {
     }
 
     // First check if user exists
-    const userExists = await pool.query('SELECT id FROM users WHERE username = $1', [username])
-    if (userExists.rows.length === 0) {
+    const usersRef = db.collection('users')
+    const userSnapshot = await usersRef.where('username', '==', username).get()
+    if (userSnapshot.empty) {
       return res.status(401).json({ error: 'שם משתמש לא קיים במערכת' })
     }
 
     const passwordHash = hashPassword(password)
-    const result = await pool.query(
-      'SELECT id, username, display_name, workspace_code FROM users WHERE username = $1 AND password_hash = $2',
-      [username, passwordHash]
-    )
+    const userDoc = userSnapshot.docs[0]
+    const userData = userDoc.data()
 
-    if (result.rows.length === 0) {
+    if (userData.password_hash !== passwordHash) {
       return res.status(401).json({ error: 'סיסמה שגויה, נסה שוב' })
     }
 
     res.json({
       success: true,
-      user: result.rows[0]
+      user: {
+        id: userDoc.id,
+        username: userData.username,
+        display_name: userData.display_name,
+        workspace_code: userData.workspace_code
+      }
     })
   } catch (error) {
     console.error('Error logging in:', error)
@@ -248,24 +207,28 @@ app.post('/api/auth/pin-login', async (req, res) => {
     }
 
     // First check if workspace exists
-    const workspaceExists = await pool.query('SELECT id FROM users WHERE workspace_code = $1', [workspaceCode])
-    if (workspaceExists.rows.length === 0) {
+    const usersRef = db.collection('users')
+    const workspaceSnapshot = await usersRef.where('workspace_code', '==', workspaceCode).get()
+    if (workspaceSnapshot.empty) {
       return res.status(401).json({ error: 'קוד עבודה לא קיים במערכת' })
     }
 
-    const pinColumn = type === 'input' ? 'input_pin' : 'display_pin'
-    const result = await pool.query(
-      `SELECT id, username, display_name, workspace_code FROM users WHERE workspace_code = $1 AND ${pinColumn} = $2`,
-      [workspaceCode, pin]
-    )
+    const userDoc = workspaceSnapshot.docs[0]
+    const userData = userDoc.data()
+    const pinField = type === 'input' ? 'input_pin' : 'display_pin'
 
-    if (result.rows.length === 0) {
+    if (userData[pinField] !== pin) {
       return res.status(401).json({ error: 'קוד PIN שגוי, נסה שוב' })
     }
 
     res.json({
       success: true,
-      user: result.rows[0],
+      user: {
+        id: userDoc.id,
+        username: userData.username,
+        display_name: userData.display_name,
+        workspace_code: userData.workspace_code
+      },
       accessType: type
     })
   } catch (error) {
@@ -283,18 +246,23 @@ app.get('/api/auth/workspace/:code', async (req, res) => {
       return res.status(400).json({ error: 'נא להזין קוד עבודה' })
     }
 
-    const result = await pool.query(
-      'SELECT id, display_name, workspace_code FROM users WHERE workspace_code = $1',
-      [code]
-    )
+    const usersRef = db.collection('users')
+    const snapshot = await usersRef.where('workspace_code', '==', code).get()
 
-    if (result.rows.length === 0) {
+    if (snapshot.empty) {
       return res.status(404).json({ error: 'קוד עבודה לא נמצא במערכת' })
     }
 
+    const userDoc = snapshot.docs[0]
+    const userData = userDoc.data()
+
     res.json({
       success: true,
-      workspace: result.rows[0]
+      workspace: {
+        id: userDoc.id,
+        display_name: userData.display_name,
+        workspace_code: userData.workspace_code
+      }
     })
   } catch (error) {
     console.error('Error fetching workspace:', error)
@@ -311,8 +279,21 @@ app.get('/api/messages', async (req, res) => {
     if (!workspace) {
       return res.status(400).json({ error: 'workspace code is required' })
     }
-    const result = await pool.query('SELECT * FROM messages WHERE workspace_code = $1 ORDER BY created_at DESC', [workspace])
-    res.json(result.rows)
+    const messagesRef = db.collection('messages')
+    const snapshot = await messagesRef
+      .where('workspace_code', '==', workspace)
+      .orderBy('created_at', 'desc')
+      .get()
+
+    const messages = snapshot.docs.map(doc => ({
+      id: doc.id,
+      ...doc.data(),
+      created_at: doc.data().created_at?.toDate?.() || doc.data().created_at,
+      updated_at: doc.data().updated_at?.toDate?.() || doc.data().updated_at,
+      display_date: doc.data().display_date?.toDate?.() || doc.data().display_date
+    }))
+
+    res.json(messages)
   } catch (error) {
     console.error('Error fetching messages:', error)
     res.status(500).json({ error: 'שגיאה בטעינת ההודעות' })
@@ -326,8 +307,25 @@ app.get('/api/messages/latest', async (req, res) => {
     if (!workspace) {
       return res.status(400).json({ error: 'workspace code is required' })
     }
-    const result = await pool.query('SELECT * FROM messages WHERE workspace_code = $1 ORDER BY created_at DESC LIMIT 1', [workspace])
-    res.json(result.rows[0] || null)
+    const messagesRef = db.collection('messages')
+    const snapshot = await messagesRef
+      .where('workspace_code', '==', workspace)
+      .orderBy('created_at', 'desc')
+      .limit(1)
+      .get()
+
+    if (snapshot.empty) {
+      return res.json(null)
+    }
+
+    const doc = snapshot.docs[0]
+    res.json({
+      id: doc.id,
+      ...doc.data(),
+      created_at: doc.data().created_at?.toDate?.() || doc.data().created_at,
+      updated_at: doc.data().updated_at?.toDate?.() || doc.data().updated_at,
+      display_date: doc.data().display_date?.toDate?.() || doc.data().display_date
+    })
   } catch (error) {
     console.error('Error fetching latest message:', error)
     res.status(500).json({ error: 'שגיאה בטעינת ההודעה' })
@@ -338,11 +336,19 @@ app.get('/api/messages/latest', async (req, res) => {
 app.get('/api/messages/:id', async (req, res) => {
   try {
     const { id } = req.params
-    const result = await pool.query('SELECT * FROM messages WHERE id = $1', [id])
-    if (result.rows.length === 0) {
+    const doc = await db.collection('messages').doc(id).get()
+
+    if (!doc.exists) {
       return res.status(404).json({ error: 'הודעה לא נמצאה' })
     }
-    res.json(result.rows[0])
+
+    res.json({
+      id: doc.id,
+      ...doc.data(),
+      created_at: doc.data().created_at?.toDate?.() || doc.data().created_at,
+      updated_at: doc.data().updated_at?.toDate?.() || doc.data().updated_at,
+      display_date: doc.data().display_date?.toDate?.() || doc.data().display_date
+    })
   } catch (error) {
     console.error('Error fetching message:', error)
     res.status(500).json({ error: 'שגיאה בטעינת ההודעה' })
@@ -356,11 +362,25 @@ app.post('/api/messages', async (req, res) => {
     if (!workspace) {
       return res.status(400).json({ error: 'workspace code is required' })
     }
-    const result = await pool.query(
-      'INSERT INTO messages (workspace_code, subject, content, display_date) VALUES ($1, $2, $3, $4) RETURNING *',
-      [workspace, subject, content, displayDate]
-    )
-    res.status(201).json(result.rows[0])
+
+    const messagesRef = db.collection('messages')
+    const docRef = await messagesRef.add({
+      workspace_code: workspace,
+      subject,
+      content,
+      display_date: new Date(displayDate),
+      created_at: admin.firestore.FieldValue.serverTimestamp(),
+      updated_at: admin.firestore.FieldValue.serverTimestamp()
+    })
+
+    const newDoc = await docRef.get()
+    res.status(201).json({
+      id: newDoc.id,
+      ...newDoc.data(),
+      created_at: new Date(),
+      updated_at: new Date(),
+      display_date: new Date(displayDate)
+    })
   } catch (error) {
     console.error('Error creating message:', error)
     res.status(500).json({ error: 'שגיאה ביצירת ההודעה' })
@@ -372,14 +392,29 @@ app.put('/api/messages/:id', async (req, res) => {
   try {
     const { id } = req.params
     const { subject, content, displayDate } = req.body
-    const result = await pool.query(
-      'UPDATE messages SET subject = $1, content = $2, display_date = $3, updated_at = CURRENT_TIMESTAMP WHERE id = $4 RETURNING *',
-      [subject, content, displayDate, id]
-    )
-    if (result.rows.length === 0) {
+
+    const docRef = db.collection('messages').doc(id)
+    const doc = await docRef.get()
+
+    if (!doc.exists) {
       return res.status(404).json({ error: 'הודעה לא נמצאה' })
     }
-    res.json(result.rows[0])
+
+    await docRef.update({
+      subject,
+      content,
+      display_date: new Date(displayDate),
+      updated_at: admin.firestore.FieldValue.serverTimestamp()
+    })
+
+    const updatedDoc = await docRef.get()
+    res.json({
+      id: updatedDoc.id,
+      ...updatedDoc.data(),
+      created_at: updatedDoc.data().created_at?.toDate?.() || updatedDoc.data().created_at,
+      updated_at: new Date(),
+      display_date: new Date(displayDate)
+    })
   } catch (error) {
     console.error('Error updating message:', error)
     res.status(500).json({ error: 'שגיאה בעדכון ההודעה' })
@@ -391,19 +426,27 @@ app.delete('/api/messages/:id', async (req, res) => {
   try {
     const { id } = req.params
     const { workspace } = req.query
-    const deletedId = parseInt(id)
 
-    const result = await pool.query('DELETE FROM messages WHERE id = $1 RETURNING *', [id])
-    if (result.rows.length === 0) {
+    const docRef = db.collection('messages').doc(id)
+    const doc = await docRef.get()
+
+    if (!doc.exists) {
       return res.status(404).json({ error: 'הודעה לא נמצאה' })
     }
+
+    await docRef.delete()
 
     // If deleted message was the active one, silently switch to next available
     if (workspace) {
       const ws = getWorkspace(workspace)
-      if (ws.activeMessageId === deletedId) {
-        const nextMessage = await pool.query('SELECT id FROM messages WHERE workspace_code = $1 ORDER BY created_at DESC LIMIT 1', [workspace])
-        ws.activeMessageId = nextMessage.rows[0]?.id || null
+      if (ws.activeMessageId === id) {
+        const messagesRef = db.collection('messages')
+        const nextMessage = await messagesRef
+          .where('workspace_code', '==', workspace)
+          .orderBy('created_at', 'desc')
+          .limit(1)
+          .get()
+        ws.activeMessageId = nextMessage.docs[0]?.id || null
       }
     }
 
@@ -424,10 +467,20 @@ app.get('/api/health', (req, res) => {
 // Admin: Get all users
 app.get('/api/admin/users', async (req, res) => {
   try {
-    const result = await pool.query(
-      'SELECT id, username, display_name, workspace_code, input_pin, display_pin, created_at FROM users ORDER BY created_at DESC'
-    )
-    res.json(result.rows)
+    const usersRef = db.collection('users')
+    const snapshot = await usersRef.orderBy('created_at', 'desc').get()
+
+    const users = snapshot.docs.map(doc => ({
+      id: doc.id,
+      username: doc.data().username,
+      display_name: doc.data().display_name,
+      workspace_code: doc.data().workspace_code,
+      input_pin: doc.data().input_pin,
+      display_pin: doc.data().display_pin,
+      created_at: doc.data().created_at?.toDate?.() || doc.data().created_at
+    }))
+
+    res.json(users)
   } catch (error) {
     console.error('Error fetching users:', error)
     res.status(500).json({ error: 'שגיאה בטעינת המשתמשים' })
@@ -440,17 +493,27 @@ app.delete('/api/admin/users/:id', async (req, res) => {
     const { id } = req.params
 
     // Get user workspace code first
-    const userResult = await pool.query('SELECT workspace_code FROM users WHERE id = $1', [id])
-    if (userResult.rows.length === 0) {
+    const userDoc = await db.collection('users').doc(id).get()
+    if (!userDoc.exists) {
       return res.status(404).json({ error: 'משתמש לא נמצא' })
     }
 
-    const workspaceCode = userResult.rows[0].workspace_code
+    const workspaceCode = userDoc.data().workspace_code
 
-    // Delete user's settings, messages, then the user
-    await pool.query('DELETE FROM settings WHERE workspace_code = $1', [workspaceCode])
-    await pool.query('DELETE FROM messages WHERE workspace_code = $1', [workspaceCode])
-    await pool.query('DELETE FROM users WHERE id = $1', [id])
+    // Delete user's settings
+    const settingsRef = db.collection('settings')
+    const settingsSnapshot = await settingsRef.where('workspace_code', '==', workspaceCode).get()
+    const settingsDeletePromises = settingsSnapshot.docs.map(doc => doc.ref.delete())
+    await Promise.all(settingsDeletePromises)
+
+    // Delete user's messages
+    const messagesRef = db.collection('messages')
+    const messagesSnapshot = await messagesRef.where('workspace_code', '==', workspaceCode).get()
+    const messagesDeletePromises = messagesSnapshot.docs.map(doc => doc.ref.delete())
+    await Promise.all(messagesDeletePromises)
+
+    // Delete user
+    await db.collection('users').doc(id).delete()
 
     res.json({ success: true, message: 'המשתמש נמחק בהצלחה' })
   } catch (error) {
@@ -469,15 +532,15 @@ app.put('/api/admin/users/:id/password', async (req, res) => {
       return res.status(400).json({ error: 'סיסמה נדרשת' })
     }
 
-    const passwordHash = hashPassword(password)
-    const result = await pool.query(
-      'UPDATE users SET password_hash = $1 WHERE id = $2 RETURNING id, username, display_name',
-      [passwordHash, id]
-    )
+    const userRef = db.collection('users').doc(id)
+    const userDoc = await userRef.get()
 
-    if (result.rows.length === 0) {
+    if (!userDoc.exists) {
       return res.status(404).json({ error: 'משתמש לא נמצא' })
     }
+
+    const passwordHash = hashPassword(password)
+    await userRef.update({ password_hash: passwordHash })
 
     res.json({ success: true, message: 'הסיסמה עודכנה בהצלחה' })
   } catch (error) {
@@ -499,31 +562,22 @@ app.put('/api/admin/users/:id/pins', async (req, res) => {
       return res.status(400).json({ error: 'PIN למסך חייב להיות 4 ספרות' })
     }
 
-    let query = 'UPDATE users SET '
-    const values = []
-    const updates = []
+    const userRef = db.collection('users').doc(id)
+    const userDoc = await userRef.get()
 
-    if (inputPin) {
-      values.push(inputPin)
-      updates.push(`input_pin = $${values.length}`)
-    }
-    if (displayPin) {
-      values.push(displayPin)
-      updates.push(`display_pin = $${values.length}`)
+    if (!userDoc.exists) {
+      return res.status(404).json({ error: 'משתמש לא נמצא' })
     }
 
-    if (updates.length === 0) {
+    const updates = {}
+    if (inputPin) updates.input_pin = inputPin
+    if (displayPin) updates.display_pin = displayPin
+
+    if (Object.keys(updates).length === 0) {
       return res.status(400).json({ error: 'לא סופקו ערכים לעדכון' })
     }
 
-    values.push(id)
-    query += updates.join(', ') + ` WHERE id = $${values.length} RETURNING id, username`
-
-    const result = await pool.query(query, values)
-
-    if (result.rows.length === 0) {
-      return res.status(404).json({ error: 'משתמש לא נמצא' })
-    }
+    await userRef.update(updates)
 
     res.json({ success: true, message: 'קודי PIN עודכנו בהצלחה' })
   } catch (error) {
@@ -541,16 +595,17 @@ app.put('/api/display-name', async (req, res) => {
       return res.status(400).json({ error: 'חסרים פרטים' })
     }
 
-    const result = await pool.query(
-      'UPDATE users SET display_name = $1 WHERE workspace_code = $2 RETURNING id, display_name',
-      [displayName, workspace]
-    )
+    const usersRef = db.collection('users')
+    const snapshot = await usersRef.where('workspace_code', '==', workspace).get()
 
-    if (result.rows.length === 0) {
+    if (snapshot.empty) {
       return res.status(404).json({ error: 'משתמש לא נמצא' })
     }
 
-    res.json({ success: true, displayName: result.rows[0].display_name })
+    const userDoc = snapshot.docs[0]
+    await userDoc.ref.update({ display_name: displayName })
+
+    res.json({ success: true, displayName })
   } catch (error) {
     console.error('Error updating display name:', error)
     res.status(500).json({ error: 'שגיאה בעדכון שם התצוגה' })
@@ -561,18 +616,21 @@ app.put('/api/display-name', async (req, res) => {
 app.post('/api/admin/login-as/:id', async (req, res) => {
   try {
     const { id } = req.params
-    const result = await pool.query(
-      'SELECT id, username, display_name, workspace_code FROM users WHERE id = $1',
-      [id]
-    )
+    const userDoc = await db.collection('users').doc(id).get()
 
-    if (result.rows.length === 0) {
+    if (!userDoc.exists) {
       return res.status(404).json({ error: 'משתמש לא נמצא' })
     }
 
+    const userData = userDoc.data()
     res.json({
       success: true,
-      user: result.rows[0]
+      user: {
+        id: userDoc.id,
+        username: userData.username,
+        display_name: userData.display_name,
+        workspace_code: userData.workspace_code
+      }
     })
   } catch (error) {
     console.error('Error logging in as user:', error)
@@ -583,9 +641,21 @@ app.post('/api/admin/login-as/:id', async (req, res) => {
 // Admin: Clear all data
 app.delete('/api/admin/clear-all', async (req, res) => {
   try {
-    await pool.query('DELETE FROM settings')
-    await pool.query('DELETE FROM messages')
-    await pool.query('DELETE FROM users')
+    // Delete all settings
+    const settingsSnapshot = await db.collection('settings').get()
+    const settingsDeletes = settingsSnapshot.docs.map(doc => doc.ref.delete())
+    await Promise.all(settingsDeletes)
+
+    // Delete all messages
+    const messagesSnapshot = await db.collection('messages').get()
+    const messagesDeletes = messagesSnapshot.docs.map(doc => doc.ref.delete())
+    await Promise.all(messagesDeletes)
+
+    // Delete all users
+    const usersSnapshot = await db.collection('users').get()
+    const usersDeletes = usersSnapshot.docs.map(doc => doc.ref.delete())
+    await Promise.all(usersDeletes)
+
     res.json({ success: true, message: 'All data cleared' })
   } catch (error) {
     console.error('Error clearing data:', error)
@@ -593,49 +663,25 @@ app.delete('/api/admin/clear-all', async (req, res) => {
   }
 })
 
-// Admin: Reset database (drop and recreate tables)
+// Admin: Reset database (clear all collections)
 app.post('/api/admin/reset-db', async (req, res) => {
   try {
     console.log('Resetting database...')
-    await pool.query('DROP TABLE IF EXISTS settings CASCADE')
-    await pool.query('DROP TABLE IF EXISTS messages CASCADE')
-    await pool.query('DROP TABLE IF EXISTS users CASCADE')
 
-    // Recreate tables
-    await pool.query(`
-      CREATE TABLE IF NOT EXISTS users (
-        id SERIAL PRIMARY KEY,
-        username VARCHAR(100) UNIQUE NOT NULL,
-        password_hash VARCHAR(255) NOT NULL,
-        display_name VARCHAR(255) NOT NULL,
-        workspace_code VARCHAR(10) UNIQUE NOT NULL,
-        input_pin VARCHAR(4) NOT NULL,
-        display_pin VARCHAR(4) NOT NULL,
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-      )
-    `)
+    // Delete all settings
+    const settingsSnapshot = await db.collection('settings').get()
+    const settingsDeletes = settingsSnapshot.docs.map(doc => doc.ref.delete())
+    await Promise.all(settingsDeletes)
 
-    await pool.query(`
-      CREATE TABLE IF NOT EXISTS messages (
-        id SERIAL PRIMARY KEY,
-        workspace_code VARCHAR(10) NOT NULL,
-        subject VARCHAR(255) NOT NULL,
-        content TEXT NOT NULL,
-        display_date TIMESTAMP NOT NULL,
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-      )
-    `)
+    // Delete all messages
+    const messagesSnapshot = await db.collection('messages').get()
+    const messagesDeletes = messagesSnapshot.docs.map(doc => doc.ref.delete())
+    await Promise.all(messagesDeletes)
 
-    await pool.query(`
-      CREATE TABLE IF NOT EXISTS settings (
-        key VARCHAR(100) NOT NULL,
-        workspace_code VARCHAR(10) NOT NULL,
-        value TEXT NOT NULL,
-        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        PRIMARY KEY (key, workspace_code)
-      )
-    `)
+    // Delete all users
+    const usersSnapshot = await db.collection('users').get()
+    const usersDeletes = usersSnapshot.docs.map(doc => doc.ref.delete())
+    await Promise.all(usersDeletes)
 
     console.log('Database reset complete!')
     res.json({ success: true, message: 'Database reset complete' })
@@ -722,19 +768,19 @@ app.post('/api/tv/pair', async (req, res) => {
     }
 
     // Get workspace display name
-    const userResult = await pool.query(
-      'SELECT display_name FROM users WHERE workspace_code = $1',
-      [workspaceCode]
-    )
+    const usersRef = db.collection('users')
+    const snapshot = await usersRef.where('workspace_code', '==', workspaceCode).get()
 
-    if (userResult.rows.length === 0) {
+    if (snapshot.empty) {
       return res.status(404).json({ error: 'מרחב עבודה לא נמצא' })
     }
+
+    const userData = snapshot.docs[0].data()
 
     // Mark as paired
     pairing.paired = true
     pairing.workspaceCode = workspaceCode
-    pairing.displayName = userResult.rows[0].display_name
+    pairing.displayName = userData.display_name
 
     // Mark workspace as having TV connected
     const ws = getWorkspace(workspaceCode)
@@ -836,40 +882,73 @@ app.get('/api/active-message', async (req, res) => {
     const ws = getWorkspace(workspace)
     let message = null
 
+    const messagesRef = db.collection('messages')
+
     if (!ws.activeMessageId) {
       // If no active message, return latest
-      const result = await pool.query('SELECT * FROM messages WHERE workspace_code = $1 ORDER BY created_at DESC LIMIT 1', [workspace])
-      message = result.rows[0] || null
-      // Update activeMessageId silently so we track current message
-      if (message) {
-        ws.activeMessageId = message.id
+      const snapshot = await messagesRef
+        .where('workspace_code', '==', workspace)
+        .orderBy('created_at', 'desc')
+        .limit(1)
+        .get()
+
+      if (!snapshot.empty) {
+        const doc = snapshot.docs[0]
+        message = {
+          id: doc.id,
+          ...doc.data(),
+          created_at: doc.data().created_at?.toDate?.() || doc.data().created_at,
+          updated_at: doc.data().updated_at?.toDate?.() || doc.data().updated_at,
+          display_date: doc.data().display_date?.toDate?.() || doc.data().display_date
+        }
+        ws.activeMessageId = doc.id
       }
     } else {
-      const result = await pool.query('SELECT * FROM messages WHERE id = $1 AND workspace_code = $2', [ws.activeMessageId, workspace])
-      if (result.rows.length === 0) {
+      const doc = await messagesRef.doc(ws.activeMessageId).get()
+      if (!doc.exists || doc.data().workspace_code !== workspace) {
         // If active message was deleted, return latest
         ws.activeMessageId = null
-        const latestResult = await pool.query('SELECT * FROM messages WHERE workspace_code = $1 ORDER BY created_at DESC LIMIT 1', [workspace])
-        message = latestResult.rows[0] || null
-        if (message) {
-          ws.activeMessageId = message.id
+        const snapshot = await messagesRef
+          .where('workspace_code', '==', workspace)
+          .orderBy('created_at', 'desc')
+          .limit(1)
+          .get()
+
+        if (!snapshot.empty) {
+          const latestDoc = snapshot.docs[0]
+          message = {
+            id: latestDoc.id,
+            ...latestDoc.data(),
+            created_at: latestDoc.data().created_at?.toDate?.() || latestDoc.data().created_at,
+            updated_at: latestDoc.data().updated_at?.toDate?.() || latestDoc.data().updated_at,
+            display_date: latestDoc.data().display_date?.toDate?.() || latestDoc.data().display_date
+          }
+          ws.activeMessageId = latestDoc.id
         }
       } else {
-        message = result.rows[0]
+        message = {
+          id: doc.id,
+          ...doc.data(),
+          created_at: doc.data().created_at?.toDate?.() || doc.data().created_at,
+          updated_at: doc.data().updated_at?.toDate?.() || doc.data().updated_at,
+          display_date: doc.data().display_date?.toDate?.() || doc.data().display_date
+        }
       }
     }
 
     // Get pinned message from database for this workspace
-    const pinnedMessageResult = await pool.query("SELECT value FROM settings WHERE key = 'pinned_message' AND workspace_code = $1", [workspace])
-    const pinnedEnabledResult = await pool.query("SELECT value FROM settings WHERE key = 'pinned_enabled' AND workspace_code = $1", [workspace])
+    const settingsRef = db.collection('settings')
+    const pinnedMessageDoc = await settingsRef.doc(`pinned_message_${workspace}`).get()
+    const pinnedEnabledDoc = await settingsRef.doc(`pinned_enabled_${workspace}`).get()
 
     // Get pinned image from database for this workspace
-    const pinnedImageResult = await pool.query("SELECT value FROM settings WHERE key = 'pinned_image' AND workspace_code = $1", [workspace])
-    const pinnedImageEnabledResult = await pool.query("SELECT value FROM settings WHERE key = 'pinned_image_enabled' AND workspace_code = $1", [workspace])
+    const pinnedImageDoc = await settingsRef.doc(`pinned_image_${workspace}`).get()
+    const pinnedImageEnabledDoc = await settingsRef.doc(`pinned_image_enabled_${workspace}`).get()
 
     // Get display name from users table
-    const userResult = await pool.query('SELECT display_name FROM users WHERE workspace_code = $1', [workspace])
-    const displayName = userResult.rows[0]?.display_name || 'מוקד עידכונים'
+    const usersRef = db.collection('users')
+    const userSnapshot = await usersRef.where('workspace_code', '==', workspace).get()
+    const displayName = userSnapshot.empty ? 'מוקד עידכונים' : userSnapshot.docs[0].data().display_name
 
     // Return message with theme, activeMessageId, lastExplicitChange, pinned message, pinned image and displayName
     res.json({
@@ -877,10 +956,10 @@ app.get('/api/active-message', async (req, res) => {
       theme: ws.activeTheme,
       activeMessageId: ws.activeMessageId,
       lastExplicitChange: ws.lastExplicitChange,
-      pinnedMessage: pinnedMessageResult.rows[0]?.value || '',
-      pinnedMessageEnabled: pinnedEnabledResult.rows[0]?.value === 'true',
-      pinnedImage: pinnedImageResult.rows[0]?.value || '',
-      pinnedImageEnabled: pinnedImageEnabledResult.rows[0]?.value === 'true',
+      pinnedMessage: pinnedMessageDoc.exists ? pinnedMessageDoc.data().value : '',
+      pinnedMessageEnabled: pinnedEnabledDoc.exists ? pinnedEnabledDoc.data().value === 'true' : false,
+      pinnedImage: pinnedImageDoc.exists ? pinnedImageDoc.data().value : '',
+      pinnedImageEnabled: pinnedImageEnabledDoc.exists ? pinnedImageEnabledDoc.data().value === 'true' : false,
       displayName
     })
   } catch (error) {
@@ -923,12 +1002,13 @@ app.get('/api/pinned-message', async (req, res) => {
       return res.status(400).json({ error: 'workspace code is required' })
     }
 
-    const messageResult = await pool.query("SELECT value FROM settings WHERE key = 'pinned_message' AND workspace_code = $1", [workspace])
-    const enabledResult = await pool.query("SELECT value FROM settings WHERE key = 'pinned_enabled' AND workspace_code = $1", [workspace])
+    const settingsRef = db.collection('settings')
+    const messageDoc = await settingsRef.doc(`pinned_message_${workspace}`).get()
+    const enabledDoc = await settingsRef.doc(`pinned_enabled_${workspace}`).get()
 
     res.json({
-      message: messageResult.rows[0]?.value || '',
-      enabled: enabledResult.rows[0]?.value === 'true'
+      message: messageDoc.exists ? messageDoc.data().value : '',
+      enabled: enabledDoc.exists ? enabledDoc.data().value === 'true' : false
     })
   } catch (error) {
     console.error('Error fetching pinned message:', error)
@@ -944,27 +1024,33 @@ app.post('/api/pinned-message', async (req, res) => {
       return res.status(400).json({ error: 'workspace code is required' })
     }
 
+    const settingsRef = db.collection('settings')
+
     if (message !== undefined) {
-      await pool.query(
-        "INSERT INTO settings (key, workspace_code, value, updated_at) VALUES ('pinned_message', $1, $2, CURRENT_TIMESTAMP) ON CONFLICT (key, workspace_code) DO UPDATE SET value = $2, updated_at = CURRENT_TIMESTAMP",
-        [workspace, message]
-      )
+      await settingsRef.doc(`pinned_message_${workspace}`).set({
+        key: 'pinned_message',
+        workspace_code: workspace,
+        value: message,
+        updated_at: admin.firestore.FieldValue.serverTimestamp()
+      })
     }
     if (enabled !== undefined) {
-      await pool.query(
-        "INSERT INTO settings (key, workspace_code, value, updated_at) VALUES ('pinned_enabled', $1, $2, CURRENT_TIMESTAMP) ON CONFLICT (key, workspace_code) DO UPDATE SET value = $2, updated_at = CURRENT_TIMESTAMP",
-        [workspace, enabled.toString()]
-      )
+      await settingsRef.doc(`pinned_enabled_${workspace}`).set({
+        key: 'pinned_enabled',
+        workspace_code: workspace,
+        value: enabled.toString(),
+        updated_at: admin.firestore.FieldValue.serverTimestamp()
+      })
     }
 
     // Get current values
-    const messageResult = await pool.query("SELECT value FROM settings WHERE key = 'pinned_message' AND workspace_code = $1", [workspace])
-    const enabledResult = await pool.query("SELECT value FROM settings WHERE key = 'pinned_enabled' AND workspace_code = $1", [workspace])
+    const messageDoc = await settingsRef.doc(`pinned_message_${workspace}`).get()
+    const enabledDoc = await settingsRef.doc(`pinned_enabled_${workspace}`).get()
 
     res.json({
       success: true,
-      message: messageResult.rows[0]?.value || '',
-      enabled: enabledResult.rows[0]?.value === 'true'
+      message: messageDoc.exists ? messageDoc.data().value : '',
+      enabled: enabledDoc.exists ? enabledDoc.data().value === 'true' : false
     })
   } catch (error) {
     console.error('Error setting pinned message:', error)
@@ -980,12 +1066,13 @@ app.get('/api/pinned-image', async (req, res) => {
       return res.status(400).json({ error: 'workspace code is required' })
     }
 
-    const imageResult = await pool.query("SELECT value FROM settings WHERE key = 'pinned_image' AND workspace_code = $1", [workspace])
-    const enabledResult = await pool.query("SELECT value FROM settings WHERE key = 'pinned_image_enabled' AND workspace_code = $1", [workspace])
+    const settingsRef = db.collection('settings')
+    const imageDoc = await settingsRef.doc(`pinned_image_${workspace}`).get()
+    const enabledDoc = await settingsRef.doc(`pinned_image_enabled_${workspace}`).get()
 
     res.json({
-      image: imageResult.rows[0]?.value || '',
-      enabled: enabledResult.rows[0]?.value === 'true'
+      image: imageDoc.exists ? imageDoc.data().value : '',
+      enabled: enabledDoc.exists ? enabledDoc.data().value === 'true' : false
     })
   } catch (error) {
     console.error('Error fetching pinned image:', error)
@@ -1001,27 +1088,33 @@ app.post('/api/pinned-image', async (req, res) => {
       return res.status(400).json({ error: 'workspace code is required' })
     }
 
+    const settingsRef = db.collection('settings')
+
     if (image !== undefined) {
-      await pool.query(
-        "INSERT INTO settings (key, workspace_code, value, updated_at) VALUES ('pinned_image', $1, $2, CURRENT_TIMESTAMP) ON CONFLICT (key, workspace_code) DO UPDATE SET value = $2, updated_at = CURRENT_TIMESTAMP",
-        [workspace, image]
-      )
+      await settingsRef.doc(`pinned_image_${workspace}`).set({
+        key: 'pinned_image',
+        workspace_code: workspace,
+        value: image,
+        updated_at: admin.firestore.FieldValue.serverTimestamp()
+      })
     }
     if (enabled !== undefined) {
-      await pool.query(
-        "INSERT INTO settings (key, workspace_code, value, updated_at) VALUES ('pinned_image_enabled', $1, $2, CURRENT_TIMESTAMP) ON CONFLICT (key, workspace_code) DO UPDATE SET value = $2, updated_at = CURRENT_TIMESTAMP",
-        [workspace, enabled.toString()]
-      )
+      await settingsRef.doc(`pinned_image_enabled_${workspace}`).set({
+        key: 'pinned_image_enabled',
+        workspace_code: workspace,
+        value: enabled.toString(),
+        updated_at: admin.firestore.FieldValue.serverTimestamp()
+      })
     }
 
     // Get current values
-    const imageResult = await pool.query("SELECT value FROM settings WHERE key = 'pinned_image' AND workspace_code = $1", [workspace])
-    const enabledResult = await pool.query("SELECT value FROM settings WHERE key = 'pinned_image_enabled' AND workspace_code = $1", [workspace])
+    const imageDoc = await settingsRef.doc(`pinned_image_${workspace}`).get()
+    const enabledDoc = await settingsRef.doc(`pinned_image_enabled_${workspace}`).get()
 
     res.json({
       success: true,
-      image: imageResult.rows[0]?.value || '',
-      enabled: enabledResult.rows[0]?.value === 'true'
+      image: imageDoc.exists ? imageDoc.data().value : '',
+      enabled: enabledDoc.exists ? enabledDoc.data().value === 'true' : false
     })
   } catch (error) {
     console.error('Error setting pinned image:', error)
@@ -1037,11 +1130,14 @@ app.delete('/api/pinned-image', async (req, res) => {
       return res.status(400).json({ error: 'workspace code is required' })
     }
 
-    await pool.query("DELETE FROM settings WHERE key = 'pinned_image' AND workspace_code = $1", [workspace])
-    await pool.query(
-      "INSERT INTO settings (key, workspace_code, value, updated_at) VALUES ('pinned_image_enabled', $1, 'false', CURRENT_TIMESTAMP) ON CONFLICT (key, workspace_code) DO UPDATE SET value = 'false', updated_at = CURRENT_TIMESTAMP",
-      [workspace]
-    )
+    const settingsRef = db.collection('settings')
+    await settingsRef.doc(`pinned_image_${workspace}`).delete()
+    await settingsRef.doc(`pinned_image_enabled_${workspace}`).set({
+      key: 'pinned_image_enabled',
+      workspace_code: workspace,
+      value: 'false',
+      updated_at: admin.firestore.FieldValue.serverTimestamp()
+    })
 
     res.json({ success: true })
   } catch (error) {
@@ -1052,8 +1148,7 @@ app.delete('/api/pinned-image', async (req, res) => {
 
 const PORT = process.env.PORT || 5000
 
-initDB().then(() => {
-  app.listen(PORT, () => {
-    console.log(`Server running on port ${PORT}`)
-  })
+app.listen(PORT, () => {
+  console.log(`Server running on port ${PORT}`)
+  console.log('Connected to Firebase Firestore')
 })
