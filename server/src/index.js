@@ -153,12 +153,13 @@ app.post('/api/auth/register', async (req, res) => {
       if (existing.rows.length === 0) isUnique = true
     }
 
-    // Hash password and create user
+    // Hash password and create user (with default PINs)
     const passwordHash = hashPassword(password)
+    const defaultPin = '1111'
     const result = await pool.query(
-      `INSERT INTO users (username, password_hash, display_name, workspace_code)
-       VALUES ($1, $2, $3, $4) RETURNING id, username, display_name, workspace_code`,
-      [username, passwordHash, displayName, workspaceCode]
+      `INSERT INTO users (username, password_hash, display_name, workspace_code, input_pin, display_pin)
+       VALUES ($1, $2, $3, $4, $5, $6) RETURNING id, username, display_name, workspace_code`,
+      [username, passwordHash, displayName, workspaceCode, defaultPin, defaultPin]
     )
 
     // Initialize default settings for this workspace

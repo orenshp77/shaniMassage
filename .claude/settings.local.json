@@ -27,7 +27,8 @@
       "Bash(npm run build:*)",
       "Bash(npx vite build)",
       "Bash(grep:*)",
-      "Bash(git fetch:*)"
+      "Bash(git fetch:*)",
+      "Bash(npm cache clean:*)"
     ]
   }
 }
