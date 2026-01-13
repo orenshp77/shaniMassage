@@ -30,7 +30,8 @@
       "Bash(git fetch:*)",
       "Bash(npm cache clean:*)",
       "Bash(explorer.exe \"d:\\\\אתרים\\\\shani_system\\\\server\")",
-      "Bash(start \"\" \"d:\\\\אתרים\\\\shani_system\\\\server\")"
+      "Bash(start \"\" \"d:\\\\אתרים\\\\shani_system\\\\server\")",
+      "Bash(powershell -Command \"[Convert]::ToBase64String\\([System.Text.Encoding]::UTF8.GetBytes\\(\\(Get-Content ''d:\\\\אתרים\\\\shani_system\\\\server\\\\key.txt'' -Raw\\)\\)\\)\")"
     ]
   }
 }

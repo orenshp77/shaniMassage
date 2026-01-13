@@ -6,16 +6,21 @@ const admin = require('firebase-admin')
 require('dotenv').config({ path: path.join(__dirname, '..', '.env') })
 
 // Initialize Firebase Admin SDK
-// Handle private key - try JSON parse first, then replace \n
+// Handle private key - support Base64 encoded or plain text with \n
 let privateKey = process.env.FIREBASE_PRIVATE_KEY
 if (privateKey) {
   try {
-    // If the key is wrapped in quotes (from Render), parse it
-    if (privateKey.startsWith('"')) {
-      privateKey = JSON.parse(privateKey)
+    // Check if it's Base64 encoded (doesn't start with -----)
+    if (!privateKey.startsWith('-----') && !privateKey.startsWith('"')) {
+      privateKey = Buffer.from(privateKey, 'base64').toString('utf-8')
+    } else {
+      // If wrapped in quotes, parse it
+      if (privateKey.startsWith('"')) {
+        privateKey = JSON.parse(privateKey)
+      }
+      // Replace escaped newlines with actual newlines
+      privateKey = privateKey.replace(/\\n/g, '\n')
     }
-    // Replace escaped newlines with actual newlines
-    privateKey = privateKey.replace(/\\n/g, '\n')
   } catch (e) {
     console.error('Error parsing private key:', e.message)
     privateKey = privateKey.replace(/\\n/g, '\n')
