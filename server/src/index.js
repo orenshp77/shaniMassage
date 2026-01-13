@@ -43,6 +43,7 @@ app.use(cors({
     'http://localhost:901',
     'http://localhost:3000',
     'https://shani-client.onrender.com',
+    'https://shani-massage-client.onrender.com',
     'https://aabb.co.il',
     'https://www.aabb.co.il',
     'http://aabb.co.il',
