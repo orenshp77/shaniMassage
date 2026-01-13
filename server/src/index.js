@@ -12,7 +12,12 @@ if (process.env.GOOGLE_APPLICATION_CREDENTIALS_JSON) {
   // Full JSON provided as environment variable
   try {
     serviceAccount = JSON.parse(process.env.GOOGLE_APPLICATION_CREDENTIALS_JSON)
+    // Fix private_key newlines - JSON.parse doesn't convert \n in strings
+    if (serviceAccount.private_key) {
+      serviceAccount.private_key = serviceAccount.private_key.replace(/\\n/g, '\n')
+    }
     console.log('Loaded service account from GOOGLE_APPLICATION_CREDENTIALS_JSON')
+    console.log('Private key length:', serviceAccount.private_key?.length)
   } catch (e) {
     console.error('Error parsing GOOGLE_APPLICATION_CREDENTIALS_JSON:', e.message)
   }
