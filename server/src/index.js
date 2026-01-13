@@ -8,11 +8,16 @@ require('dotenv').config({ path: path.join(__dirname, '..', '.env') })
 // Initialize Firebase Admin SDK
 // Handle private key - support Base64 encoded or plain text with \n
 let privateKey = process.env.FIREBASE_PRIVATE_KEY
+console.log('Private key env length:', privateKey?.length)
+console.log('Private key starts with:', privateKey?.substring(0, 20))
 if (privateKey) {
   try {
     // Check if it's Base64 encoded (doesn't start with -----)
     if (!privateKey.startsWith('-----') && !privateKey.startsWith('"')) {
+      console.log('Decoding Base64 key...')
       privateKey = Buffer.from(privateKey, 'base64').toString('utf-8')
+      console.log('Decoded key length:', privateKey?.length)
+      console.log('Decoded key starts with:', privateKey?.substring(0, 30))
     } else {
       // If wrapped in quotes, parse it
       if (privateKey.startsWith('"')) {
