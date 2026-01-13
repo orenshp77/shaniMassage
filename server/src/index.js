@@ -6,43 +6,43 @@ const admin = require('firebase-admin')
 require('dotenv').config({ path: path.join(__dirname, '..', '.env') })
 
 // Initialize Firebase Admin SDK
-// Handle private key - support Base64 encoded or plain text with \n
-let privateKey = process.env.FIREBASE_PRIVATE_KEY
-console.log('Private key env length:', privateKey?.length)
-console.log('Private key starts with:', privateKey?.substring(0, 20))
-if (privateKey) {
+// Use GOOGLE_APPLICATION_CREDENTIALS_JSON for the entire service account JSON
+let serviceAccount
+if (process.env.GOOGLE_APPLICATION_CREDENTIALS_JSON) {
+  // Full JSON provided as environment variable
   try {
-    // Check if it's Base64 encoded (doesn't start with -----)
-    if (!privateKey.startsWith('-----') && !privateKey.startsWith('"')) {
-      console.log('Decoding Base64 key...')
-      privateKey = Buffer.from(privateKey, 'base64').toString('utf-8')
-      console.log('Decoded key length:', privateKey?.length)
-      console.log('Decoded key starts with:', privateKey?.substring(0, 30))
-    } else {
-      // If wrapped in quotes, parse it
-      if (privateKey.startsWith('"')) {
-        privateKey = JSON.parse(privateKey)
-      }
-      // Replace escaped newlines with actual newlines
-      privateKey = privateKey.replace(/\\n/g, '\n')
-    }
+    serviceAccount = JSON.parse(process.env.GOOGLE_APPLICATION_CREDENTIALS_JSON)
+    console.log('Loaded service account from GOOGLE_APPLICATION_CREDENTIALS_JSON')
   } catch (e) {
-    console.error('Error parsing private key:', e.message)
+    console.error('Error parsing GOOGLE_APPLICATION_CREDENTIALS_JSON:', e.message)
+  }
+} else {
+  // Fallback to individual environment variables
+  let privateKey = process.env.FIREBASE_PRIVATE_KEY
+  if (privateKey) {
+    // Handle different formats
+    if (!privateKey.startsWith('-----') && !privateKey.startsWith('"')) {
+      // Base64 encoded
+      privateKey = Buffer.from(privateKey, 'base64').toString('utf-8')
+    } else if (privateKey.startsWith('"')) {
+      // JSON string
+      privateKey = JSON.parse(privateKey)
+    }
     privateKey = privateKey.replace(/\\n/g, '\n')
   }
-}
 
-const serviceAccount = {
-  type: 'service_account',
-  project_id: process.env.FIREBASE_PROJECT_ID,
-  private_key_id: process.env.FIREBASE_PRIVATE_KEY_ID,
-  private_key: privateKey,
-  client_email: process.env.FIREBASE_CLIENT_EMAIL,
-  client_id: process.env.FIREBASE_CLIENT_ID,
-  auth_uri: 'https://accounts.google.com/o/oauth2/auth',
-  token_uri: 'https://oauth2.googleapis.com/token',
-  auth_provider_x509_cert_url: 'https://www.googleapis.com/oauth2/v1/certs',
-  client_x509_cert_url: process.env.FIREBASE_CERT_URL
+  serviceAccount = {
+    type: 'service_account',
+    project_id: process.env.FIREBASE_PROJECT_ID,
+    private_key_id: process.env.FIREBASE_PRIVATE_KEY_ID,
+    private_key: privateKey,
+    client_email: process.env.FIREBASE_CLIENT_EMAIL,
+    client_id: process.env.FIREBASE_CLIENT_ID,
+    auth_uri: 'https://accounts.google.com/o/oauth2/auth',
+    token_uri: 'https://oauth2.googleapis.com/token',
+    auth_provider_x509_cert_url: 'https://www.googleapis.com/oauth2/v1/certs',
+    client_x509_cert_url: process.env.FIREBASE_CERT_URL
+  }
 }
 
 admin.initializeApp({
