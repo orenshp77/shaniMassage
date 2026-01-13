@@ -1,7 +1,13 @@
 import { useState, useEffect, useRef } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import Swal from 'sweetalert2'
-import api from '../services/api'
+import {
+  getMessages, createMessage, updateMessage as updateMessageFirebase, deleteMessage as deleteMessageFirebase,
+  getActiveTheme, setActiveTheme,
+  getPinnedMessage, setPinnedMessage as setPinnedMessageFirebase,
+  getPinnedImage, setPinnedImage as setPinnedImageFirebase, deletePinnedImage,
+  updateDisplayName as updateDisplayNameFirebase, setActiveMessage, disconnectTv
+} from '../services/firebase'
 import { THEMES } from '../components/AnimatedBackgrounds'
 import './InputPage.css'
 
@@ -54,8 +60,8 @@ function InputPage() {
     try {
       const workspace = ws || localStorage.getItem('workspaceCode')
       if (!workspace) return
-      const response = await api.get(`/active-theme?workspace=${workspace}`)
-      setSelectedTheme(response.data.theme)
+      const response = await getActiveTheme(workspace)
+      setSelectedTheme(response.theme)
     } catch (error) {
       console.error('Error fetching theme:', error)
     }
@@ -65,9 +71,9 @@ function InputPage() {
     try {
       const workspace = ws || localStorage.getItem('workspaceCode')
       if (!workspace) return
-      const response = await api.get(`/pinned-message?workspace=${workspace}`)
-      setPinnedMessage(response.data.message || '')
-      setPinnedEnabled(response.data.enabled || false)
+      const response = await getPinnedMessage(workspace)
+      setPinnedMessage(response.message || '')
+      setPinnedEnabled(response.enabled || false)
     } catch (error) {
       console.error('Error fetching pinned message:', error)
     }
@@ -76,7 +82,7 @@ function InputPage() {
   const handlePinnedMessageChange = async (message) => {
     setPinnedMessage(message)
     try {
-      await api.post('/pinned-message', { message, workspace: workspaceCode })
+      await setPinnedMessageFirebase(workspaceCode, message, undefined)
     } catch (error) {
       console.error('Error saving pinned message:', error)
     }
@@ -86,7 +92,7 @@ function InputPage() {
     const newEnabled = !pinnedEnabled
     setPinnedEnabled(newEnabled)
     try {
-      await api.post('/pinned-message', { enabled: newEnabled, workspace: workspaceCode })
+      await setPinnedMessageFirebase(workspaceCode, undefined, newEnabled)
       Swal.fire({
         icon: 'success',
         title: newEnabled ? 'הודעה נעוצה מופעלת' : 'הודעה נעוצה כבויה',
@@ -102,9 +108,9 @@ function InputPage() {
     try {
       const workspace = ws || localStorage.getItem('workspaceCode')
       if (!workspace) return
-      const response = await api.get(`/pinned-image?workspace=${workspace}`)
-      setPinnedImage(response.data.image || '')
-      setPinnedImageEnabled(response.data.enabled || false)
+      const response = await getPinnedImage(workspace)
+      setPinnedImage(response.image || '')
+      setPinnedImageEnabled(response.enabled || false)
     } catch (error) {
       console.error('Error fetching pinned image:', error)
     }
@@ -140,7 +146,7 @@ function InputPage() {
       const base64 = reader.result
       setPinnedImage(base64)
       try {
-        await api.post('/pinned-image', { image: base64, workspace: workspaceCode })
+        await setPinnedImageFirebase(workspaceCode, base64, undefined)
         Swal.fire({
           icon: 'success',
           title: 'התמונה הועלתה בהצלחה!',
@@ -162,7 +168,7 @@ function InputPage() {
     const newEnabled = !pinnedImageEnabled
     setPinnedImageEnabled(newEnabled)
     try {
-      await api.post('/pinned-image', { enabled: newEnabled, workspace: workspaceCode })
+      await setPinnedImageFirebase(workspaceCode, undefined, newEnabled)
       Swal.fire({
         icon: 'success',
         title: newEnabled ? 'תמונה נעוצה מופעלת' : 'תמונה נעוצה כבויה',
@@ -186,7 +192,7 @@ function InputPage() {
 
     if (result.isConfirmed) {
       try {
-        await api.delete(`/pinned-image?workspace=${workspaceCode}`)
+        await deletePinnedImage(workspaceCode)
         setPinnedImage('')
         setPinnedImageEnabled(false)
         Swal.fire({
@@ -215,7 +221,7 @@ function InputPage() {
     if (newName.trim()) {
       saveTimeoutRef.current = setTimeout(async () => {
         try {
-          await api.put('/display-name', { displayName: newName.trim(), workspace: workspaceCode })
+          await updateDisplayNameFirebase(workspaceCode, newName.trim())
           localStorage.setItem('displayName', newName.trim())
           const user = JSON.parse(localStorage.getItem('user') || '{}')
           if (user) {
@@ -239,7 +245,7 @@ function InputPage() {
       clearTimeout(saveTimeoutRef.current)
     }
     try {
-      await api.put('/display-name', { displayName: displayName.trim(), workspace: workspaceCode })
+      await updateDisplayNameFirebase(workspaceCode, displayName.trim())
       localStorage.setItem('displayName', displayName.trim())
       const user = JSON.parse(localStorage.getItem('user') || '{}')
       if (user) {
@@ -261,7 +267,7 @@ function InputPage() {
   const handleThemeChange = async (themeId) => {
     try {
       setSelectedTheme(themeId)
-      await api.post('/active-theme', { theme: themeId, workspace: workspaceCode })
+      await setActiveTheme(workspaceCode, themeId)
       Swal.fire({
         icon: 'success',
         title: `הרקע שונה ל${THEMES[themeId].name}`,
@@ -277,8 +283,8 @@ function InputPage() {
     try {
       const workspace = ws || localStorage.getItem('workspaceCode')
       if (!workspace) return
-      const response = await api.get(`/messages?workspace=${workspace}`)
-      setMessages(response.data)
+      const messagesData = await getMessages(workspace)
+      setMessages(messagesData)
     } catch (error) {
       console.error('Error fetching messages:', error)
     }
@@ -289,14 +295,8 @@ function InputPage() {
     setLoading(true)
 
     try {
-      const dataToSend = {
-        ...formData,
-        displayDate: new Date().toISOString(),
-        workspace: workspaceCode
-      }
-
       if (editingId) {
-        await api.put(`/messages/${editingId}`, dataToSend)
+        await updateMessageFirebase(editingId, formData.subject, formData.content, new Date().toISOString())
         setEditingId(null)
         Swal.fire({
           icon: 'success',
@@ -306,8 +306,8 @@ function InputPage() {
         })
       } else {
         // Create new message and set it as active
-        const response = await api.post('/messages', dataToSend)
-        await api.post('/active-message', { messageId: response.data.id, workspace: workspaceCode })
+        const newMessage = await createMessage(formData.subject, formData.content, new Date().toISOString(), workspaceCode)
+        await setActiveMessage(workspaceCode, newMessage.id)
         Swal.fire({
           icon: 'success',
           title: 'ההודעה נשלחה!',
@@ -333,8 +333,8 @@ function InputPage() {
 
   const handleDisplayMessage = async (message) => {
     try {
-      // Set active message on server - Display page will auto-update with alert
-      await api.post('/active-message', { messageId: message.id, workspace: workspaceCode })
+      // Set active message - Display page will auto-update with alert
+      await setActiveMessage(workspaceCode, message.id)
       Swal.fire({
         icon: 'success',
         title: 'ההודעה נשלחה למסך!',
@@ -363,7 +363,7 @@ function InputPage() {
     if (!window.confirm('האם למחוק את ההודעה?')) return
 
     try {
-      await api.delete(`/messages/${id}?workspace=${workspaceCode}`)
+      await deleteMessageFirebase(id)
       fetchMessages()
     } catch (error) {
       console.error('Error deleting message:', error)
@@ -401,9 +401,9 @@ function InputPage() {
             <div className="header-actions">
               <span className="workspace-badge">קוד: {workspaceCode}</span>
               <button className="logout-btn" onClick={async () => {
-                // Notify server to disconnect TV
+                // Notify to disconnect TV
                 try {
-                  await api.post('/tv/disconnect', { workspaceCode })
+                  await disconnectTv(workspaceCode)
                 } catch (e) {}
                 localStorage.removeItem('workspaceCode')
                 localStorage.removeItem('displayName')

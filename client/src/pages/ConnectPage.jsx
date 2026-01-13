@@ -3,7 +3,7 @@ import { useNavigate, useSearchParams, Link } from 'react-router-dom'
 import { QRCodeSVG } from 'qrcode.react'
 import { Html5Qrcode } from 'html5-qrcode'
 import Swal from 'sweetalert2'
-import api from '../services/api'
+import { generateTvPairingCode, checkTvPairing, getWorkspaceByCode } from '../services/firebase'
 import './ConnectPage.css'
 
 function ConnectPage() {
@@ -286,8 +286,8 @@ function ConnectPage() {
   // Generate TV pairing code
   const generatePairingCode = async () => {
     try {
-      const response = await api.post('/tv/generate-code')
-      setPairingCode(response.data.pairingCode)
+      const result = await generateTvPairingCode()
+      setPairingCode(result.pairingCode)
       setTvStatus('waiting')
     } catch (error) {
       console.error('Error generating pairing code:', error)
@@ -300,13 +300,13 @@ function ConnectPage() {
     if (!pairingCode || tvStatus !== 'waiting') return
 
     try {
-      const response = await api.get(`/tv/check-pairing/${pairingCode}`)
-      if (response.data.paired) {
+      const result = await checkTvPairing(pairingCode)
+      if (result.paired) {
         setTvStatus('paired')
 
         // Store workspace info
-        localStorage.setItem('workspaceCode', response.data.workspaceCode)
-        localStorage.setItem('displayName', response.data.displayName)
+        localStorage.setItem('workspaceCode', result.workspaceCode)
+        localStorage.setItem('displayName', result.displayName)
         localStorage.setItem('tvMode', 'true')
 
         // Navigate to display page after short delay
@@ -333,8 +333,8 @@ function ConnectPage() {
   // Phone side - fetch workspace and go directly to QR page
   const fetchWorkspace = async (wsCode) => {
     try {
-      const response = await api.get(`/auth/workspace/${wsCode}`)
-      const ws = response.data.workspace
+      const result = await getWorkspaceByCode(wsCode)
+      const ws = result.workspace
 
       // Go directly to QR page (no PIN needed)
       localStorage.setItem('workspaceCode', ws.workspace_code)

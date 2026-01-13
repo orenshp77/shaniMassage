@@ -1,0 +1,43 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Users collection
+    match /users/{userId} {
+      // Anyone can read users (for login/workspace lookup)
+      allow read: if true;
+      // Anyone can create a user (registration)
+      allow create: if true;
+      // Anyone can update their own user document
+      allow update: if true;
+      // Anyone can delete (for admin functionality)
+      allow delete: if true;
+    }
+
+    // Messages collection
+    match /messages/{messageId} {
+      // Anyone can read messages (display page needs this)
+      allow read: if true;
+      // Anyone can create/update/delete messages
+      allow create, update, delete: if true;
+    }
+
+    // Settings collection
+    match /settings/{settingId} {
+      // Anyone can read/write settings
+      allow read, write: if true;
+    }
+
+    // Workspace state collection
+    match /workspace_state/{workspaceCode} {
+      // Anyone can read/write workspace state
+      allow read, write: if true;
+    }
+
+    // TV Pairing collection
+    match /tv_pairing/{pairingCode} {
+      // Anyone can read/write pairing data
+      allow read, write: if true;
+    }
+  }
+}

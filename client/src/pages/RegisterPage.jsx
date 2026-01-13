@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
-import api from '../services/api'
+import { registerUser } from '../services/firebase'
 import Swal from 'sweetalert2'
 import './AuthPages.css'
 
@@ -22,11 +22,11 @@ function RegisterPage() {
     e.preventDefault()
     setLoading(true)
     try {
-      const response = await api.post('/auth/register', formData)
+      const response = await registerUser(formData.username, formData.password, formData.displayName)
 
       // Save user and workspace info to localStorage
-      localStorage.setItem('user', JSON.stringify(response.data.user))
-      localStorage.setItem('workspaceCode', response.data.user.workspace_code)
+      localStorage.setItem('user', JSON.stringify(response.user))
+      localStorage.setItem('workspaceCode', response.user.workspace_code)
       localStorage.setItem('displayName', formData.displayName)
 
       // Check if there's a pending pairing code
@@ -39,7 +39,7 @@ function RegisterPage() {
           title: 'נרשמת בהצלחה!',
           html: `
             <div style="text-align: right; direction: rtl;">
-              <p><strong>קוד העבודה שלך:</strong> ${response.data.user.workspace_code}</p>
+              <p><strong>קוד העבודה שלך:</strong> ${response.user.workspace_code}</p>
               <p>עכשיו נחבר את הטלוויזיה...</p>
             </div>
           `,
@@ -54,7 +54,7 @@ function RegisterPage() {
           title: 'נרשמת בהצלחה!',
           html: `
             <div style="text-align: right; direction: rtl;">
-              <p><strong>קוד העבודה שלך:</strong> ${response.data.user.workspace_code}</p>
+              <p><strong>קוד העבודה שלך:</strong> ${response.user.workspace_code}</p>
               <p>שמור את הקוד הזה - תצטרך אותו להתחברות</p>
             </div>
           `,
@@ -67,7 +67,7 @@ function RegisterPage() {
       Swal.fire({
         icon: 'error',
         title: 'שגיאה',
-        text: error.response?.data?.error || 'שגיאה ביצירת המשתמש'
+        text: error.message || 'שגיאה ביצירת המשתמש'
       })
     } finally {
       setLoading(false)

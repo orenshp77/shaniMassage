@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import api from '../services/api'
+import { getAllUsers, deleteUser, updateUserPassword, loginAsUser, clearAllData } from '../services/firebase'
 import Swal from 'sweetalert2'
 import './AdminPage.css'
 
@@ -32,8 +32,8 @@ function AdminPage() {
 
   const fetchUsers = async () => {
     try {
-      const response = await api.get('/admin/users')
-      setUsers(response.data)
+      const users = await getAllUsers()
+      setUsers(users)
     } catch (error) {
       console.error('Error fetching users:', error)
       Swal.fire({
@@ -61,7 +61,7 @@ function AdminPage() {
 
     if (result.isConfirmed) {
       try {
-        await api.delete(`/admin/users/${user.id}`)
+        await deleteUser(user.id)
         Swal.fire({
           icon: 'success',
           title: 'המשתמש נמחק',
@@ -86,7 +86,7 @@ function AdminPage() {
     }
 
     try {
-      await api.put(`/admin/users/${selectedUser.id}/password`, { password: newPassword })
+      await updateUserPassword(selectedUser.id, newPassword)
       Swal.fire({
         icon: 'success',
         title: 'הסיסמה עודכנה',
@@ -102,8 +102,8 @@ function AdminPage() {
 
   const handleLoginAsUser = async (user) => {
     try {
-      const response = await api.post(`/admin/login-as/${user.id}`)
-      const userData = response.data.user
+      const result = await loginAsUser(user.id)
+      const userData = result.user
 
       // Store user data
       localStorage.setItem('workspaceCode', userData.workspace_code)
@@ -138,7 +138,7 @@ function AdminPage() {
 
     if (result.isConfirmed) {
       try {
-        await api.delete('/admin/clear-all')
+        await clearAllData()
         Swal.fire({
           icon: 'success',
           title: 'כל הנתונים נמחקו',

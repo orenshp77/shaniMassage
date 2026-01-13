@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { QRCodeSVG } from 'qrcode.react'
-import api from '../services/api'
+import { generateTvPairingCode, checkTvPairing } from '../services/firebase'
 import './TVPairPage.css'
 
 function TVPairPage() {
@@ -20,8 +20,8 @@ function TVPairPage() {
 
   const generatePairingCode = async () => {
     try {
-      const response = await api.post('/tv/generate-code')
-      setPairingCode(response.data.pairingCode)
+      const result = await generateTvPairingCode()
+      setPairingCode(result.pairingCode)
       setStatus('waiting')
     } catch (error) {
       console.error('Error generating pairing code:', error)
@@ -34,14 +34,14 @@ function TVPairPage() {
     if (!pairingCode || status !== 'waiting') return
 
     try {
-      const response = await api.get(`/tv/check-pairing/${pairingCode}`)
-      if (response.data.paired) {
+      const result = await checkTvPairing(pairingCode)
+      if (result.paired) {
         setStatus('paired')
-        setWorkspaceCode(response.data.workspaceCode)
+        setWorkspaceCode(result.workspaceCode)
 
         // Store workspace info
-        localStorage.setItem('workspaceCode', response.data.workspaceCode)
-        localStorage.setItem('displayName', response.data.displayName)
+        localStorage.setItem('workspaceCode', result.workspaceCode)
+        localStorage.setItem('displayName', result.displayName)
         localStorage.setItem('tvMode', 'true')
 
         // Navigate to display page after short delay

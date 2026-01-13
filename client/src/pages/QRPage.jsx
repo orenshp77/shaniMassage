@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { QRCodeSVG } from 'qrcode.react'
 import Swal from 'sweetalert2'
-import api from '../services/api'
+import { getTvStatus, disconnectTv } from '../services/firebase'
 import './QRPage.css'
 
 function QRPage() {
@@ -59,8 +59,8 @@ function QRPage() {
     // Check TV connection status
     const checkTvStatus = async () => {
       try {
-        const response = await api.get(`/tv/status?workspace=${storedWorkspace}`)
-        setTvConnected(response.data.connected)
+        const result = await getTvStatus(storedWorkspace)
+        setTvConnected(result.connected)
       } catch (error) {
         console.error('Error checking TV status:', error)
       }
@@ -84,7 +84,7 @@ function QRPage() {
   const handleLogout = async () => {
     // Notify server to disconnect TV
     try {
-      await api.post('/tv/disconnect', { workspaceCode })
+      await disconnectTv(workspaceCode)
     } catch (e) {}
     localStorage.removeItem('workspaceCode')
     localStorage.removeItem('displayName')

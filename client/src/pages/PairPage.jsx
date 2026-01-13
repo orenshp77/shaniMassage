@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { useSearchParams, useNavigate } from 'react-router-dom'
 import { Html5Qrcode } from 'html5-qrcode'
-import api from '../services/api'
+import { pairTvWithWorkspace } from '../services/firebase'
 import Swal from 'sweetalert2'
 import './PairPage.css'
 
@@ -73,16 +73,13 @@ function PairPage() {
     setStatus('pairing')
 
     try {
-      const response = await api.post('/tv/pair', {
-        pairingCode,
-        workspaceCode
-      })
+      const result = await pairTvWithWorkspace(pairingCode, workspaceCode)
 
       setStatus('success')
       Swal.fire({
         icon: 'success',
         title: 'הטלוויזיה מחוברת!',
-        text: response.data.message,
+        text: result.message,
         showConfirmButton: false,
         timer: 2000
       }).then(() => {
@@ -94,7 +91,7 @@ function PairPage() {
       Swal.fire({
         icon: 'error',
         title: 'שגיאה',
-        text: error.response?.data?.error || 'לא ניתן לצמד את הטלוויזיה'
+        text: error.message || 'לא ניתן לצמד את הטלוויזיה'
       })
     }
   }
@@ -249,16 +246,13 @@ function PairPage() {
     setStatus('pairing')
 
     try {
-      const response = await api.post('/tv/pair', {
-        pairingCode: code,
-        workspaceCode
-      })
+      const result = await pairTvWithWorkspace(code, workspaceCode)
 
       setStatus('success')
       Swal.fire({
         icon: 'success',
         title: 'הטלוויזיה מחוברת!',
-        text: response.data.message,
+        text: result.message,
         showConfirmButton: false,
         timer: 2000
       }).then(() => {
@@ -269,7 +263,7 @@ function PairPage() {
       Swal.fire({
         icon: 'error',
         title: 'שגיאה',
-        text: error.response?.data?.error || 'לא ניתן לצמד את הטלוויזיה'
+        text: error.message || 'לא ניתן לצמד את הטלוויזיה'
       })
     }
   }

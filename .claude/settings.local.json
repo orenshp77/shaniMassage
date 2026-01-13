@@ -31,7 +31,13 @@
       "Bash(npm cache clean:*)",
       "Bash(explorer.exe \"d:\\\\אתרים\\\\shani_system\\\\server\")",
       "Bash(start \"\" \"d:\\\\אתרים\\\\shani_system\\\\server\")",
-      "Bash(powershell -Command \"[Convert]::ToBase64String\\([System.Text.Encoding]::UTF8.GetBytes\\(\\(Get-Content ''d:\\\\אתרים\\\\shani_system\\\\server\\\\key.txt'' -Raw\\)\\)\\)\")"
+      "Bash(powershell -Command \"[Convert]::ToBase64String\\([System.Text.Encoding]::UTF8.GetBytes\\(\\(Get-Content ''d:\\\\אתרים\\\\shani_system\\\\server\\\\key.txt'' -Raw\\)\\)\\)\")",
+      "Bash(npm --version:*)",
+      "Bash(bash -c \"cd ''/d/אתרים/shani_system/client'' && npm run build\")",
+      "Bash(cmd.exe /c \"cd /d d:\\\\אתרים\\\\shani_system\\\\client && npm run build\")",
+      "Bash(powershell.exe -Command \"cd ''d:\\\\אתרים\\\\shani_system\\\\client''; npm run build\")",
+      "Bash(powershell.exe -Command \"cd ''d:\\\\אתרים\\\\shani_system''; firebase deploy --only hosting\")",
+      "Bash(powershell.exe -Command \"cd ''d:\\\\אתרים\\\\shani_system''; firebase hosting:sites:list\")"
     ]
   }
 }

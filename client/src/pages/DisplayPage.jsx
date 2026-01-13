@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import Swal from 'sweetalert2'
-import api from '../services/api'
+import { getActiveMessageWithState, checkTvDisconnect } from '../services/firebase'
 import AnimatedBackground from '../components/AnimatedBackgrounds'
 import './DisplayPage.css'
 
@@ -93,8 +93,8 @@ function DisplayPage() {
   // Check if workspace was disconnected
   const checkDisconnect = async () => {
     try {
-      const response = await api.get(`/tv/check-disconnect?workspace=${workspaceCode.current}`)
-      if (response.data.disconnected) {
+      const result = await checkTvDisconnect(workspaceCode.current)
+      if (result.disconnected) {
         // User logged out, go back to home page
         localStorage.removeItem('workspaceCode')
         localStorage.removeItem('displayName')
@@ -116,8 +116,8 @@ function DisplayPage() {
       // Check for disconnect
       await checkDisconnect()
 
-      const response = await api.get(`/active-message?workspace=${workspaceCode.current}`)
-      const { message: newMessage, theme, lastExplicitChange, pinnedMessage: serverPinnedMessage, pinnedMessageEnabled, pinnedImage: serverPinnedImage, pinnedImageEnabled: serverPinnedImageEnabled, displayName: serverDisplayName } = response.data
+      const data = await getActiveMessageWithState(workspaceCode.current)
+      const { message: newMessage, theme, lastExplicitChange, pinnedMessage: serverPinnedMessage, pinnedMessageEnabled, pinnedImage: serverPinnedImage, pinnedImageEnabled: serverPinnedImageEnabled, displayName: serverDisplayName } = data
 
       // Update theme if changed
       if (theme && theme !== currentTheme) {

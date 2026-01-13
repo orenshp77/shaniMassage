@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
-import api from '../services/api'
+import { loginUser } from '../services/firebase'
 import Swal from 'sweetalert2'
 import './AuthPages.css'
 
@@ -22,8 +22,8 @@ function LoginPage() {
     setLoading(true)
 
     try {
-      const response = await api.post('/auth/login', formData)
-      const user = response.data.user
+      const response = await loginUser(formData.username, formData.password)
+      const user = response.user
 
       // Store user data in localStorage
       localStorage.setItem('user', JSON.stringify(user))
@@ -46,12 +46,11 @@ function LoginPage() {
         }
       })
     } catch (error) {
-      const errorMessage = error.response?.data?.error || 'שגיאה בהתחברות'
-      const isAuthError = error.response?.status === 401
+      const errorMessage = error.message || 'שגיאה בהתחברות'
 
       Swal.fire({
         icon: 'error',
-        title: isAuthError ? 'פרטים שגויים' : 'שגיאה',
+        title: 'פרטים שגויים',
         text: errorMessage,
         confirmButtonText: 'נסה שוב',
         confirmButtonColor: '#00bcd4'
