@@ -2,7 +2,7 @@ import axios from 'axios'
 
 // Use production URL in production, local in development
 const API_URL = import.meta.env.PROD
-  ? 'https://shani-server.onrender.com/api'
+  ? 'https://shanimassage.onrender.com/api'
   : '/api'
 
 const api = axios.create({

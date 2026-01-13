@@ -28,7 +28,9 @@
       "Bash(npx vite build)",
       "Bash(grep:*)",
       "Bash(git fetch:*)",
-      "Bash(npm cache clean:*)"
+      "Bash(npm cache clean:*)",
+      "Bash(explorer.exe \"d:\\\\אתרים\\\\shani_system\\\\server\")",
+      "Bash(start \"\" \"d:\\\\אתרים\\\\shani_system\\\\server\")"
     ]
   }
 }
